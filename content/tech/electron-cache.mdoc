@@ -1,0 +1,119 @@
+---
+title: '[Electron] 브라우저에선 되는데 왜 앱에선 안 될까? (캐시 지옥과 WebRTC InvalidStateError 해결기)'
+summary: 브라우저와는 다른 Electron만의 강력한 캐시 정책과 프로세스 구조를 이해하는 과정
+publishedAt: 2026-01-02
+tags:
+  - Javascript
+  - Electron
+  - WebRTC
+difficulty: intermediate
+githubLink: asdfasd
+---
+최근 리액트(React) 기반의 웹 사이트를 Electron 앱으로 패키징하는 작업을 진행했습니다.
+
+브라우저에서는 수정 사항이 즉각 반영되고 모든 기능이 정상 작동하는데, Electron 앱에서만 WebRTC 관련 에러가 발생하는 현상을 겪었습니다.
+
+단순한 브라우저인 줄 알았던 Electron이 왜 더 까다롭게 구는지, 그리고 어떻게 해결했는지 정리해 보았습니다.
+
+---
+
+## 1. 이전 코드가 동작하고 있지는 않을까?
+
+이런 의구심을 갖고 관련 내용을 찾아보던 중
+
+가장 당혹스러웠던 점은 **"앱을 삭제하고 다시 설치했음에도 캐시가 남아있다"**는 점이었습니다.
+
+### 원인: 끈질긴 Persistent Storage
+
+일반적인 브라우저는 사용자가 '새로고침'을 누르거나 설정에서 캐시를 비우는 것이 직관적이지만, Electron은 **'웹사이트'가 아닌 '설치형 소프트웨어'**로 동작합니다.
+
+- **OS의 관리 방식:** Windows나 macOS는 앱을 삭제할 때 실행 파일만 지우고, 사용자의 설정 데이터가 담긴 폴더(`%AppData%` 등)는 남겨둡니다. 다음에 앱을 재설치했을 때 로그인 정보나 설정을 유지하기 위함이죠.
+- **강력한 캐시 정책:** Electron 내부의 Chromium 엔진은 앱의 구동 속도를 높이기 위해 JS, CSS 리소스를 일반 브라우저보다 훨씬 더 공격적으로 캐싱합니다.
+
+### 해결법: 세션 데이터 강제 초기화
+
+개발 단계나 업데이트 시점에 아래 코드를 메인 프로세스(`main.js`)에 추가하여 캐시를 완전히 비워줄 수 있습니다.
+
+```javascript
+const { app, session } = require('electron');
+
+app.on('ready', async () => {
+  // 모든 캐시, 쿠키, 로컬 스토리지 비우기
+  await session.defaultSession.clearStorageData();
+  console.log('Cache cleared!');
+  
+  createWindow();
+});
+
+```
+
+---
+
+## 2. WebRTC 에러: InvalidStateError (setRemoteDescription)
+
+소스코드 반영 여부를 확인하던 중, 콘솔에서 다음과 같은 에러를 마주했습니다.
+
+> Uncaught (in promise) InvalidStateError: Failed to execute 'setRemoteDescription' on 'RTCPeerConnection': Called in wrong state: stable
+
+### 왜 발생할까?
+
+이 에러는 WebRTC의 연결 상태가 이미 `stable`(안정화 완료)인데, 또다시 상대방의 Answer를 적용하려고 할 때 발생합니다.
+
+특히 **Electron 환경에서 빈번한 이유**는 다음과 같습니다.
+
+1. **중복 리스너:** Electron의 렌더러 프로세스가 재시작되거나 새로고침될 때, 이전의 소켓 연결이나 이벤트 리스너가 제대로 클린업되지 않아 동일한 시그널링 메시지를 두 번 처리할 수 있습니다.
+1. **프로세스 생명주기:** 브라우저는 탭을 닫으면 메모리가 즉시 해제되지만, Electron은 메인-렌더러 구조상 자원 해제가 불완전할 경우 '이전 상태의 찌꺼기'가 새 연결을 방해할 확률이 높습니다.
+
+### 해결 코드
+
+```javascript
+if (peerConnection.signalingState === 'stable') {
+  return; // 이미 연결된 상태라면 중복 호출 방지
+}
+await peerConnection.setRemoteDescription(description);
+
+```
+
+`setRemoteDescription`을 호출하기 전, 현재 상태를 체크하는 방어 로직이 필수입니다.
+
+자세한 내용은 관련 글 참조
+
+[WebRTC setRemoteDescription 에러 해결기: "Called in wrong state: stable"](https://www.notion.so/WebRTC-setRemoteDescription-Called-in-wrong-state-stable-2dcc8e16fda8801ebc87fd2b327eacde?pvs=21)
+
+---
+
+## 3. Electron은 왜 브라우저보다 더 엄격할까?
+
+개발을 진행하며 느낀 점은 Electron이 브라우저보다 훨씬 "보수적이고 엄격하다"는 것이었습니다. 그 이유는 크게 세 가지로 요약됩니다.
+
+{% table %}
+- **구분**
+- **브라우저**
+- **Electron**
+---
+- **인식**
+- 가벼운 웹 페이지
+- 독립적인 **소프트웨어**
+---
+- **보안**
+- 샌드박스 제한
+- **시스템 자원 접근 권한** 보유
+---
+- **상태 관리**
+- 유연함 (탭 단위)
+- **엄격함 (프로세스 단위)**
+{% /table %}
+
+1. **최적화 우선순위:** 앱은 켰을 때 0.1초라도 빨리 화면이 떠야 합니다. 이를 위해 로컬 캐시를 최우선으로 사용하므로 소스 수정 반영이 더디게 느껴집니다.
+1. **보안 책임:** Electron은 사용자 PC의 파일 시스템에 접근할 수 있습니다. 따라서 잘못된 상태에서의 통신이나 신뢰할 수 없는 스크립트 실행에 대해 브라우저보다 훨씬 민감하게 에러를 발생시킵니다.
+1. **리소스 독점:** 브라우저는 여러 사이트가 자원을 나눠 쓰지만, Electron은 하드웨어(카메라, 마이크 등)를 독점적으로 제어하려 합니다. 그래서 상태 동기화 오류에 타협이 없습니다.
+
+---
+
+## 마치며
+
+Electron 앱을 개발할 때는 **브라우저의 관성에서 벗어나 '소프트웨어'의 관점에서 접근**해야 한다는 것을 깨달았습니다.
+
+소스 수정이 반영되지 않는다면 가장 먼저 하드웨어에 저장된 데이터 폴더를 의심해 보고, WebRTC 같은 복잡한 상태 머신은 반드시 현재 상태를 체크하는 방어 코드를 작성해야 합니다.
+
+캐시 지옥에서 고생하고 계실 다른 프론트엔드 개발자분들께 이 글이 도움이 되길 바랍니다.
