@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@variant dark (&:where(.dark, .dark *));
 @import "./prism-theme.css";
 
 
@@ -35,14 +36,14 @@
   --spacing-element: 2rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --electric-blue: #ffffff;
-    --blue-light: #d4d4d4;
-    --blue-dark: #ffffff;
-  }
+/* Support both system preference (fallback) and manual toggle via class */
+
+:root.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --electric-blue: #ffffff;
+  --blue-light: #d4d4d4;
+  --blue-dark: #ffffff;
 }
 
 html {
@@ -92,9 +93,30 @@ body {
   font-family: var(--font-geist-mono), monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  .prose :not(pre)>code {
-    background-color: var(--gray-800);
-    color: var(--blue-light);
-  }
+.dark .prose :not(pre)>code {
+  background-color: var(--gray-800);
+  color: var(--blue-light);
+}
+
+/* Smooth theme transition */
+body,
+div,
+span,
+button,
+a,
+input,
+header,
+footer,
+section,
+article,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
 }
