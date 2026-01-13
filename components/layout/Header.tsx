@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export default function Header() {
   const pathname = usePathname();
@@ -57,6 +58,9 @@ export default function Header() {
               )}
             </Link>
           ))}
+
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           {/* Admin Link */}
           <Link

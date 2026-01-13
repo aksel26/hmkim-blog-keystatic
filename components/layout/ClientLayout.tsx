@@ -4,6 +4,8 @@ import { usePathname } from 'next/navigation';
 import Header from './Header';
 import Footer from './Footer';
 
+import { ThemeProvider } from '@/components/theme-provider';
+
 export default function ClientLayout({
   children,
 }: {
@@ -19,10 +21,14 @@ export default function ClientLayout({
   }
 
   return (
-    <>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+
+    >
       <Header />
       <main className="min-h-screen">{children}</main>
       <Footer />
-    </>
+    </ThemeProvider>
   );
 }
