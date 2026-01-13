@@ -2,6 +2,9 @@
 @plugin "@tailwindcss/typography";
 @import "./prism-theme.css";
 
+
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -26,7 +29,7 @@
   --color-gray-200: var(--gray-200);
   --color-gray-800: var(--gray-800);
   --color-gray-900: var(--gray-900);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-freesentation);
   --font-mono: var(--font-geist-mono);
   --spacing-section: 8rem;
   --spacing-element: 2rem;
@@ -42,17 +45,17 @@
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-}
-
-
 html {
   scroll-behavior: smooth;
   word-break: keep-all;
 }
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
 
 /* Remove automatic quotes from code and blockquote */
 .prose code::before,
@@ -80,7 +83,7 @@ html {
   font-family: var(--font-geist-mono), Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
 }
 
-.prose :not(pre) > code {
+.prose :not(pre)>code {
   background-color: var(--gray-100);
   color: var(--electric-blue);
   padding: 0.2em 0.4em;
@@ -90,9 +93,8 @@ html {
 }
 
 @media (prefers-color-scheme: dark) {
-  .prose :not(pre) > code {
+  .prose :not(pre)>code {
     background-color: var(--gray-800);
     color: var(--blue-light);
   }
 }
-
