@@ -40,14 +40,14 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
 
             {/* Text Hero Section */}
             <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-4xl">
-                <span className="mb-6 inline-block rounded-full bg-gray-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80">
+                <span className="mb-6 inline-block rounded-full bg-gray-100 dark:bg-gray-800 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80 dark:text-foreground/90">
                     {post.category}
                 </span>
                 <h1 className="mb-8 text-3xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-5xl">
                     {post.title}
                 </h1>
 
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60">
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
                     {post.location && (
                         <span className="flex items-center gap-2">
                             <span>📍</span>
@@ -82,7 +82,7 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
 
             {/* Content Section */}
             <article className="container mx-auto px-6 max-w-[800px]">
-                <div className="prose prose-lg prose-gray mx-auto">
+                <div className="prose prose-lg prose-gray dark:prose-invert mx-auto">
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
@@ -95,7 +95,7 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                         {post.gallery
                             .filter((item): item is string => typeof item === 'string')
                             .map((img, idx) => (
-                                <div key={idx} className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100">
+                                <div key={idx} className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
                                     <Image
                                         src={img}
                                         alt={`${post.title} gallery image ${idx + 1}`}

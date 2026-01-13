@@ -44,13 +44,13 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                     {post.tags.map((tag) => (
                         <span
                             key={tag}
-                            className="rounded-md bg-electric-blue/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-electric-blue"
+                            className="rounded-md bg-electric-blue/10 dark:bg-electric-blue/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-electric-blue dark:text-blue-400"
                         >
                             #{tag}
                         </span>
                     ))}
                     {post.difficulty && (
-                        <span className="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold capitalize tracking-wider text-foreground">
+                        <span className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1 text-xs font-semibold capitalize tracking-wider text-foreground">
                             {post.difficulty} Level
                         </span>
                     )}
@@ -64,7 +64,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                     {post.summary}
                 </p>
 
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60">
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
                     <time className="flex items-center gap-2">
                         <span>📅</span>
                         {formatDate(post.publishedAt || '')}
@@ -74,7 +74,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                             href={post.githubLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 font-medium text-electric-blue transition-colors hover:text-blue-dark"
+                            className="flex items-center gap-2 font-medium text-electric-blue dark:text-blue-400 transition-colors hover:text-blue-dark dark:hover:text-blue-300"
                         >
                             <span>💻</span>
                             View on GitHub
@@ -85,13 +85,13 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
 
             {/* Article Content */}
             <article className="container mx-auto px-6 max-w-[800px]">
-                <div className="prose prose-lg prose-gray mx-auto">
+                <div className="prose prose-2xl prose-gray dark:prose-invert mx-auto">
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
 
             {/* Navigation */}
-            <div className="border-t border-gray-200 bg-white py-12 mt-20">
+            <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-20">
                 <div className="container mx-auto max-w-5xl px-6 text-center">
                     <Link
                         href="/tech"

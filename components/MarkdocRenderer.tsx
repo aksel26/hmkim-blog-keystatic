@@ -30,7 +30,7 @@ const components = {
 export function MarkdocRenderer({ node }: MarkdocRendererProps) {
     const renderable = Markdoc.transform(node, config);
     return (
-        <div className="prose mx-auto">
+        <div className="prose dark:prose-invert mx-auto max-w-none">
             {Markdoc.renderers.react(renderable, React, { components })}
         </div>
     );
