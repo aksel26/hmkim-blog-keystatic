@@ -58,11 +58,10 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-              selectedCategory === null
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-foreground hover:bg-gray-200'
-            }`}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === null
+              ? 'bg-orange-500 text-white dark:text-gray-700'
+              : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
           >
             All
           </button>
@@ -70,11 +69,10 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
             <button
               key={category.value}
               onClick={() => setSelectedCategory(category.value)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                selectedCategory === category.value
-                  ? 'bg-orange-500 text-white'
-                  : 'bg-gray-100 text-foreground hover:bg-gray-200'
-              }`}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === category.value
+                ? 'bg-orange-500 text-white dark:text-gray-700'
+                : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
             >
               <span>{category.emoji}</span>
               <span>{category.label}</span>
@@ -96,11 +94,11 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden rounded-xl bg-gray-50"
+            className="group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900"
           >
             <Link href={`/life/${post.slug}`} className="block">
               {/* Image */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-gray-200">
+              <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
                 {post.thumbnail ? (
                   <Image
                     src={post.thumbnail}

@@ -22,7 +22,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="border-t border-gray-200 bg-gray-50">
+    <footer className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-background">
       <div className="container mx-auto max-w-7xl px-6 py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* Brand Section */}

@@ -51,11 +51,10 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedTag(null)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-              selectedTag === null
-                ? 'bg-electric-blue text-white'
-                : 'bg-gray-100 text-foreground hover:bg-gray-200'
-            }`}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === null
+              ? 'bg-electric-blue text-white dark:text-gray-700'
+              : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
+              }`}
           >
             All
           </button>
@@ -63,11 +62,10 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             <button
               key={tag}
               onClick={() => setSelectedTag(tag)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${
-                selectedTag === tag
-                  ? 'bg-electric-blue text-white'
-                  : 'bg-gray-100 text-foreground hover:bg-gray-200'
-              }`}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === tag
+                ? 'bg-electric-blue text-white dark:text-gray-700'
+                : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
+                }`}
             >
               {tag}
             </button>
@@ -88,7 +86,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-6 transition-all hover:border-electric-blue hover:shadow-xl"
+            className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 transition-all hover:border-electric-blue hover:shadow-xl"
           >
             <Link href={`/tech/${post.slug}`} className="block">
               {/* Difficulty Badge */}
@@ -122,13 +120,13 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                   {post.tags.slice(0, 3).map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-foreground/80"
+                      className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80"
                     >
                       #{tag}
                     </span>
                   ))}
                   {post.tags.length > 3 && (
-                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-foreground/80">
+                    <span className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80">
                       +{post.tags.length - 3}
                     </span>
                   )}
