@@ -1,0 +1,157 @@
+---
+title: '파일 I/O: Buffer, Blob, API Routes를 통한 바이너리 데이터 스트리밍 가이드'
+summary: >-
+  웹 환경에서 이진 데이터를 다루는 것은 단순 텍스트 처리와 다릅니다. File, Buffer, Blob의 변환 과정과 API Routes를
+  통한 효율적인 파일 전송 원리를 분석합니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - BinaryData
+  - Node.js
+  - Javascript
+createdAt: 2025-11-04
+updatedAt: 2025-11-04
+---
+웹 애플리케이션에서 파일 입출력을 다루는 것은 JSON 데이터를 주고받는 것과는 근본적으로 다릅니다.
+
+이 과정은 **이진 데이터(Binary Data)**를 클라이언트와 서버 간에 손실 없이 전송하고, 각 런타임(Browser vs Node.js)에 적합한 데이터 형식으로 변환하는 과정을 수반합니다.
+
+> 이 글에서는 Next.js 환경을 기반으로 파일 업로드부터 서버 처리, 그리고 클라이언트 다운로드까지의 **전체 바이너리 데이터 파이프라인**을 상세히 살펴봅니다.
+
+### 1. 클라이언트 ➔ 서버: 파일 업로드와 `Buffer` 변환
+
+사용자가 선택한 `File` 객체는 브라우저에서 관리됩니다. 이를 서버(Node.js)로 보낸 뒤 서버가 이해할 수 있는 형식으로 다루려면 데이터 변환이 필요합니다.
+
+```javascript
+// 'file'은 <input type="file">에서 얻은 File 객체
+const arrayBuffer = await file.arrayBuffer();
+const buffer = Buffer.from(arrayBuffer);
+
+```
+
+### `file.arrayBuffer()` vs `Buffer.from()`
+
+- **`ArrayBuffer`**: 브라우저와 JS 엔진에서 사용되는 **범용 고정 길이 원시 이진 데이터 버퍼**입니다. 데이터 자체를 저장하는 용도이며, 직접 조작하려면 `TypedArray`나 `DataView`가 필요합니다.
+- **`Buffer`**: **Node.js 환경** 전용 객체입니다. `Uint8Array`를 상속받아 구현되었으며, Node.js의 파일 시스템(`fs`)이나 네트워크 작업에 최적화된 API를 제공합니다.
+
+> Tip: 브라우저의 ArrayBuffer가 '순수 저장소'라면, Node.js의 Buffer는 '도구가 포함된 저장소'라고 이해하면 쉽습니다.
+
+---
+
+### 2. 서버 ➔ 클라이언트: API Route를 이용한 효율적 응답
+
+서버의 파일을 클라이언트로 전송할 때는 단순히 데이터를 보내는 것을 넘어, 브라우저가 이를 '파일'로 인식하게 만드는 **HTTP 헤더 설정**이 핵심입니다.
+
+```javascript
+// app/api/download/[filename]/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { createReadStream, existsSync } from "fs";
+import { join } from "path";
+
+export async function GET(req: NextRequest, { params }: { params: { filename: string } }) {
+  const { filename } = params;
+  const filePath = join(process.cwd(), "public", "reports", filename);
+
+  if (!existsSync(filePath)) {
+    return NextResponse.json({ error: "File not found" }, { status: 404 });
+  }
+
+  // 1. 스트림 방식으로 파일 읽기 (대용량 파일 대응)
+  const stream = createReadStream(filePath);
+  
+  // 2. HTTP 응답 헤더 설정
+  const headers = new Headers();
+  headers.set("Content-Type", "application/octet-stream");
+  // RFC 5987 준수: 한글 파일명 깨짐 방지
+  const encodedFilename = encodeURIComponent(filename);
+  headers.set("Content-Disposition", `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`);
+
+  // 3. ReadableStream으로 변환하여 응답
+  return new NextResponse(stream as any, {
+    status: 200,
+    headers: headers,
+  });
+}
+
+```
+
+### 핵심 포인트
+
+1. **Streaming vs Buffering**: `readFileSync`는 파일을 메모리에 한꺼번에 올리지만, `createReadStream`은 청크(Chunk) 단위로 읽습니다. **대용량 파일 전송 시 서버 메모리 고갈(OOM)을 방지**하는 필수 기법입니다.
+1. **`Content-Disposition`**: 브라우저가 파일을 화면에 표시하지 않고 '다운로드' 하도록 강제합니다. `filename*` 옵션을 추가하면 한글 파일명도 안전하게 전달됩니다.
+
+---
+
+### 3. 클라이언트: `Blob` 수신 및 다운로드 트리거
+
+서버에서 보낸 이진 스트림을 브라우저 메모리에 담고, 사용자의 로컬 시스템으로 저장하는 과정입니다.
+
+```javascript
+async function downloadFile(report) {
+  const response = await axios.get(`/api/download/${report.filename}`, {
+    responseType: "blob", // 바이너리 데이터를 Blob으로 직접 받음
+  });
+
+  const blob = response.data;
+
+  // 1. Blob 객체에 대한 참조 URL 생성
+  const url = window.URL.createObjectURL(blob);
+
+  // 2. 가상 <a> 태그를 통한 다운로드 실행
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", report.filename);
+  document.body.appendChild(link);
+  link.click();
+
+  // 3. 필수: 메모리 해제
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+```
+
+### 가비지 컬렉션과 `revokeObjectURL`
+
+`URL.createObjectURL`로 생성된 URL은 해당 문서가 닫히기 전까지 메모리에 계속 남아있습니다.
+
+대용량 파일을 반복 다운로드할 경우 **메모리 누수(Memory Leak)**의 주범이 되므로, 작업 완료 후 반드시 `revokeObjectURL`을 호출해야 합니다.
+
+---
+
+### 요약: 바이너리 데이터 객체 비교
+
+{% table %}
+- **객체**
+- **환경**
+- **주요 용도**
+---
+- **ArrayBuffer**
+- Universal
+- 원시 데이터 저장 (조작 기능 없음)
+---
+- **Buffer**
+- Node.js
+- 서버 측 파일/네트워크 I/O 처리
+---
+- **Blob**
+- Browser
+- 불변 파일 데이터, 멀티미디어 리소스 참조
+---
+- **File**
+- Browser
+- Blob + 메타데이터 (이름, 수정일 등)
+{% /table %}
+
+### 마치며
+
+파일 I/O 처리는 프론트엔드와 백엔드 지식이 교차하는 지점입니다.
+
+단순히 코드를 복사하는 것에 그치지 않고, 각 환경에서 데이터가 어떻게 변환되는지 이해한다면 더 견고하고 성능 좋은 웹 서비스를 개발할 수 있습니다.
+
+**도움이 되셨나요?**
+
+위 내용 중 **대용량 파일 처리를 위한 스트림 API**에 대해 더 자세히 알고 싶으시다면 다음 포스팅에서 다루어 보겠습니다.
+
+궁금한 점은 댓글로 남겨주세요!

@@ -1,0 +1,226 @@
+---
+title: 'WebRTC setRemoteDescription 에러 해결기: "Called in wrong state: stable"'
+summary: WebRTC Signaling 버그를 해결하는 과정을 작성한 글입니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - WebRTC
+  - Javascript
+  - Socket
+createdAt: 2026-01-02
+updatedAt: 2026-01-02
+---
+## 🔥 문제 상황
+
+시험 감독 플랫폼을 개발하던 중, 응시자와 감독관 간 실시간 영상 연결을 위해 WebRTC를 사용하고 있었습니다.
+
+그런데 특정 상황에서 다음과 같은 에러가 발생했습니다:
+
+```javascript
+Uncaught (in promise) InvalidStateError: Failed to execute 'setRemoteDescription'
+on 'RTCPeerConnection': Failed to set remote answer sdp:
+Called in wrong state: stable
+
+
+```
+
+에러 메시지를 보면 RTCPeerConnection이 `stable` 상태일 때 answer를 설정하려다 실패한 것을 알 수 있습니다.
+
+## 🔍 원인 분석
+
+### WebRTC Signaling State 이해하기
+
+WebRTC는 peer 간 연결을 맺기 위해 다음과 같은 상태(signaling state)를 거칩니다:
+
+1. **stable**: 연결이 완료되었거나 아직 시작하지 않은 상태
+1. **have-local-offer**: 로컬에서 offer를 생성하고 설정한 상태
+1. **have-remote-offer**: 원격에서 offer를 받아 설정한 상태
+1. **have-local-pranswer**: 임시 answer를 로컬에 설정한 상태
+1. **have-remote-pranswer**: 임시 answer를 원격에서 받은 상태
+
+### 정상적인 WebRTC Offer-Answer 흐름
+
+```
+[Offerer]                              [Answerer]
+   |                                        |
+   |-- createOffer() ----------------------|
+   |-- setLocalDescription(offer) ---------|
+   |   (state: have-local-offer)           |
+   |                                        |
+   |-- send offer -----------------------→ |
+   |                                        |-- setRemoteDescription(offer)
+   |                                        |   (state: have-remote-offer)
+   |                                        |-- createAnswer()
+   |                                        |-- setLocalDescription(answer)
+   |                                        |   (state: stable)
+   |                                        |
+   | ←--------------------- send answer ---|
+   |                                        |
+   |-- setRemoteDescription(answer) -------|
+   |   (state: stable) ✅                  |
+
+
+```
+
+### 문제의 원인
+
+우리 코드에서는 `USER_ANSWER` 이벤트를 받았을 때 **무조건** `setRemoteDescription(answer)`를 호출하고 있었습니다:
+
+```javascript
+socket?.on(SOCKET_EVENT.USER_ANSWER, (peerId, description) => {
+  peerConnections[peerId].setRemoteDescription(description); // ❌ 상태 체크 없음
+  // ...
+});
+
+
+```
+
+이렇게 되면 다음과 같은 문제 상황이 발생할 수 있습니다:
+
+- **중복된 answer를 받았을 때**: 이미 stable 상태인데 또 answer를 설정하려고 시도
+- **offer를 보내지 않은 상태에서 answer를 받았을 때**: stable 상태에서 바로 answer 설정 시도
+- **비동기 처리 중 타이밍 이슈**: 네트워크 지연으로 인해 예상치 못한 순서로 이벤트 수신
+
+## ✅ 해결 방법
+
+### 1. Signaling State 검증 추가
+
+answer를 설정하기 전에 현재 연결이 올바른 상태(`have-local-offer`)인지 확인합니다:
+
+```javascript
+socket?.on(SOCKET_EVENT.USER_ANSWER, async (peerId, description) => {
+  // 1️⃣ PeerConnection 존재 여부 확인
+  if (!peerConnections[peerId]) {
+    console.error(`[WebRTC] PeerConnection ${peerId} not found`);
+    return;
+  }
+
+  // 2️⃣ 현재 Signaling State 확인
+  const signalingState = peerConnections[peerId].signalingState;
+  console.log(`[WebRTC] Current signaling state for ${peerId}:`, signalingState);
+
+  // 3️⃣ have-local-offer 상태일 때만 answer 설정
+  if (signalingState === 'have-local-offer') {
+    try {
+      await peerConnections[peerId].setRemoteDescription(description);
+      console.log(`[WebRTC] Remote description set successfully for ${peerId}`);
+    } catch (error) {
+      console.error(`[WebRTC] Failed to set remote description for ${peerId}:`, error);
+      return;
+    }
+  } else {
+    console.warn(
+      `[WebRTC] Cannot set remote answer in ${signalingState} state. ` +
+      `Expected 'have-local-offer'`
+    );
+    return;
+  }
+
+  // 4️⃣ ontrack 이벤트 핸들러 설정
+  peerConnections[peerId].ontrack = (event) => {
+    // 스트림 처리...
+  };
+});
+
+
+```
+
+### 2. Offer 처리 시 에러 핸들링 강화
+
+offer를 받아서 answer를 생성하는 부분에도 에러 처리를 추가합니다:
+
+```javascript
+peerConnections[peerId]
+  .setRemoteDescription(description)
+  .then(() => peerConnections[peerId].createAnswer())
+  .then((sdp) => peerConnections[peerId].setLocalDescription(sdp))
+  .then(() => {
+    socket.emit(
+      SOCKET_EVENT.ANSWER,
+      myPeerId,
+      socketId,
+      peerConnections[peerId].localDescription
+    );
+  })
+  .catch((error) => {
+    // ✅ 에러 캐치 추가
+    console.error(`[WebRTC] Error in offer-answer exchange for ${peerId}:`, error);
+  });
+
+
+```
+
+### 3. 모바일 연결에도 동일하게 적용
+
+모바일 화면 공유 기능에서도 같은 패턴으로 에러 처리를 추가합니다:
+
+```javascript
+socket?.on(
+  SOCKET_EVENT.USER_OFFER,
+  async (peerId, socketId, videoAnswer, description) => {
+    peerConnections[peerId] = new RTCPeerConnection(RTCConfig);
+
+    if (videoAnswer === "Y") {
+      my_video_stream
+        .getTracks()
+        .forEach((track) =>
+          peerConnections[peerId].addTrack(track, my_video_stream)
+        );
+    }
+
+    // ✅ try-catch로 전체 프로세스 감싸기
+    try {
+      await peerConnections[peerId].setRemoteDescription(description);
+      const answer = await peerConnections[peerId].createAnswer();
+      await peerConnections[peerId].setLocalDescription(answer);
+      socket?.emit(SOCKET_EVENT.ANSWER, myPeerId, socketId, answer);
+    } catch (error) {
+      console.error(`[WebRTC Mobile] Error in offer-answer exchange:`, error);
+      return;
+    }
+
+    // ontrack 핸들러 설정...
+  }
+);
+
+
+```
+
+## 📊 수정 효과
+
+### Before ❌
+
+- 특정 상황에서 `InvalidStateError` 발생
+- 에러 발생 시 연결 실패로 이어짐
+- 디버깅이 어려움 (에러만 표시되고 원인 파악 불가)
+
+### After ✅
+
+- Signaling state를 체크하여 잘못된 상태에서의 호출 방지
+- 에러 발생 시 graceful하게 처리
+- 상세한 로그로 디버깅 용이
+- 연결 안정성 향상
+
+## 🎯 핵심 포인트
+
+1. **WebRTC는 상태 기반 프로토콜**: 각 동작은 특정 상태에서만 유효합니다
+1. **Signaling State 확인 필수**: `setRemoteDescription` 호출 전 반드시 상태를 확인하세요
+1. **비동기 처리 주의**: WebRTC 작업은 모두 비동기이므로 `async/await`로 순서를 보장하세요
+1. **에러 처리는 필수**: Promise rejection을 항상 처리하여 안정성을 높이세요
+
+## 💡 결론
+
+WebRTC를 사용할 때는 단순히 API를 호출하는 것을 넘어서, **연결의 상태(state)를 이해하고 관리**하는 것이 중요합니다.
+
+특히 실시간 통신 환경에서는 네트워크 지연, 중복 메시지 등 예상치 못한 상황이 발생할 수 있으므로, 방어적 프로그래밍이 필요합니다.
+
+이번 수정으로 우리 플랫폼의 WebRTC 연결 안정성이 크게 향상되었고, 향후 유사한 문제가 발생해도 로그를 통해 빠르게 원인을 파악할 수 있게 되었습니다.
+
+---
+
+**참고 자료**
+
+- [MDN - RTCPeerConnection.signalingState](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/signalingState)
+- [MDN - RTCPeerConnection.setRemoteDescription()](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/setRemoteDescription)
+- [WebRTC Signaling and Negotiation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling)

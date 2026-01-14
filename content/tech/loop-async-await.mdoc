@@ -1,0 +1,245 @@
+---
+title: 자바스크립트 비동기 반복문, 제대로 쓰고 있나요?
+summary: >-
+  async/await를 반복문에서 쓰면 뭔가 느리다고 느낀 적 있나요? 순차 실행과 병렬 실행의 차이, 그리고 안전하게 처리하는 방법을
+  알아봅니다.
+keywords:
+  - Tech
+status: draft
+tags:
+  - Javascript
+  - Promise
+  - Async
+  - 비동기처리
+  - Await
+createdAt: 2025-11-07
+updatedAt: 2025-11-07
+---
+## 뭔가 느린데...?
+
+API 여러 개를 한 번에 호출해야 하는 상황, 다들 겪어보셨죠? 반복문 안에서 `await`를 쓰면 직관적이긴 한데, 막상 돌려보면 생각보다 느린 느낌이 들 때가 있어요. "왜 한 번에 안 날아가고 하나씩 기다리지?" 싶은 순간들이요.
+
+오늘은 자바스크립트에서 비동기 반복문을 다룰 때 흔히 겪는 문제들과, 상황에 맞게 제대로 쓰는 방법을 정리해볼게요.
+
+## 문제의 시작: for 루프에서 await
+
+유저 목록을 가져온다고 해볼까요?
+
+```
+const userIds = [1, 2, 3];
+
+for (const id of userIds) {
+  const user = await fetchUser(id);
+  console.log(user);
+}
+
+
+```
+
+이 코드는 잘 동작합니다. 하지만 **순차적으로** 실행돼요. `fetchUser(1)`이 끝나야 `fetchUser(2)`가 시작되고, 그게 끝나야 `fetchUser(3)`이 시작됩니다. 각 요청이 1초씩 걸린다면 총 3초가 필요하죠.
+
+순서가 중요한 상황이라면 이게 맞습니다. 하지만 독립적인 API 호출을 이렇게 하면 비효율적이에요.
+
+## map()에서 async 쓰기: 흔한 실수
+
+그럼 `map()`으로 한 번에 처리하면 되지 않을까요?
+
+```
+const userIds = [1, 2, 3];
+
+const results = userIds.map(async (id) => {
+  const user = await fetchUser(id);
+  return user;
+});
+
+console.log(results); // [Promise, Promise, Promise] ❌
+
+
+```
+
+어라, 유저 데이터 대신 Promise 배열이 나왔네요. `map()`은 비동기를 기다려주지 않거든요. 이렇게 하면 요청은 동시에 날아가는데 결과를 제대로 받을 수 없어요.
+
+올바른 방법은 `Promise.all()`을 사용하는 겁니다.
+
+```
+const results = await Promise.all(userIds.map((id) => fetchUser(id)));
+
+console.log(results); // [user1, user2, user3] ✅
+
+
+```
+
+이제 모든 요청이 병렬로 실행되고, 실제 유저 데이터를 받을 수 있습니다. 1초씩 3번 기다리는 게 아니라, 동시에 요청해서 대략 1초 만에 끝나는 거죠.
+
+## Promise.all()의 함정
+
+`Promise.all()`은 빠르긴 한데, 치명적인 단점이 있어요. **하나라도 실패하면 전체가 실패**합니다.
+
+```
+const results = await Promise.all(
+  userIds.map((id) => fetchUser(id)) // 만약 id=2가 404 에러면?
+);
+
+
+```
+
+`fetchUser(2)`가 에러를 던지면, 나머지 1번과 3번이 성공했든 말든 전체 결과를 받을 수 없어요. 이건 좀 아쉽죠.
+
+### 더 안전한 방법들
+
+### 1. Promise.allSettled() 사용하기
+
+모든 요청의 성공/실패를 개별적으로 처리하고 싶다면 이걸 쓰세요.
+
+```
+const results = await Promise.allSettled(userIds.map((id) => fetchUser(id)));
+
+results.forEach((result) => {
+  if (result.status === "fulfilled") {
+    console.log("✅ 성공:", result.value);
+  } else {
+    console.warn("❌ 실패:", result.reason);
+  }
+});
+
+
+```
+
+어떤 요청이 실패해도 다른 요청의 결과는 받을 수 있어요. 실무에서 더 실용적인 방법이죠.
+
+### 2. try/catch로 에러 처리하기
+
+각 요청마다 에러 핸들링을 넣는 방법도 있어요.
+
+```
+const results = await Promise.all(
+  userIds.map(async (id) => {
+    try {
+      return await fetchUser(id);
+    } catch (err) {
+      console.error(`유저 ${id} 조회 실패`, err);
+      return { id, name: "Unknown User" }; // 기본값 반환
+    }
+  })
+);
+
+
+```
+
+이렇게 하면 일부 요청이 실패해도 Promise.all() 자체는 성공적으로 완료되고, 실패한 부분에는 대체 데이터를 넣을 수 있어요.
+
+## 상황별 최적의 패턴
+
+### 순차 실행이 필요할 때
+
+다음 작업이 이전 결과에 의존하거나, API rate limit이 있을 때는 for...of를 쓰세요.
+
+```
+for (const id of userIds) {
+  const user = await fetchUser(id);
+  console.log(user);
+}
+
+
+```
+
+- 순서 보장됨
+- Rate limiting에 유리
+- 독립적인 요청에는 느림
+
+### 빠른 병렬 실행이 필요할 때
+
+각 작업이 독립적이고 동시 실행 가능할 때는 Promise.all()을 쓰세요.
+
+```
+const usersData = await Promise.all(userIds.map((id) => fetchUser(id)));
+
+
+```
+
+- 네트워크 요청이 많을 때 훨씬 빠름
+- 하나라도 실패하면 전체 실패 (핸들링 필수)
+
+### 안전한 병렬 실행이 필요할 때
+
+일부 실패해도 괜찮다면 Promise.allSettled()를 쓰세요.
+
+```
+const results = await Promise.allSettled(userIds.map((id) => fetchUser(id)));
+
+
+```
+
+- 각 요청의 성공/실패를 개별 처리
+- 가장 안전한 방법
+
+### 동시 실행 수를 제한하고 싶을 때
+
+API 서버 부하를 고려해야 할 때는 p-limit 같은 라이브러리를 쓰세요.
+
+```
+import pLimit from "p-limit";
+
+const limit = pLimit(2); // 동시에 2개씩만 실행
+
+const limitedFetches = userIds.map((id) => limit(() => fetchUser(id)));
+
+const results = await Promise.all(limitedFetches);
+
+
+```
+
+- 속도와 안정성의 균형
+- 외부 서비스 과부하 방지
+- 추가 라이브러리 필요
+
+## 절대 하지 말아야 할 것: forEach + await
+
+이건 정말 흔한 실수예요.
+
+```
+userIds.forEach(async (id) => {
+  const user = await fetchUser(id);
+  console.log(user); // ❌ 제대로 기다리지 않음
+});
+
+
+```
+
+`forEach()`는 콜백이 비동기든 말든 신경 쓰지 않고 그냥 지나갑니다. 요청은 날아가는데 완료 여부를 알 수 없고, 순서도 보장되지 않아요.
+
+대신 이렇게 쓰세요:
+
+- 순차 실행: `for...of + await`
+- 병렬 실행: `Promise.all() + map()`
+
+## 패턴 선택 가이드
+
+{% table %}
+- 목적
+- 패턴
+- 동시 실행 수
+---
+- 순서 유지, 하나씩 실행
+- `for...of + await`
+- 1
+---
+- 빠르게 전부 실행
+- `Promise.all() + map()`
+- 무제한
+---
+- 실행 수 제한
+- `p-limit` 등
+- N개 (커스텀)
+{% /table %}
+
+## 정리하면
+
+비동기 반복문은 의도에 맞게 쓰는 게 중요해요.
+
+- **순서가 중요하면** → `for...of`
+- **속도가 중요하면** → `Promise.all()`
+- **안정성이 중요하면** → `allSettled()` 또는 `try/catch`
+- **균형이 필요하면** → `p-limit` 등
+
+여러분의 코드에서도 비동기 반복문이 병목이 되고 있진 않은지 한번 확인해보세요!
