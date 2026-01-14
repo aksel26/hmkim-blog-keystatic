@@ -140,46 +140,56 @@ export default function Header({ onSearchOpen }: HeaderProps) {
       {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 top-16 z-40 flex flex-col bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-6 md:hidden border-t"
-          >
-            <div className="flex flex-col space-y-4">
-              {navItems.map((item, index) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={cn(
-                    'text-lg font-medium transition-colors p-2 rounded-md hover:bg-muted',
-                    isActive(item.href)
-                      ? 'text-electric-blue bg-muted/50'
-                      : 'text-foreground/80'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 top-16 z-40 bg-background/60 backdrop-blur-xl md:hidden h-screen"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-x-0 top-16 z-50 flex flex-col bg-background/80 backdrop-blur-lg p-6 md:hidden border-t border-b border-b-gray-100"
+            >
+              <div className="flex flex-col space-y-4">
+                {navItems.map((item, index) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={cn(
+                      'text-lg font-medium transition-colors p-2 rounded-md hover:bg-muted',
+                      isActive(item.href)
+                        ? 'text-electric-blue bg-muted/50'
+                        : 'text-foreground/80'
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
 
-              <div className="pt-4 border-t border-border flex items-center justify-between">
-                <span className="text-sm font-medium text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
+                <div className="pt-4 border-t border-t-gray-300 flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Theme</span>
+                  <ThemeToggle />
+                </div>
 
-              <div className="pt-2">
-                <Link
-                  href="/keystatic"
-                  className="block w-full rounded-md bg-electric-blue px-4 py-3 text-center text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Admin Dashboard
-                </Link>
+                <div className="pt-2">
+                  <Link
+                    href="/keystatic"
+                    className="block w-full rounded-md bg-electric-blue px-4 py-3 text-center text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Admin Dashboard
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </header>
