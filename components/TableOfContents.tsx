@@ -11,14 +11,9 @@ interface TableOfContentsProps {
 // Shared hook for TOC functionality
 function useToc(items: TocItem[]) {
     const [activeId, setActiveId] = useState<string | null>(null);
-    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (!mounted || items.length === 0) return;
+        if (items.length === 0) return;
 
         const observer = new IntersectionObserver(
             (entries) => {
@@ -40,7 +35,7 @@ function useToc(items: TocItem[]) {
         });
 
         return () => observer.disconnect();
-    }, [items, mounted]);
+    }, [items]);
 
     const handleClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
         e.preventDefault();
@@ -55,13 +50,13 @@ function useToc(items: TocItem[]) {
         }
     }, []);
 
-    return { activeId, handleClick, mounted };
+    return { activeId, handleClick };
 }
 
 // Mobile: Collapsible TOC
 export function MobileTableOfContents({ items }: TableOfContentsProps) {
     const [isOpen, setIsOpen] = useState(false);
-    const { activeId, handleClick, mounted } = useToc(items);
+    const { activeId, handleClick } = useToc(items);
 
     if (items.length === 0) return null;
 
@@ -72,7 +67,7 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
 
     const getItemClassName = (item: TocItem) => {
         const levelClass = item.level === 2 ? 'pl-0' : item.level === 3 ? 'pl-4' : 'pl-8';
-        const activeClass = mounted && activeId === item.id
+        const activeClass = activeId === item.id
             ? 'text-electric-blue font-medium'
             : 'text-foreground/60 hover:text-foreground/90';
         return `block py-1.5 text-sm transition-colors ${levelClass} ${activeClass}`;
@@ -104,7 +99,7 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
                                     onClick={(e) => handleItemClick(e, item.id)}
                                     className={getItemClassName(item)}
                                 >
-                                    {item.text || `(No text - id: ${item.id})`}
+                                    {item.text}
                                 </a>
                             ))}
                         </nav>
@@ -117,13 +112,13 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
 
 // Desktop: Sticky TOC
 export function DesktopTableOfContents({ items }: TableOfContentsProps) {
-    const { activeId, handleClick, mounted } = useToc(items);
+    const { activeId, handleClick } = useToc(items);
 
     if (!items || items.length === 0) return null;
 
     const getItemClassName = (item: TocItem) => {
         const levelClass = item.level === 2 ? 'pl-3' : item.level === 3 ? 'pl-5' : 'pl-7';
-        const activeClass = mounted && activeId === item.id
+        const activeClass = activeId === item.id
             ? 'border-electric-blue text-foreground font-medium'
             : 'border-transparent text-foreground/50 hover:text-foreground/80 hover:border-gray-300 dark:hover:border-gray-600';
         return `block py-1 text-[13px] leading-snug transition-all duration-200 border-l-2 ${levelClass} ${activeClass}`;
@@ -142,7 +137,7 @@ export function DesktopTableOfContents({ items }: TableOfContentsProps) {
                         onClick={(e) => handleClick(e, item.id)}
                         className={getItemClassName(item)}
                     >
-                        {item.text || `(No text - id: ${item.id})`}
+                        {item.text}
                     </a>
                 ))}
             </nav>
