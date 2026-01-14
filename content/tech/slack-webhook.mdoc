@@ -1,0 +1,122 @@
+---
+title: 배포 요청 Slack App 개발기 - GitHub Webhook 연동 자동화
+summary: >-
+  운영 서버 수동 배포의 불편함을 해결하기 위한 Slack 알림 시스템 구축. GitHub PR과 연동된 실시간 배포 상태 관리 앱 개발
+  과정을 공유합니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - Javascript
+  - Webhook
+  - Slack
+  - Github
+createdAt: 2024-06-25
+updatedAt: 2024-06-25
+---
+## ⚙️ 동작 흐름: 한눈에 보는 워크플로우
+
+개발자가 코드를 올리는 순간부터 배포 상태가 업데이트되기까지의 전체 흐름은 다음과 같습니다.
+
+1. **PR 생성:** 개발자가 `prod` 브랜치로 Pull Request 생성.
+1. **Webhook 발동:** GitHub가 이벤트를 감지하여 **Firebase Functions** URL로 데이터 전송.
+1. **알림 전송:** Firebase에서 데이터를 가공해 Slack 채널에 배포 요청 카드(Block Kit) 발송.
+1. **상태 업데이트:** 담당자가 Slack에서 **[배포 예정]** 버튼 클릭 → 메시지가 실시간으로 업데이트되며 상태 공유.
+
+---
+
+## 🛠️ 개발 과정: 단계별 핵심 포인트
+
+### 1. Firebase Functions: Webhook 핸들러
+
+GitHub로부터 받은 데이터를 파싱하여 Slack으로 전달하는 가교 역할을 합니다. `prod` 브랜치에 대한 이벤트만 필터링하는 것이 핵심입니다.
+
+```javascript
+// prod 브랜치에 대한 PR 오픈 이벤트만 필터링
+if (pull_request && pull_request.base.ref === 'prod' && action === 'opened') {
+  await sendSlackMessage(prData);
+}
+
+```
+
+### 2. Slack Block Kit: UX 디자인의 진화
+
+단순 텍스트 알림에서 인터랙티브한 버튼형 UI로 발전시켰습니다.
+
+{% table %}
+- **버전**
+- **특징**
+- **비고**
+---
+- **V1. 텍스트**
+- 단순 알림만 제공
+- 가독성 낮음
+---
+- **V2. 구조화**
+- 섹션과 필드로 정보 구분
+- PR 제목, 작성자 한눈에 파악
+---
+- **V3. 인터랙티브**
+- **[배포 예정]** 버튼 추가
+- **실시간 상태 관리 가능** ✅
+{% /table %}
+
+![](/images/tech/slack-webhook/1.webp)
+
+V1
+
+![](/images/tech/slack-webhook/2.webp)
+
+V2
+
+![](/images/tech/slack-webhook/3.webp)
+
+V3
+
+---
+
+## 🔍 트러블슈팅: 404 에러와 `@slack/bolt` 이슈
+
+### 문제 상황
+
+Slack API의 **Interactivity & Shortcuts** 설정 후 버튼을 눌렀을 때 계속해서 `404 Not Found`가 발생하며 Firebase Console에 로그조차 찍히지 않았습니다.
+
+### 시도와 좌절
+
+- `@slack/bolt` 라이브러리를 사용해 `app.action`으로 라우팅하려 했으나, Firebase Functions의 요청 구조와 충돌하며 진입조차 못 하는 현상 발생.
+- 의미를 알 수 없는 `TypeError: Cannot read properties of undefined (reading 'apply')` 에러 반복.
+
+### 해결책: "Back to the Basic"
+
+복잡한 라이브러리 대신 **표준 HTTP 요청 처리** 방식을 선택했습니다. `req.body.payload`를 직접 파싱하고, Slack에서 제공하는 `response_url`을 추출하여 직접 `axios.post`를 날리는 방식으로 해결했습니다.
+
+> 핵심 인사이트: 라이브러리가 환경(Serverless 등)과 충돌할 땐 원시 데이터를 직접 다루는 것이 가장 명확한 해결책이 될 수 있습니다. response_url만 있으면 기존 메시지를 자유롭게 업데이트할 수 있습니다.
+
+---
+
+## 🏗️ 전체 시스템 아키텍처
+
+- **Event Source:** GitHub Webhooks (PR 이벤트 감지)
+- **Backend:** Firebase Functions (서버리스 API 구현)
+- **Interface:** Slack API (Block Kit UI)
+- **Communication:** Node.js + Axios (HTTP 요청 처리)
+
+---
+
+## 🚀 성과 및 회고
+
+### 얻은 것들
+
+1. **커뮤니케이션 비용 감소:** "배포됐나요?"라는 질문 대신 Slack의 ✅ 표시만 확인하면 됩니다.
+1. **누락 없는 배포:** 모든 운영 배포 건이 채널에 기록되어 담당자가 놓칠 리가 없습니다.
+1. **디버깅 능력 향상:** 외부 Webhook과 Serverless 환경에서의 통신 흐름을 깊게 이해하게 되었습니다.
+
+### 향후 개선 계획
+
+- **권한 제어:** 특정 담당자만 배포 버튼을 클릭할 수 있도록 인증 로직 추가.
+- **로컬 테스트 환경:** `ngrok`을 활용해 배포 없이 로컬에서 Slack 이벤트를 수신하는 환경 구축.
+- **상태 세분화:** [배포 중], [배포 완료] 등 단계별 버튼과 타임스탬프 기록.
+
+---
+
+**이 프로젝트와 관련된 코드가 궁금하시거나, 비슷한 자동화 경험이 있다면 댓글로 공유해 주세요!**

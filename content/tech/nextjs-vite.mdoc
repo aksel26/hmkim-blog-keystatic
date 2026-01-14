@@ -1,0 +1,309 @@
+---
+title: 설문조사 앱 개발, Next.js 대신 Vite + React를 선택한 이유
+summary: 사내 설문조사 앱 개발 시 Next.js 대신 Vite + React를 선택한 실전 경험을 공유합니다. SEO 요구사항, 개발 속도, 번들 사이즈, 배포 전략 등 7가지 관점에서 두 프레임워크를 비교 분석하고, 프로젝트 특성에 맞는 기술 선택 기준을 제시합니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - Vite
+  - React
+  - Next.js
+  - 프론트엔드
+createdAt: 2025-08-01
+updatedAt: 2025-08-01
+---
+
+사내 성격진단 서비스 개발 프로젝트를 시작하면서 가장 먼저 마주한 선택은 "어떤 프레임워크를 사용할 것인가"였습니다. 
+
+Next.js와 Vite + React, 두 선택지 모두 훌륭한 도구지만, 프로젝트의 특성과 요구사항을 고려했을 때 Vite + React가 더 적합하다고 판단했습니다. 
+
+이 글에서는 그 이유를 구체적으로 공유하겠습니다.
+
+## 프로젝트 특성 분석
+
+외부 유료 성격진단 서비스를 대체하기 위한 이번 프로젝트는 다음과 같은 특징을 가지고 있었습니다.
+
+- **사내 직원 대상의 폐쇄형 서비스** (검색 엔진 노출 불필요)
+- **설문 응답 → 결과 확인**의 단순한 사용자 플로우
+- **실시간 인터랙션이 중요한 SPA 특성**
+- **빠른 개발과 배포가 필요한 과제 프로젝트**
+
+이러한 특성을 바탕으로 기술 선택의 기준을 정리했습니다.
+
+## 비교 분석
+
+### 1. SEO 요구사항
+
+**Next.js의 강점**
+
+- 서버 사이드 렌더링(SSR)을 통한 검색 엔진 최적화
+- 메타 태그 관리가 용이한 구조
+- 공개 서비스나 마케팅 페이지에 유리
+
+**Vite + React 선택 이유**
+
+```jsx
+// 사내 폐쇄형 서비스 특성
+- 검색 엔진 노출이 필요 없는 인트라넷 환경
+- 직원 계정 기반 접근 제어
+- SEO보다 사용자 경험이 우선
+
+```
+
+사내 서비스이기 때문에 Google이나 Naver에 노출될 필요가 없었습니다. 오히려 보안상 노출되지 않는 것이 바람직했죠. Next.js의 가장 큰 장점인 SEO 최적화가 우리 프로젝트에는 오버스펙이었습니다.
+
+### 2. 개발 경험 (DX)
+
+**Vite의 압도적인 개발 속도**
+
+```bash
+# Vite 개발 서버 시작 속도
+npm run dev
+# → 평균 200-300ms
+
+# Next.js 개발 서버 시작 속도
+npm run dev
+# → 평균 1-2초
+
+```
+
+실제 개발하면서 느낀 차이는 명확했습니다.
+
+**Vite의 HMR (Hot Module Replacement)**
+
+- 코드 수정 후 브라우저 반영: **50ms 이내**
+- 번들링 없이 ESM을 활용한 즉각적인 업데이트
+- 설문 문항 수정, UI 조정 등 반복 작업에서 생산성 향상
+
+**Next.js의 경우**
+
+- 페이지 라우팅 구조로 인한 약간의 오버헤드
+- Fast Refresh는 훌륭하지만 Vite만큼 빠르지는 않음
+
+과제 프로젝트 특성상 빠른 프로토타이핑과 반복 개발이 중요했기에, Vite의 개발 경험은 큰 장점이었습니다.
+
+### 3. 번들 사이즈와 성능
+
+**설문조사 앱의 번들 분석**
+
+```jsx
+// Vite + React 프로덕션 빌드 결과
+dist/assets/index-a3b2c1d4.js    142.35 kB
+dist/assets/index-e4f3g2h1.css   23.18 kB
+
+// 예상되는 Next.js 빌드 결과
+.next/static/chunks/main.js       ~85 kB (Next.js 런타임)
+.next/static/chunks/framework.js  ~50 kB (React 런타임)
++ 실제 페이지 코드
+
+```
+
+**Vite를 선택한 이유**
+
+- 불필요한 프레임워크 런타임 코드 제거
+- 순수하게 필요한 React 코드만 번들링
+- Tree-shaking이 더 적극적으로 동작
+- 최종 번들 사이즈 약 30% 감소
+
+설문조사 앱은 복잡한 라우팅이나 서버 기능이 필요 없었기 때문에, Next.js의 추가 런타임은 순수한 오버헤드였습니다.
+
+### 4. 라우팅 복잡도
+
+**프로젝트의 라우팅 구조**
+
+```jsx
+// 실제 필요한 라우팅
+/            → 메인 (설문 시작)
+/survey      → 설문 진행
+/result/:id  → 결과 확인
+/admin       → 관리자 페이지
+
+```
+
+**React Router vs Next.js App Router**
+
+```jsx
+// React Router - 명시적이고 간단
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/survey" element={<Survey />} />
+        <Route path="/result/:id" element={<Result />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+// Next.js - 파일 시스템 기반 라우팅
+app/
+  page.tsx
+  survey/
+    page.tsx
+  result/
+    [id]/
+      page.tsx
+  admin/
+    page.tsx
+
+```
+
+4개의 페이지만 있는 단순한 구조에서는 React Router의 명시적인 라우팅이 오히려 더 직관적이었습니다. Next.js의 파일 시스템 기반 라우팅은 페이지가 많을 때 빛을 발하지만, 우리 프로젝트에는 과도했습니다.
+
+### 5. 배포 전략
+
+**Vite + React 배포의 단순함**
+
+```bash
+# 빌드
+npm run build
+
+# 결과물: 정적 파일
+dist/
+  index.html
+  assets/
+    index-xxx.js
+    index-xxx.css
+
+# 배포: 어디든 가능
+- Firebase Hosting
+- Vercel
+- Netlify
+- AWS S3 + CloudFront
+- 회사 내부 서버
+
+```
+
+**선택 이유**
+
+- 정적 파일만 있으면 되는 단순한 배포
+- 서버리스 환경에 최적화
+- 회사 인프라에 유연하게 대응 가능
+- 배포 파이프라인 구성이 간단
+
+Next.js는 서버가 필요한 기능(API Routes, ISR 등)이 있을 때 진가를 발휘하지만, 우리는 백엔드 API가 별도로 존재했기 때문에 정적 배포로 충분했습니다.
+
+### 6. 학습 곡선과 팀 협업
+
+**과제 프로젝트의 현실**
+
+```jsx
+// 프로젝트 타임라인
+기획: 1주
+개발: 2주
+배포 및 피드백: 1주
+
+// 팀 구성
+PM/기획: 본인
+개발: 본인
+디자인: 본인
+
+```
+
+혼자서 모든 역할을 수행하는 상황에서 Vite + React의 장점:
+
+- React 개발자라면 바로 시작 가능
+- 추가 학습 비용 없음
+- Next.js의 App Router, Server Components 등 신규 개념 학습 불필요
+- 빠른 개발에 집중 가능
+
+### 7. 실제 사용 사례
+
+**설문 진행 화면 예시**
+
+```jsx
+// Vite + React로 구현한 설문 컴포넌트
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+function SurveyQuestion({ question, onAnswer }) {
+  const [selected, setSelected] = useState(null);
+
+  const handleSelect = (value) => {
+    setSelected(value);
+    // 즉각적인 상태 업데이트와 애니메이션
+    setTimeout(() => onAnswer(value), 300);
+  };
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -50 }}
+      >
+        <h2>{question.text}</h2>
+        {question.options.map((option) => (
+          <OptionButton
+            key={option.id}
+            selected={selected === option.id}
+            onClick={() => handleSelect(option.id)}
+          >
+            {option.text}
+          </OptionButton>
+        ))}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+```
+
+이런 인터랙티브한 UI는 클라이언트 사이드에서 즉각적으로 반응해야 합니다. Vite + React의 순수 CSR 방식이 더 적합했죠.
+
+## 성능 비교 결과
+
+실제 프로덕션 환경에서 측정한 지표입니다.
+
+| 지표 | Vite + React | Next.js (예상) |
+| --- | --- | --- |
+| 초기 로딩 속도 | 1.2s | 1.5s |
+| 첫 번째 의미있는 렌더링 (FCP) | 0.8s | 1.1s |
+| Time to Interactive (TTI) | 1.3s | 1.8s |
+| 번들 사이즈 | 165KB | 220KB |
+| 개발 서버 시작 | 0.3s | 1.5s |
+| HMR 속도 | 50ms | 150ms |
+
+## 트레이드오프 인정하기
+
+물론 Vite + React를 선택하면서 포기한 것들도 있습니다.
+
+**Next.js를 선택했다면 얻을 수 있었던 것들**
+
+- 이미지 최적화 (`next/image`)
+- API Routes를 통한 백엔드 통합
+- ISR, SSG 같은 하이브리드 렌더링 전략
+- 프로덕션 최적화가 자동으로 적용되는 편리함
+
+**하지만 우리 프로젝트에서는**
+
+- 이미지가 많지 않아 `react-lazy-load-image` 정도로 충분
+- 백엔드 API가 이미 별도로 존재
+- 실시간 인터랙션이 중요한 SPA 특성
+- 빠른 개발이 최우선
+
+## 결론
+
+설문조사 앱에서 Vite + React를 선택한 것은 "무엇이 더 좋은가"가 아니라 "무엇이 우리 프로젝트에 더 적합한가"의 문제였습니다.
+
+**Vite + React를 선택해야 하는 경우**
+
+- SEO가 필요 없는 사내 도구나 관리자 페이지
+- 실시간 인터랙션이 중요한 SPA
+- 빠른 개발과 프로토타이핑이 필요한 경우
+- 순수 클라이언트 사이드 렌더링으로 충분한 경우
+- 정적 배포만 필요한 경우
+
+**Next.js를 선택해야 하는 경우**
+
+- SEO가 중요한 공개 웹사이트
+- 복잡한 라우팅과 페이지가 많은 서비스
+- SSR, ISR 같은 하이브리드 렌더링이 필요한 경우
+- 이미지 최적화가 중요한 콘텐츠 중심 사이트
+- 풀스택 개발이 필요한 경우
+
+결국 도구는 문제를 해결하기 위한 수단입니다. 프로젝트의 본질적인 요구사항을 이해하고, 그에 맞는 도구를 선택하는 것이 중요합니다. 이번 설문조사 앱 개발을 통해, 때로는 "덜 사용하는 것"이 "더 많이 사용하는 것"보다 현명한 선택일 수 있다는 것을 다시 한번 깨달았습니다.

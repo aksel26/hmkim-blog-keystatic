@@ -1,0 +1,161 @@
+---
+title: '식대앱 개발기 #3: AWS Lightsail 배포와 HTTPS 적용 완벽 가이드'
+summary: >-
+  개발은 배포부터가 시작입니다. AWS Lightsail과 Nginx, HTTPS 설정을 통해 24시간 중단 없는 서비스를 구축한 과정을
+  담았습니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - AWS
+  - PM2
+  - Nginx
+  - Certbot
+  - SSL
+createdAt: 2024-09-20
+updatedAt: 2024-09-20
+---
+## 🚀 시작하며: "개발은 끝났지만, 배포는 이제 시작이다"
+
+[1편: SMB의 한계](https://www.notion.so/devLog/app-log-1)와 [2편: AWS 전환 및 기능 구현](https://www.notion.so/devLog/app-log-2)을 거쳐 앱은 완성되었습니다. 하지만 내 컴퓨터(`localhost`)에서만 돌아가는 앱은 실제 서비스가 아니죠. 전 직원이 안정적으로 사용할 수 있는 인프라를 구축하기 위해 제가 선택한 여정을 소개합니다.
+
+---
+
+## 🏗️ 인프라 선택: 왜 AWS Lightsail인가?
+
+처음엔 EC2를 고민했지만, 소규모 프로젝트에는 설정이 복잡하고 가격 예측이 어려웠습니다. 동료의 추천으로 만난 **Lightsail**은 그야말로 신세계였습니다.
+
+### Lightsail vs EC2, 한눈에 비교하기
+
+{% table %}
+- 항목
+- AWS Lightsail
+- AWS EC2
+---
+- **설정 난이도**
+- 🟢 매우 쉬움 (원클릭)
+- 🔴 높음 (VPC, 보안그룹 등)
+---
+- **가격 체계**
+- 🟢 고정 요금 (예측 가능)
+- 🟡 사용량 기반 (변동폭 큼)
+---
+- **적합한 규모**
+- 개인/소규모 프로젝트 ✅
+- 중대규모/엔터프라이즈
+---
+- **특징**
+- 통합 대시보드 관리
+- 세밀한 커스터마이징
+{% /table %}
+
+---
+
+## 🔄 무중단 서비스를 위한 PM2 설정
+
+서버가 에러로 꺼지거나, 코드를 수정할 때마다 서비스가 중단되면 안 되겠죠? **PM2**를 도입해 '24시간 잠들지 않는 서버'를 만들었습니다.
+
+### 핵심: Ecosystem 파일로 관리하기
+
+단순 실행(`pm2 start`) 대신 설정 파일을 사용해 클러스터 모드와 로그 관리를 자동화했습니다.
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: "meal-app",
+    script: "./server.js",
+    instances: "max", // CPU 코어 수만큼 프로세스 생성 (부하 분산)
+    exec_mode: "cluster",
+    env: { NODE_ENV: "production" },
+    max_memory_restart: "500M", // 메모리 과부하 시 자동 재시작
+    log_date_format: "YYYY-MM-DD HH:mm:ss",
+    error_file: "./logs/err.log",
+    out_file: "./logs/out.log"
+  }]
+};
+
+```
+
+## 🤖 CI/CD: "Push하면 배포는 알아서 하세요"
+
+매번 서버에 접속해 `git pull`을 하는 수동 배포는 실수를 유발합니다. **GitHub Actions**를 통해 배포 자동화를 구축했습니다.
+
+### 배포 파이프라인 흐름
+
+1. `main` 브랜치에 코드 **Push**
+1. GitHub Actions가 코드를 체크아웃하고 **의존성 설치 및 빌드**
+1. **rsync**를 이용해 Lightsail 서버로 파일 전송
+1. **PM2 reload**를 실행해 무중단 배포 완료
+
+> 효과: 배포 시간이 10분에서 1분 내외로 단축되었고, 휴먼 에러를 예방할 수 있었습니다.
+
+## 🌐 도메인과 HTTPS: 보안의 완성
+
+`http://[IP주소]`는 신뢰도가 떨어지고 PWA 기능을 100% 활용할 수 없습니다. **Nginx**와 **Let's Encrypt**로 보안을 강화했습니다.
+
+### 1. Nginx 리버스 프록시 설정
+
+Nginx는 외부의 80(HTTP)/443(HTTPS) 요청을 받아 내부의 3000(Node.js) 포트로 연결해주는 '문지기' 역할을 합니다.
+
+```JSON
+# /etc/nginx/sites-available/meal-app
+server {
+    listen 80;
+    server_name meal.acg-playground.com;
+
+    location / {
+        proxy_pass <http://localhost:3000>;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+```
+
+### 2. Certbot으로 1분 만에 SSL 적용
+
+`Certbot` 라이브러리를 사용해 무료 SSL 인증서를 발급받고 HTTPS를 적용했습니다.
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d meal.acg-playground.com
+
+```
+
+- **결과:** 주소창의 🔒 자물쇠 아이콘 획득! 90일마다 자동으로 갱신되도록 크론탭 설정까지 마쳤습니다.
+  - PWA 배포환경에서도 동작가능
+  - 클립보드 복사 기능 동작
+
+## 📊 프로젝트 결과 및 회고
+
+### 🎉 최종 성과
+
+- **대표님 승인:** 정식 사내 시스템으로 채택되어 전 직원이 사용 중입니다.
+- **업무 효율 향상:** 직원 1인당 일평균 5분의 불필요한 작업 시간 단축.
+- **데이터 가시성:** 엑셀 파일을 일일이 열지 않고도 실시간 잔액 확인 가능.
+
+### 🧠 배운 점
+
+1. **작은 것부터 시작하라(MVP):** 처음부터 완벽한 인프라를 짜기보다 하나씩 확장하는 재미를 알게 되었습니다.
+1. **자동화는 선택이 아닌 필수:** CI/CD와 PM2는 운영자의 삶의 질을 바꿉니다.
+1. **풀스택의 관점:** 단순히 코드만 짜는 것이 아니라, 서버 리소스와 보안을 고민하며 개발의 시야가 넓어졌습니다.
+
+---
+
+## 🏁 마무리하며
+
+프론트엔드 개발 지식만으로 시작했던 이 프로젝트는, 제게 **기획, 디자인, 인프라, 보안**을 아우르는 소중한 경험을 선물해주었습니다. 막막함 속에서 하나씩 문제를 해결해 나가는 과정이 바로 개발의 진짜 매력이 아닐까 싶습니다.
+
+그동안 식대앱 개발기 시리즈를 읽어주셔서 감사합니다! 궁금한 점이나 여러분만의 배포 노하우가 있다면 댓글로 남겨주세요. 🙌
+
+---
+
+**시리즈 완결**
+
+1. [\#1: SMB 프로토콜과 Express.js](https://www.google.com/search?q=/devLog/app-log-1)
+1. [\#2: AWS Lightsail과 Google Sheets](https://www.google.com/search?q=/devLog/app-log-2)
+1. **#3: 배포와 HTTPS 적용** (현재 글)
