@@ -95,76 +95,72 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
             key={post.slug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -8 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900"
+            className="group relative flex flex-col overflow-hidden rounded-xl"
           >
-            <Link href={`/life/${post.slug}`} className="block">
-              {/* Thumbnail */}
-              <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
-                {post.thumbnailImage ? (
-                  <Image
-                    src={post.thumbnailImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : post.thumbnailVideo ? (
-                  <video
-                    src={post.thumbnailVideo}
-                    className="w-full h-full object-cover"
-                    muted
-                    loop
-                    autoPlay
-                    playsInline
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-6xl">
-                    📷
-                  </div>
-                )}
+            <Link href={`/life/${post.slug}`} className="absolute inset-0 z-10" aria-label={`Read ${post.title}`}>
+              <span className="sr-only">Read {post.title}</span>
+            </Link>
 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-100 transition-opacity duration-500 group-hover:opacity-80" />
-
-                {/* Life Badge */}
-                <div className="absolute left-4 top-4">
-                  <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gray-900 backdrop-blur-sm">
-                    Life
-                  </span>
+            {/* Thumbnail */}
+            <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800">
+              {post.thumbnailImage ? (
+                <Image
+                  src={post.thumbnailImage}
+                  alt={post.title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : post.thumbnailVideo ? (
+                <video
+                  src={post.thumbnailVideo}
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  autoPlay
+                  playsInline
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-4xl text-gray-400">
+                  📷
                 </div>
+              )}
 
-                {/* Title Overlay */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h3 className="mb-1 text-xl font-medium leading-tight transition-transform duration-300 group-hover:translate-y-[-4px]">
-                    {post.title}
-                  </h3>
-                  {post.summary && (
-                    <p className="text-sm text-white/90 line-clamp-2">{post.summary}</p>
+              {/* Hashtags Badge */}
+              {post.tags && post.tags.length > 0 && (
+                <div className="absolute left-3 top-3 z-[5] flex gap-1 flex-wrap max-w-[80%]">
+                  {post.tags.slice(0, 2).map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                  {post.tags.length > 2 && (
+                    <span className="inline-flex items-center rounded-full bg-black/50 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                      +{post.tags.length - 2}
+                    </span>
                   )}
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Meta Info */}
-              <div className="p-4">
-                <div className="flex items-center justify-between text-xs text-foreground/60">
-                  <time>{formatDate(post.createdAt)}</time>
-                  <span className="font-medium text-orange-500">Read More →</span>
-                </div>
-                {/* Tags */}
-                {post.tags && post.tags.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1">
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-md bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 text-xs text-orange-600 dark:text-orange-400"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </Link>
+            {/* Content */}
+            <div className="pt-4 flex flex-col flex-1">
+              <h3 className="text-xl font-medium leading-tight tracking-tight mb-2 group-hover:underline decoration-1 underline-offset-4">
+                {post.title}
+              </h3>
+
+              <p className="text-foreground/50 text-sm line-clamp-2 mb-3">
+                {post.summary}
+              </p>
+
+              <time className="text-xs text-foreground/40 mt-auto">
+                {formatDate(post.createdAt)}
+              </time>
+            </div>
           </motion.article>
         ))}
       </motion.div>

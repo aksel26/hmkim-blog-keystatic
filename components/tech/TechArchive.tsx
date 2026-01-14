@@ -87,15 +87,16 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
-        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 gap-y-12"
       >
         {filteredPosts.map((post, index) => (
           <motion.article
             key={post.slug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -8 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all hover:border-electric-blue hover:shadow-xl"
+            className="group relative overflow-hidden dark:border-gray-800 bg-white dark:bg-gray-900 transition-all"
           >
             <Link href={`/tech/${post.slug}`} className="block">
               {/* Thumbnail */}
@@ -110,7 +111,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                 </div>
               )}
 
-              <div className="p-6">
+              <div className="">
                 {/* Title */}
                 <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-electric-blue">
                   {post.title}
@@ -145,8 +146,6 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                   </div>
                 )}
 
-                {/* Hover Indicator */}
-                <div className="absolute bottom-0 left-0 h-1 w-0 bg-electric-blue transition-all duration-300 group-hover:w-full" />
               </div>
             </Link>
           </motion.article>
