@@ -6,6 +6,8 @@ import { notFound } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
 import StickySidebar from '@/components/StickySidebar';
 import ScrollButtons from '@/components/ScrollButtons';
+import { MobileTableOfContents, DesktopTableOfContents } from '@/components/TableOfContents';
+import { extractTocFromMarkdoc } from '@/lib/toc';
 
 export async function generateStaticParams() {
     const posts = await getAllLifePosts(false);
@@ -23,11 +25,15 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
     }
 
     const { node } = await post.content();
+    const tocItems = extractTocFromMarkdoc(node);
 
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Sticky Sidebar */}
             <StickySidebar />
+
+            {/* Table of Contents (Desktop - fixed position) */}
+            <DesktopTableOfContents items={tocItems} />
 
             {/* Scroll Buttons */}
             <ScrollButtons />
@@ -134,6 +140,9 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
 
             {/* Content Section */}
             <article className="container mx-auto px-3 max-w-[800px]">
+                {/* Table of Contents (Mobile - collapsible) */}
+                <MobileTableOfContents items={tocItems} />
+
                 <div className="prose prose-lg prose-gray dark:prose-invert mx-auto">
                     <MarkdocRenderer node={node} />
                 </div>
