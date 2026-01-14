@@ -5,9 +5,28 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Search } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { SearchItem } from '@/lib/types';
 
-export default function Header() {
+interface HeaderProps {
+  onSearchOpen: () => void;
+}
+
+export default function Header({ onSearchOpen }: HeaderProps) {
   const pathname = usePathname();
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        onSearchOpen();
+      }
+    };
+
+    document.addEventListener('keydown', down);
+    return () => document.removeEventListener('keydown', down);
+  }, [onSearchOpen]);
 
   const isActive = (path: string) => {
     if (path === '/') return pathname === '/';
@@ -15,7 +34,6 @@ export default function Header() {
   };
 
   const navItems = [
-    { label: 'Home', href: '/' },
     { label: 'Tech', href: '/tech' },
     { label: 'Life', href: '/life' },
   ];
@@ -58,6 +76,18 @@ export default function Header() {
               )}
             </Link>
           ))}
+
+          {/* Search Trigger */}
+          <button
+            onClick={() => onSearchOpen()}
+            className="flex items-center gap-2 rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Search"
+          >
+            <Search className="h-5 w-5" />
+            <kbd className="hidden pointer-events-none h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-70 sm:flex">
+              <span className="text-xs">⌘</span>K
+            </kbd>
+          </button>
 
           {/* Theme Toggle */}
           <ThemeToggle />

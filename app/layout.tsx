@@ -1,4 +1,5 @@
 import ClientLayout from "@/components/layout/ClientLayout";
+import { getAllPosts } from "@/lib/keystatic/reader";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -14,17 +15,24 @@ export const metadata: Metadata = {
   description: "This is where I tell stories. Most of them are about tech and life.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const posts = await getAllPosts();
+  const searchData = posts.map((post) => ({
+    title: post.title,
+    slug: `/${post.category}/${post.slug}`,
+    category: post.category,
+  }));
+
   return (
     <html lang="ko" suppressHydrationWarning>
       <body
         className={`${freesentation.className} antialiased`}
       >
-        <ClientLayout>{children}</ClientLayout>
+        <ClientLayout searchData={searchData}>{children}</ClientLayout>
       </body>
     </html>
   );
