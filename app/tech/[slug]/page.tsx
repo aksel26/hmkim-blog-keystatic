@@ -1,12 +1,14 @@
 import { getTechPost, getAllTechPosts } from '@/lib/keystatic/reader';
 import { MarkdocRenderer } from '@/components/MarkdocRenderer';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
 import StickySidebar from '@/components/StickySidebar';
+import ScrollButtons from '@/components/ScrollButtons';
 
 export async function generateStaticParams() {
-    const posts = await getAllTechPosts();
+    const posts = await getAllTechPosts(false);
     return posts.map((post) => ({
         slug: post.slug,
     }));
@@ -15,7 +17,6 @@ export async function generateStaticParams() {
 export default async function TechPostPage(props: { params: Promise<{ slug: string }> }) {
     const params = await props.params;
     const post = await getTechPost(params.slug);
-
 
     if (!post) {
         notFound();
@@ -27,6 +28,9 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
         <div className="min-h-screen bg-background pb-20">
             {/* Sticky Sidebar */}
             <StickySidebar />
+
+            {/* Scroll Buttons */}
+            <ScrollButtons />
 
             {/* Back Navigation */}
             <div className="container mx-auto px-6 py-8 max-w-[800px]">
@@ -49,9 +53,9 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                             #{tag}
                         </span>
                     ))}
-                    {post.difficulty && (
-                        <span className="rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1 text-xs font-semibold capitalize tracking-wider text-foreground">
-                            {post.difficulty} Level
+                    {post.status === 'draft' && (
+                        <span className="rounded-md border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-yellow-600 dark:text-yellow-400">
+                            초안
                         </span>
                     )}
                 </div>
@@ -67,24 +71,61 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                 <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
                     <time className="flex items-center gap-2">
                         <span>📅</span>
-                        {formatDate(post.publishedAt || '')}
+                        등록: {formatDate(post.createdAt || '')}
                     </time>
-                    {post.githubLink && (
-                        <a
-                            href={post.githubLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 font-medium text-electric-blue dark:text-blue-400 transition-colors hover:text-blue-dark dark:hover:text-blue-300"
-                        >
-                            <span>💻</span>
-                            View on GitHub
-                        </a>
+                    {post.updatedAt && post.updatedAt !== post.createdAt && (
+                        <time className="flex items-center gap-2">
+                            <span>✏️</span>
+                            수정: {formatDate(post.updatedAt)}
+                        </time>
                     )}
                 </div>
+
+                {/* Keywords */}
+                {post.keywords && post.keywords.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                        {post.keywords.map((keyword) => (
+                            <span
+                                key={keyword}
+                                className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 text-xs text-foreground/70"
+                            >
+                                {keyword}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
+            {/* Thumbnail */}
+            {post.thumbnailImage && (
+                <div className="container mx-auto px-6 max-w-4xl mb-12">
+                    <div className="relative aspect-video overflow-hidden rounded-xl">
+                        <Image
+                            src={post.thumbnailImage}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
+                </div>
+            )}
+
+            {post.thumbnailVideo && (
+                <div className="container mx-auto px-6 max-w-4xl mb-12">
+                    <video
+                        src={post.thumbnailVideo}
+                        className="w-full rounded-xl"
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                    />
+                </div>
+            )}
+
             {/* Article Content */}
-            <article className="container mx-auto px-6 max-w-[800px]">
+            <article className="container mx-auto px-3 max-w-[800px]">
                 <div className="prose prose-2xl prose-gray dark:prose-invert mx-auto">
                     <MarkdocRenderer node={node} />
                 </div>

@@ -2,9 +2,18 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { TechPost } from '@/types';
 import { formatDate } from '@/lib/utils';
+
+interface TechPost {
+  slug: string;
+  title: string;
+  summary?: string;
+  createdAt: string;
+  tags?: string[];
+  thumbnailImage?: string;
+}
 
 interface TechArchiveProps {
   posts: TechPost[];
@@ -73,7 +82,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         </div>
       </motion.div>
 
-      {/* Posts Grid - Masonry Layout */}
+      {/* Posts Grid */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -86,55 +95,59 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 transition-all hover:border-electric-blue hover:shadow-xl"
+            className="group relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 transition-all hover:border-electric-blue hover:shadow-xl"
           >
             <Link href={`/tech/${post.slug}`} className="block">
-              {/* Difficulty Badge */}
-              {post.difficulty && (
-                <div className="mb-3 inline-block rounded-md bg-electric-blue/10 px-2 py-1 text-xs font-semibold uppercase tracking-wider text-electric-blue">
-                  {post.difficulty}
+              {/* Thumbnail */}
+              {post.thumbnailImage && (
+                <div className="relative aspect-video overflow-hidden">
+                  <Image
+                    src={post.thumbnailImage}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
                 </div>
               )}
 
-              {/* Title */}
-              <h3 className="mb-3 text-xl font-bold leading-tight tracking-tight transition-colors group-hover:text-electric-blue">
-                {post.title}
-              </h3>
+              <div className="p-6">
+                {/* Title */}
+                <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-electric-blue">
+                  {post.title}
+                </h3>
 
-              {/* Summary */}
-              <p className="mb-4 line-clamp-3 text-sm text-foreground/70">
-                {post.summary}
-              </p>
+                {/* Summary */}
+                <p className="mb-4 line-clamp-3 text-sm text-foreground/50">
+                  {post.summary}
+                </p>
 
-              {/* Meta Info */}
-              <div className="flex items-center justify-between text-xs text-foreground/60">
-                <time>{formatDate(post.publishedAt)}</time>
-                {post.githubLink && (
-                  <span className="text-electric-blue">GitHub →</span>
+                {/* Meta Info */}
+                <div className="flex items-center justify-between text-xs text-foreground/60">
+                  <time>{formatDate(post.createdAt)}</time>
+                </div>
+
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {post.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                    {post.tags.length > 3 && (
+                      <span className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80">
+                        +{post.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
                 )}
+
+                {/* Hover Indicator */}
+                <div className="absolute bottom-0 left-0 h-1 w-0 bg-electric-blue transition-all duration-300 group-hover:w-full" />
               </div>
-
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {post.tags.slice(0, 3).map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                  {post.tags.length > 3 && (
-                    <span className="rounded-md bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-foreground/80">
-                      +{post.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* Hover Indicator */}
-              <div className="absolute bottom-0 left-0 h-1 w-0 bg-electric-blue transition-all duration-300 group-hover:w-full" />
             </Link>
           </motion.article>
         ))}

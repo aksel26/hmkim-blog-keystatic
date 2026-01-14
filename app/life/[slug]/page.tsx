@@ -5,9 +5,10 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { formatDate } from '@/lib/utils';
 import StickySidebar from '@/components/StickySidebar';
+import ScrollButtons from '@/components/ScrollButtons';
 
 export async function generateStaticParams() {
-    const posts = await getAllLifePosts();
+    const posts = await getAllLifePosts(false);
     return posts.map((post) => ({
         slug: post.slug,
     }));
@@ -28,6 +29,9 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
             {/* Sticky Sidebar */}
             <StickySidebar />
 
+            {/* Scroll Buttons */}
+            <ScrollButtons />
+
             {/* Back Navigation */}
             <div className="container mx-auto px-6 py-8 max-w-[800px]">
                 <Link
@@ -41,37 +45,71 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
             {/* Text Hero Section */}
             <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-4xl">
                 <span className="mb-6 inline-block rounded-full bg-gray-100 dark:bg-gray-800 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80 dark:text-foreground/90">
-                    {post.category}
+                    Life
                 </span>
                 <h1 className="mb-8 text-3xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-5xl">
                     {post.title}
                 </h1>
 
+                {post.summary && (
+                    <p className="mb-8 text-lg text-foreground/70 md:text-xl max-w-2xl mx-auto">
+                        {post.summary}
+                    </p>
+                )}
+
                 <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
-                    {post.location && (
-                        <span className="flex items-center gap-2">
-                            <span>📍</span>
-                            {post.location}
-                        </span>
-                    )}
-                    <span className="flex items-center gap-2">
+                    <time className="flex items-center gap-2">
                         <span>📅</span>
-                        {formatDate(post.visitDate || '')}
-                    </span>
-                    {post.rating && (
-                        <span className="flex items-center gap-2">
-                            <span>⭐</span>
-                            {post.rating} / 5
+                        등록: {formatDate(post.createdAt || '')}
+                    </time>
+                    {post.updatedAt && post.updatedAt !== post.createdAt && (
+                        <time className="flex items-center gap-2">
+                            <span>✏️</span>
+                            수정: {formatDate(post.updatedAt)}
+                        </time>
+                    )}
+                    {post.status === 'draft' && (
+                        <span className="flex items-center gap-2 text-yellow-600">
+                            <span>📝</span>
+                            초안
                         </span>
                     )}
                 </div>
+
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                        {post.tags.map((tag) => (
+                            <span
+                                key={tag}
+                                className="rounded-md bg-orange-100 dark:bg-orange-900/30 px-3 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400"
+                            >
+                                #{tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {/* Keywords */}
+                {post.keywords && post.keywords.length > 0 && (
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                        {post.keywords.map((keyword) => (
+                            <span
+                                key={keyword}
+                                className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 text-xs text-foreground/70"
+                            >
+                                {keyword}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Full Width Hero Image */}
-            {post.thumbnail && (
+            {/* Thumbnail Image */}
+            {post.thumbnailImage && (
                 <div className="relative w-full aspect-[21/9] mb-20">
                     <Image
-                        src={post.thumbnail}
+                        src={post.thumbnailImage}
                         alt={post.title}
                         fill
                         className="object-cover"
@@ -80,33 +118,38 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                 </div>
             )}
 
+            {/* Thumbnail Video */}
+            {post.thumbnailVideo && (
+                <div className="container mx-auto px-6 max-w-4xl mb-12">
+                    <video
+                        src={post.thumbnailVideo}
+                        className="w-full rounded-xl"
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                    />
+                </div>
+            )}
+
             {/* Content Section */}
-            <article className="container mx-auto px-6 max-w-[800px]">
+            <article className="container mx-auto px-3 max-w-[800px]">
                 <div className="prose prose-lg prose-gray dark:prose-invert mx-auto">
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
 
-            {/* Gallery Section */}
-            {post.gallery && post.gallery.length > 0 && (
-                <div className="container mx-auto px-6 max-w-7xl mt-24">
-                    <h2 className="text-3xl font-bold mb-12 text-center">Gallery</h2>
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                        {post.gallery
-                            .filter((item): item is string => typeof item === 'string')
-                            .map((img, idx) => (
-                                <div key={idx} className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100 dark:bg-gray-800">
-                                    <Image
-                                        src={img}
-                                        alt={`${post.title} gallery image ${idx + 1}`}
-                                        fill
-                                        className="object-cover transition-transform duration-500 hover:scale-105"
-                                    />
-                                </div>
-                            ))}
-                    </div>
+            {/* Navigation */}
+            <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-20">
+                <div className="container mx-auto max-w-5xl px-6 text-center">
+                    <Link
+                        href="/life"
+                        className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition-all hover:bg-orange-600 active:scale-95"
+                    >
+                        ← Browse More Life Posts
+                    </Link>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

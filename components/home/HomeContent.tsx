@@ -16,7 +16,7 @@ export default function HomeContent({ initialPosts }: HomeContentProps) {
     const filteredPosts = useMemo(() => {
         return initialPosts.filter((post) => {
             // Filter by Tab
-            if (activeTab !== 'all' && post.type !== activeTab) {
+            if (activeTab !== 'all' && post.category !== activeTab) {
                 return false;
             }
 

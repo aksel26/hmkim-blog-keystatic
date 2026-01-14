@@ -4,29 +4,32 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
-import { LifePost } from '@/types';
 import { formatDate } from '@/lib/utils';
 
-const CATEGORIES = [
-  { value: 'restaurant', label: 'Restaurant', emoji: '🍽️' },
-  { value: 'cafe', label: 'Cafe', emoji: '☕' },
-  { value: 'travel', label: 'Travel', emoji: '✈️' },
-  { value: 'concert', label: 'Concert', emoji: '🎵' },
-];
+interface LifePost {
+  slug: string;
+  title: string;
+  summary?: string;
+  createdAt: string;
+  tags?: string[];
+  thumbnailImage?: string;
+  thumbnailVideo?: string;
+}
 
 interface LifeArchiveProps {
   posts: LifePost[];
+  tags: string[];
 }
 
-export default function LifeArchive({ posts }: LifeArchiveProps) {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   const filteredPosts = useMemo(() => {
-    if (selectedCategory) {
-      return posts.filter((post) => post.category === selectedCategory);
+    if (selectedTag) {
+      return posts.filter((post) => post.tags?.includes(selectedTag));
     }
     return posts;
-  }, [selectedCategory, posts]);
+  }, [selectedTag, posts]);
 
   return (
     <div className="container mx-auto max-w-7xl px-6 py-12">
@@ -45,7 +48,7 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
         </p>
       </motion.header>
 
-      {/* Category Filters */}
+      {/* Tag Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -53,35 +56,34 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
         className="mb-12"
       >
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground/60">
-          Filter by Category
+          Filter by Tag
         </h2>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setSelectedCategory(null)}
-            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === null
+            onClick={() => setSelectedTag(null)}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === null
               ? 'bg-orange-500 text-white dark:text-gray-700'
               : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
             All
           </button>
-          {CATEGORIES.map((category) => (
+          {tags.map((tag) => (
             <button
-              key={category.value}
-              onClick={() => setSelectedCategory(category.value)}
-              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedCategory === category.value
+              key={tag}
+              onClick={() => setSelectedTag(tag)}
+              className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === tag
                 ? 'bg-orange-500 text-white dark:text-gray-700'
                 : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
-              <span>{category.emoji}</span>
-              <span>{category.label}</span>
+              {tag}
             </button>
           ))}
         </div>
       </motion.div>
 
-      {/* Posts Grid - Image-Centric Layout */}
+      {/* Posts Grid */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -97,48 +99,47 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
             className="group relative overflow-hidden rounded-xl bg-gray-50 dark:bg-gray-900"
           >
             <Link href={`/life/${post.slug}`} className="block">
-              {/* Image */}
+              {/* Thumbnail */}
               <div className="relative aspect-[4/3] overflow-hidden bg-gray-200 dark:bg-gray-800">
-                {post.thumbnail ? (
+                {post.thumbnailImage ? (
                   <Image
-                    src={post.thumbnail}
+                    src={post.thumbnailImage}
                     alt={post.title}
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
+                ) : post.thumbnailVideo ? (
+                  <video
+                    src={post.thumbnailVideo}
+                    className="w-full h-full object-cover"
+                    muted
+                    loop
+                    autoPlay
+                    playsInline
+                  />
                 ) : (
                   <div className="flex h-full items-center justify-center text-6xl">
-                    {CATEGORIES.find((c) => c.value === post.category)?.emoji || '📷'}
+                    📷
                   </div>
                 )}
 
                 {/* Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-100 transition-opacity duration-500 group-hover:opacity-80" />
 
-                {/* Category Badge */}
+                {/* Life Badge */}
                 <div className="absolute left-4 top-4">
                   <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-gray-900 backdrop-blur-sm">
-                    {post.category}
+                    Life
                   </span>
                 </div>
 
-                {/* Rating */}
-                {post.rating && (
-                  <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-white/90 px-2 py-1 backdrop-blur-sm">
-                    <span className="text-sm">⭐</span>
-                    <span className="text-xs font-bold text-gray-900">
-                      {post.rating}
-                    </span>
-                  </div>
-                )}
-
                 {/* Title Overlay */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                  <h3 className="mb-1 text-xl font-bold leading-tight transition-transform duration-300 group-hover:translate-y-[-4px]">
+                  <h3 className="mb-1 text-xl font-medium leading-tight transition-transform duration-300 group-hover:translate-y-[-4px]">
                     {post.title}
                   </h3>
-                  {post.location && (
-                    <p className="text-sm text-white/90">📍 {post.location}</p>
+                  {post.summary && (
+                    <p className="text-sm text-white/90 line-clamp-2">{post.summary}</p>
                   )}
                 </div>
               </div>
@@ -146,9 +147,22 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
               {/* Meta Info */}
               <div className="p-4">
                 <div className="flex items-center justify-between text-xs text-foreground/60">
-                  <time>{formatDate(post.visitDate)}</time>
+                  <time>{formatDate(post.createdAt)}</time>
                   <span className="font-medium text-orange-500">Read More →</span>
                 </div>
+                {/* Tags */}
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {post.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-md bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 text-xs text-orange-600 dark:text-orange-400"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </Link>
           </motion.article>
@@ -159,7 +173,7 @@ export default function LifeArchive({ posts }: LifeArchiveProps) {
       {filteredPosts.length === 0 && (
         <div className="py-20 text-center">
           <p className="text-lg text-foreground/60">
-            No posts found for this category.
+            No posts found for this tag.
           </p>
         </div>
       )}

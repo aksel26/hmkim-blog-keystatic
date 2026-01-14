@@ -1,28 +1,21 @@
-// Tech Collection Types
-export interface TechPost {
+// Post Types
+export interface Post {
   slug: string;
   title: string;
-  summary: string;
-  tags: string[];
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  githubLink?: string;
-  publishedAt: string;
-}
-
-// Life Collection Types
-export interface LifePost {
-  slug: string;
-  title: string;
-  location?: string;
-  visitDate: string;
-  rating?: number;
-  category: 'restaurant' | 'cafe' | 'travel' | 'concert';
-  thumbnail?: string;
-  gallery?: string[];
+  summary?: string;
+  keywords?: string[];
+  category: 'tech' | 'life';
+  status: 'draft' | 'published';
+  tags?: string[];
+  createdAt: string;
+  updatedAt?: string;
+  thumbnailImage?: string;
+  thumbnailVideo?: string;
 }
 
 // Common Types
 export type PostCategory = 'tech' | 'life';
+export type PostStatus = 'draft' | 'published';
 
 export interface BlogConfig {
   siteName: string;

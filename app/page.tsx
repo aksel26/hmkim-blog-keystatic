@@ -1,31 +1,20 @@
-import { getAllTechPosts, getAllLifePosts } from '@/lib/keystatic/reader';
+import { getAllPosts } from '@/lib/keystatic/reader';
 import HomeContent from '@/components/home/HomeContent';
 import { Post } from '@/components/home/MasonryGrid';
 
 export default async function Home() {
-  const [techPosts, lifePosts] = await Promise.all([
-    getAllTechPosts(),
-    getAllLifePosts(),
-  ]);
+  const posts = await getAllPosts();
 
-  const allPosts: Post[] = ([
-    ...techPosts.map((post) => ({
-      ...post,
-      title: post.title || 'Untitled',
-      type: 'tech' as const,
-      publishedAt: post.publishedAt || '', // Ensure string
-    })),
-    ...lifePosts.map((post) => ({
-      ...post,
-      title: post.title || 'Untitled',
-      type: 'life' as const,
-      visitDate: post.visitDate || '', // Ensure string
-    })),
-  ] as Post[]).sort((a, b) => {
-    const dateA = new Date(a.publishedAt || a.visitDate || '');
-    const dateB = new Date(b.publishedAt || b.visitDate || '');
-    return dateB.getTime() - dateA.getTime();
-  });
+  const allPosts: Post[] = posts.map((post) => ({
+    slug: post.slug,
+    title: post.title || 'Untitled',
+    summary: post.summary || '',
+    category: post.category || 'tech',
+    tags: post.tags || [],
+    createdAt: post.createdAt || '',
+    thumbnailImage: post.thumbnailImage || undefined,
+    thumbnailVideo: post.thumbnailVideo || undefined,
+  }));
 
   return <HomeContent initialPosts={allPosts} />;
 }
