@@ -6,12 +6,11 @@ import keystaticConfig from '@/keystatic.config';
 export const reader = createReader('', keystaticConfig);
 
 // Helper functions for Tech posts
-export async function getAllTechPosts() {
+export async function getAllTechPosts(onlyPublished = true) {
   const slugs = await reader.collections.tech.list();
   const posts = await Promise.all(
     slugs.map(async (slug) => {
       const post = await reader.collections.tech.read(slug);
-      // Exclude content function for client component serialization
       const { content, ...postData } = post || {};
       return {
         slug,
@@ -19,10 +18,15 @@ export async function getAllTechPosts() {
       };
     })
   );
-  return posts.sort(
+
+  const filteredPosts = onlyPublished
+    ? posts.filter((post) => post?.status === 'published')
+    : posts;
+
+  return filteredPosts.sort(
     (a, b) =>
-      new Date(b?.publishedAt || '').getTime() -
-      new Date(a?.publishedAt || '').getTime()
+      new Date(b?.createdAt || '').getTime() -
+      new Date(a?.createdAt || '').getTime()
   );
 }
 
@@ -30,18 +34,12 @@ export async function getTechPost(slug: string) {
   return await reader.collections.tech.read(slug);
 }
 
-export async function getTechPostsByTag(tag: string) {
-  const posts = await getAllTechPosts();
-  return posts.filter((post) => post?.tags?.includes(tag));
-}
-
 // Helper functions for Life posts
-export async function getAllLifePosts() {
+export async function getAllLifePosts(onlyPublished = true) {
   const slugs = await reader.collections.life.list();
   const posts = await Promise.all(
     slugs.map(async (slug) => {
       const post = await reader.collections.life.read(slug);
-      // Exclude content function for client component serialization
       const { content, ...postData } = post || {};
       return {
         slug,
@@ -49,10 +47,15 @@ export async function getAllLifePosts() {
       };
     })
   );
-  return posts.sort(
+
+  const filteredPosts = onlyPublished
+    ? posts.filter((post) => post?.status === 'published')
+    : posts;
+
+  return filteredPosts.sort(
     (a, b) =>
-      new Date(b?.visitDate || '').getTime() -
-      new Date(a?.visitDate || '').getTime()
+      new Date(b?.createdAt || '').getTime() -
+      new Date(a?.createdAt || '').getTime()
   );
 }
 
@@ -60,14 +63,49 @@ export async function getLifePost(slug: string) {
   return await reader.collections.life.read(slug);
 }
 
-export async function getLifePostsByCategory(category: string) {
-  const posts = await getAllLifePosts();
-  return posts.filter((post) => post?.category === category);
+// Get all posts from both collections
+export async function getAllPosts(onlyPublished = true) {
+  const [techPosts, lifePosts] = await Promise.all([
+    getAllTechPosts(onlyPublished),
+    getAllLifePosts(onlyPublished),
+  ]);
+
+  const allPosts = [
+    ...techPosts.map((post) => ({ ...post, category: 'tech' as const })),
+    ...lifePosts.map((post) => ({ ...post, category: 'life' as const })),
+  ];
+
+  return allPosts.sort(
+    (a, b) =>
+      new Date(b?.createdAt || '').getTime() -
+      new Date(a?.createdAt || '').getTime()
+  );
 }
 
-// Get all unique tags from Tech posts
-export async function getAllTags() {
-  const posts = await getAllTechPosts();
+// Get all unique tags from both collections
+export async function getAllTags(onlyPublished = true) {
+  const posts = await getAllPosts(onlyPublished);
   const tags = posts.flatMap((post) => post?.tags || []);
   return Array.from(new Set(tags));
+}
+
+// Get tags from Tech posts only
+export async function getTechTags(onlyPublished = true) {
+  const posts = await getAllTechPosts(onlyPublished);
+  const tags = posts.flatMap((post) => post?.tags || []);
+  return Array.from(new Set(tags));
+}
+
+// Get tags from Life posts only
+export async function getLifeTags(onlyPublished = true) {
+  const posts = await getAllLifePosts(onlyPublished);
+  const tags = posts.flatMap((post) => post?.tags || []);
+  return Array.from(new Set(tags));
+}
+
+// Get all unique keywords from both collections
+export async function getAllKeywords(onlyPublished = true) {
+  const posts = await getAllPosts(onlyPublished);
+  const keywords = posts.flatMap((post) => post?.keywords || []);
+  return Array.from(new Set(keywords));
 }

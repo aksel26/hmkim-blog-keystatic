@@ -1,47 +1,86 @@
 import { config, fields, collection } from '@keystatic/core';
 
+// 공통 스키마 필드
+const commonFields = {
+  // slug (title에서 자동 생성)
+  title: fields.slug({ name: { label: '제목' } }),
+
+  // 요약
+  summary: fields.text({
+    label: '요약',
+    description: '게시글 요약',
+    multiline: true,
+  }),
+
+  // 키워드
+  keywords: fields.array(
+    fields.text({ label: '키워드' }),
+    {
+      label: '키워드',
+      itemLabel: (props) => props.value,
+    }
+  ),
+
+  // 상태 (초안, 배포)
+  status: fields.select({
+    label: '상태',
+    options: [
+      { label: '초안', value: 'draft' },
+      { label: '배포', value: 'published' },
+    ],
+    defaultValue: 'draft',
+  }),
+
+  // Tags
+  tags: fields.array(
+    fields.text({ label: 'Tag' }),
+    {
+      label: 'Tags',
+      itemLabel: (props) => props.value,
+    }
+  ),
+
+  // 등록일
+  createdAt: fields.date({
+    label: '등록일',
+    defaultValue: { kind: 'today' },
+  }),
+
+  // 수정일
+  updatedAt: fields.date({
+    label: '수정일',
+    defaultValue: { kind: 'today' },
+  }),
+
+  // Thumbnail (image)
+  thumbnailImage: fields.image({
+    label: '썸네일 이미지',
+    directory: 'public/images/thumbnails',
+    publicPath: '/images/thumbnails/',
+  }),
+
+  // Thumbnail (video/mov)
+  thumbnailVideo: fields.file({
+    label: '썸네일 비디오',
+    directory: 'public/videos/thumbnails',
+    publicPath: '/videos/thumbnails/',
+  }),
+};
+
 export default config({
   storage: {
     kind: 'local',
   },
   collections: {
     tech: collection({
-      label: 'Tech Posts',
+      label: 'Tech',
       slugField: 'title',
       path: 'content/tech/*',
       format: { contentField: 'content' },
       schema: {
-        title: fields.slug({ name: { label: 'Title' } }),
-        summary: fields.text({
-          label: 'Summary',
-          description: 'Brief summary of the post',
-        }),
-        publishedAt: fields.date({
-          label: 'Published At',
-          defaultValue: { kind: 'today' },
-        }),
-        tags: fields.array(
-          fields.text({ label: 'Tag' }),
-          {
-            label: 'Tags',
-            itemLabel: (props) => props.value,
-          }
-        ),
-        difficulty: fields.select({
-          label: 'Difficulty',
-          options: [
-            { label: 'Beginner', value: 'beginner' },
-            { label: 'Intermediate', value: 'intermediate' },
-            { label: 'Advanced', value: 'advanced' },
-          ],
-          defaultValue: 'intermediate',
-        }),
-        githubLink: fields.url({
-          label: 'GitHub Link',
-          description: 'Optional GitHub repository link',
-        }),
+        ...commonFields,
         content: fields.markdoc({
-          label: 'Content',
+          label: '내용',
           options: {
             image: {
               directory: 'public/images/tech',
@@ -52,56 +91,14 @@ export default config({
       },
     }),
     life: collection({
-      label: 'Life Posts',
+      label: 'Life',
       slugField: 'title',
       path: 'content/life/*',
       format: { contentField: 'content' },
       schema: {
-        title: fields.slug({ name: { label: 'Title' } }),
-        visitDate: fields.date({
-          label: 'Visit Date',
-          defaultValue: { kind: 'today' },
-        }),
-        category: fields.select({
-          label: 'Category',
-          options: [
-            { label: 'Restaurant', value: 'restaurant' },
-            { label: 'Cafe', value: 'cafe' },
-            { label: 'Travel', value: 'travel' },
-            { label: 'Concert', value: 'concert' },
-          ],
-          defaultValue: 'restaurant',
-        }),
-        location: fields.text({
-          label: 'Location',
-          description: 'Place name or address',
-        }),
-        rating: fields.number({
-          label: 'Rating',
-          description: 'Rating out of 5',
-          validation: {
-            min: 0,
-            max: 5,
-          },
-        }),
-        thumbnail: fields.image({
-          label: 'Thumbnail',
-          directory: 'public/images/life/thumbnails',
-          publicPath: '/images/life/thumbnails/',
-        }),
-        gallery: fields.array(
-          fields.image({
-            label: 'Image',
-            directory: 'public/images/life/gallery',
-            publicPath: '/images/life/gallery/',
-          }),
-          {
-            label: 'Gallery',
-            itemLabel: (props) => props.value?.filename || 'Image',
-          }
-        ),
+        ...commonFields,
         content: fields.markdoc({
-          label: 'Content',
+          label: '내용',
           options: {
             image: {
               directory: 'public/images/life',
