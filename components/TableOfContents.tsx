@@ -75,10 +75,10 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
 
     return (
         <div className="xl:hidden mb-8">
-            <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+            <div className="border border-white/20 dark:border-white/10 rounded-lg overflow-hidden backdrop-blur-md bg-white/70 dark:bg-gray-900/70 shadow-lg">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 text-sm font-medium text-foreground/80 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
                 >
                     <span>목차</span>
                     <ChevronDown
@@ -126,7 +126,7 @@ export function DesktopTableOfContents({ items }: TableOfContentsProps) {
 
     return (
         <aside className="hidden xl:block fixed top-1/2 -translate-y-1/2 right-[calc(45%-580px)] z-10 w-56">
-            <nav className="space-y-1">
+            <nav className="p-4 rounded-xl backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-white/10 shadow-lg space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-wider text-foreground/40 mb-3">
                     목차
                 </p>
