@@ -1,5 +1,6 @@
 import React from 'react';
 import Markdoc, { Config, nodes, Tag } from '@markdoc/markdoc';
+import Image from 'next/image';
 import { CodeBlock } from './CodeBlock';
 
 interface MarkdocRendererProps {
@@ -67,6 +68,36 @@ const config: Config = {
                 );
             },
         },
+        image: {
+            render: 'Image',
+            attributes: {
+                src: { type: String, required: true },
+                alt: { type: String },
+                title: { type: String },
+            },
+        },
+        table: {
+            render: 'Table',
+        },
+        th: {
+            render: 'Th',
+        },
+        td: {
+            render: 'Td',
+        },
+    },
+    tags: {
+        video: {
+            render: 'Video',
+            attributes: {
+                src: { type: String, required: true },
+                autoplay: { type: Boolean, default: false },
+                loop: { type: Boolean, default: false },
+                muted: { type: Boolean, default: false },
+                controls: { type: Boolean, default: true },
+                width: { type: String },
+            },
+        },
     },
 };
 
@@ -75,6 +106,56 @@ const components = {
         <CodeBlock className={language ? `language-${language}` : undefined}>
             {children}
         </CodeBlock>
+    ),
+    Image: ({ src, alt, title }: { src: string; alt?: string; title?: string }) => (
+        <span className="block relative w-full">
+            <Image
+                src={src}
+                alt={alt || ''}
+                title={title}
+                width={800}
+                height={600}
+                className="rounded-lg object-cover w-full h-auto"
+                sizes="(max-width: 768px) 100vw, 800px"
+            />
+        </span>
+    ),
+    Table: ({ children }: { children: React.ReactNode }) => (
+        <table className="w-full table-fixed border-collapse">
+            {children}
+        </table>
+    ),
+    Th: ({ children }: { children: React.ReactNode }) => (
+        <th className="p-2 align-top">{children}</th>
+    ),
+    Td: ({ children }: { children: React.ReactNode }) => (
+        <td className="p-2 align-top">{children}</td>
+    ),
+    Video: ({
+        src,
+        autoplay,
+        loop,
+        muted,
+        controls,
+        width,
+    }: {
+        src: string;
+        autoplay?: boolean;
+        loop?: boolean;
+        muted?: boolean;
+        controls?: boolean;
+        width?: string;
+    }) => (
+        <video
+            src={src}
+            autoPlay={autoplay}
+            loop={loop}
+            muted={muted}
+            controls={controls}
+            playsInline
+            style={{ width: width || '100%', maxWidth: '100%' }}
+            className="rounded-lg"
+        />
     ),
 };
 
