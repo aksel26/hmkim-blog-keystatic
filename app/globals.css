@@ -10,6 +10,8 @@
   --background: #ffffff;
   --foreground: #171717;
   --electric-blue: #000000;
+  --tech-blue: #0984E3;
+  --life-orange: #ff6900;
   --blue-light: #525252;
   --blue-dark: #000000;
   --gray-50: #fafafa;
@@ -23,6 +25,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-electric-blue: var(--electric-blue);
+  --color-tech-blue: var(--tech-blue);
+  --color-life-orange: var(--life-orange);
   --color-blue-light: var(--blue-light);
   --color-blue-dark: var(--blue-dark);
   --color-gray-50: var(--gray-50);
@@ -98,25 +102,18 @@ body {
   color: var(--blue-light);
 }
 
-/* Smooth theme transition */
-body,
-div,
-span,
-button,
-a,
-input,
-header,
-footer,
-section,
-article,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+/* Smooth theme transition - only body background */
+body {
+  transition: background-color 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

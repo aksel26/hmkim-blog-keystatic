@@ -41,7 +41,7 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
         className="mb-12"
       >
         <h1 className="mb-4 text-5xl font-bold tracking-tight">
-          Life <span className="text-orange-500">Logs</span>
+        <span className="text-life-orange">Life</span>Logs
         </h1>
         <p className="text-lg text-foreground/70">
           Captured moments from my journey.
@@ -62,7 +62,7 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
           <button
             onClick={() => setSelectedTag(null)}
             className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === null
-              ? 'bg-orange-500 text-white dark:text-gray-700'
+              ? 'bg-life-orange text-white dark:text-gray-700'
               : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
@@ -73,7 +73,7 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === tag
-                ? 'bg-orange-500 text-white dark:text-gray-700'
+                ? 'bg-life-orange text-white dark:text-gray-700'
                 : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
@@ -95,7 +95,6 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
             key={post.slug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -8 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
             className="group relative flex flex-col overflow-hidden rounded-xl"
           >
@@ -149,7 +148,7 @@ export default function LifeArchive({ posts, tags }: LifeArchiveProps) {
 
             {/* Content */}
             <div className="pt-4 flex flex-col flex-1">
-              <h3 className="text-xl font-medium leading-tight tracking-tight mb-2 group-hover:underline decoration-1 underline-offset-4">
+              <h3 className="text-xl font-medium leading-tight tracking-tight mb-2 transition-colors group-hover:text-life-orange">
                 {post.title}
               </h3>
 

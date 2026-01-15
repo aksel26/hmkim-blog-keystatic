@@ -9,7 +9,7 @@ export default function Hero() {
         transition={{ duration: 0.6 }}
       >
         <span className="mb-4 inline-block font-mono text-sm tracking-wider uppercase text-gray-500">
-          Design & Code
+          LifeLog & Code
         </span>
         <h1 className="mb-8 text-6xl font-black leading-tight tracking-tighter text-foreground md:text-8xl lg:text-9xl">
           STORIES.

@@ -40,7 +40,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         className="mb-12"
       >
         <h1 className="mb-4 text-5xl font-bold tracking-tight">
-          Tech <span className="text-electric-blue">Archive</span>
+        <span className="text-tech-blue">Tech</span> Archive
         </h1>
         <p className="text-lg text-foreground/70">
           Explorations in code, architecture, and engineering.
@@ -61,7 +61,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
           <button
             onClick={() => setSelectedTag(null)}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === null
-              ? 'bg-electric-blue text-white dark:text-gray-700'
+              ? 'bg-tech-blue text-white dark:text-gray-700'
               : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
               }`}
           >
@@ -72,7 +72,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
               key={tag}
               onClick={() => setSelectedTag(tag)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === tag
-                ? 'bg-electric-blue text-white dark:text-gray-700'
+                ? 'bg-tech-blue text-white dark:text-gray-700'
                 : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
                 }`}
             >
@@ -94,9 +94,8 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             key={post.slug}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            whileHover={{ y: -8 }}
             transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden dark:border-gray-800 bg-white dark:bg-gray-900 transition-all"
+            className="group relative overflow-hidden dark:border-gray-800 bg-transparent transition-all"
           >
             <Link href={`/tech/${post.slug}`} className="block">
               {/* Thumbnail */}
@@ -113,7 +112,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
 
               <div className="">
                 {/* Title */}
-                <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-electric-blue">
+                <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-tech-blue">
                   {post.title}
                 </h3>
 
