@@ -131,10 +131,10 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                     <video
                         src={post.thumbnailVideo}
                         className="w-full rounded-xl"
-                        controls
                         autoPlay
                         muted
                         loop
+                        playsInline
                     />
                 </div>
             )}
