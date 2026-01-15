@@ -1,4 +1,33 @@
 import { config, fields, collection } from '@keystatic/core';
+import { block } from '@keystatic/core/content-components';
+
+// 비디오 컴포넌트 정의
+const videoComponent = (directory: string, publicPath: string) => block({
+  label: '비디오',
+  schema: {
+    src: fields.file({
+      label: '비디오 파일',
+      directory,
+      publicPath,
+    }),
+    autoplay: fields.checkbox({
+      label: '자동 재생',
+      defaultValue: false,
+    }),
+    loop: fields.checkbox({
+      label: '반복 재생',
+      defaultValue: false,
+    }),
+    muted: fields.checkbox({
+      label: '음소거',
+      defaultValue: false,
+    }),
+    controls: fields.checkbox({
+      label: '컨트롤 표시',
+      defaultValue: true,
+    }),
+  },
+});
 
 // 공통 스키마 필드
 const commonFields = {
@@ -87,6 +116,9 @@ export default config({
               publicPath: '/images/tech/',
             },
           },
+          components: {
+            video: videoComponent('public/videos/tech', '/videos/tech/'),
+          },
         }),
       },
     }),
@@ -104,6 +136,9 @@ export default config({
               directory: 'public/images/life',
               publicPath: '/images/life/',
             },
+          },
+          components: {
+            video: videoComponent('public/videos/life', '/videos/life/'),
           },
         }),
       },
