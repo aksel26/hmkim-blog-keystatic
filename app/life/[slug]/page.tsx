@@ -118,6 +118,7 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                         src={post.thumbnailImage}
                         alt={post.title}
                         fill
+                        fetchPriority="high"
                         className="object-cover"
                         priority
                     />

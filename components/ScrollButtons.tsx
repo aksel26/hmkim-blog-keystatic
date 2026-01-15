@@ -8,11 +8,19 @@ export default function ScrollButtons() {
   const [showButtons, setShowButtons] = useState(false);
 
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      setShowButtons(window.scrollY > 200);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          setShowButtons(window.scrollY > 200);
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
