@@ -1,12 +1,8 @@
 ---
 title: '리액트 Fiber 아키텍처: 렌더링 주도권을 되찾아온 리액트의 엔진 교체기'
-summary: >-
-  리액트는 왜 렌더링 알고리즘을 완전히 새로 썼을까요? 애니메이션과 인터랙션을 방해하지 않는 비차단(Non-blocking) 렌더링의 핵심,
-  Fiber 아키텍처를 파헤칩니다.
+summary: 리액트는 왜 렌더링 알고리즘을 완전히 새로 썼을까요? 애니메이션과 인터랙션을 방해하지 않는 비차단(Non-blocking) 렌더링의 핵심, Fiber 아키텍처를 파헤칩니다.
 keywords:
-  - React
-  - Fiber
-  - 렌더링
+  - Tech
 status: published
 tags:
   - React
@@ -42,19 +38,19 @@ Fiber는 단순한 가상 DOM 노드를 넘어, 자체적인 상태와 **작업 
 
 ```
 {
-  type: 'div',
-  key: null,
-  stateNode: ..., // 실제 DOM 노드 참조
+type: 'div',
+key: null,
+stateNode: ..., // 실제 DOM 노드 참조
 
-  // 트리 구조를 위한 링크 (Linked List 방식)
-  return: Fiber,  // 부모 노드
-  child: Fiber,   // 첫 번째 자식 노드
-  sibling: Fiber, // 형제 노드
+// 트리 구조를 위한 링크 (Linked List 방식)
+return: Fiber, // 부모 노드
+child: Fiber, // 첫 번째 자식 노드
+sibling: Fiber, // 형제 노드
 
-  // 작업 우선순위 및 상태
-  lanes: Lane,    // 작업의 우선순위 (Lane 모델)
-  alternate: Fiber, // 반대편 트리(Current ↔ WorkInProgress) 참조
-  flags: Flags,   // DOM에 적용해야 할 변경 사항 (배치, 업데이트 등)
+// 작업 우선순위 및 상태
+lanes: Lane, // 작업의 우선순위 (Lane 모델)
+alternate: Fiber, // 반대편 트리(Current ↔ WorkInProgress) 참조
+flags: Flags, // DOM에 적용해야 할 변경 사항 (배치, 업데이트 등)
 }
 
 ```
@@ -102,7 +98,8 @@ Fiber는 어떤 작업이 더 중요한지 어떻게 판단할까요? 리액트�
 1. **Current Tree**: 현재 화면에 보여지고 있는 실제 DOM과 매칭되는 트리.
 1. **WorkInProgress Tree**: 현재 작업 중인 새로운 트리.
 
-Commit Phase가 끝나면 리액트는 단순히 포인터를 교체(Swap)하여 `WorkInProgress` 트리를 `Current` 트리로 바꿉니다. 이는 그래픽 프로그래밍의 **더블 버퍼링** 기법과 유사하며, 사용자에게 중간 과정이 노출되지 않는 매끄러운 화면 전환을 보장합니다.
+Commit Phase가 끝나면 리액트는 단순히 포인터를 교체(Swap)하여 `WorkInProgress` 트리를 `Current` 트리로 바꿉니다. 이는 그래픽 프로그래밍의 **더블 버퍼링** 기법과 유사하며,
+사용자에게 중간 과정이 노출되지 않는 매끄러운 화면 전환을 보장합니다.
 
 ---
 

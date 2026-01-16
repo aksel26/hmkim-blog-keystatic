@@ -1,0 +1,2317 @@
+---
+title: 프론트엔드 면접 질문 - React/Next
+summary: 프론트엔드 면접 시 React,Next 면접 질문들입니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - 면접
+createdAt: 2025-10-21
+updatedAt: 2025-10-21
+---
+
+## React 관련 질문
+
+### Q1. Virtual DOM의 작동 원리와 Reconciliation 과정을 설명해주세요.
+
+**키워드:** `Diffing Algorithm`, `Fiber`, `재조정`, `렌더링 최적화`, `key prop`
+
+**답변:**
+
+**Virtual DOM이 필요한 이유:**
+실제 DOM 조작은 비용이 크므로(Reflow, Repaint), 메모리 상의 가상 DOM으로 먼저 변경사항을 계산합니다.
+
+**Reconciliation 과정:**
+
+1. 상태 변경 시 새로운 Virtual DOM 트리 생성
+2. 이전 트리와 비교 (Diffing)
+3. 변경된 부분만 실제 DOM에 반영 (Commit)
+
+**Diffing 알고리즘 최적화:**
+
+```jsx
+// 1. 같은 타입 → 속성만 업데이트
+<div className="before" /> → <div className="after" />
+// div는 재사용, className만 변경
+
+// 2. 다른 타입 → 전체 교체
+<div /> → <span />
+// div 삭제 후 span 새로 생성
+
+// 3. Key를 통한 최적화
+{items.map(item => (
+  <Item key={item.id} data={item} />
+))}
+// 재배열 시 key로 동일 요소 식별
+```
+
+**Key의 중요성:**
+
+```jsx
+// ❌ index를 key로 사용 (재배열 시 문제)
+{
+  items.map((item, index) => <Item key={index} data={item} />);
+}
+
+// ✅ 고유한 id를 key로 사용
+{
+  items.map((item) => <Item key={item.id} data={item} />);
+}
+```
+
+**Fiber Architecture (React 16+):**
+
+- 작업을 작은 단위(Fiber)로 분할
+- 우선순위 기반 스케줄링
+- 중단 가능한 렌더링 (Interruptible Rendering)
+- 작업 단위를 나눠서 처리 → 메인 스레드 블로킹 방지
+
+**렌더링 단계:**
+
+1. **Render Phase** (중단 가능): Virtual DOM 비교, 변경사항 계산
+2. **Commit Phase** (중단 불가): 실제 DOM 업데이트
+
+---
+
+### Q2. React Hooks의 규칙과 useState의 내부 동작 원리를 설명해주세요.
+
+**키워드:** `Hooks 규칙`, `Linked List`, `Fiber`, `클로저`, `배치 업데이트`
+
+**답변:**
+
+**Hooks 규칙:**
+
+1. 최상위에서만 호출 (조건문, 반복문 X)
+2. React 함수에서만 호출 (함수 컴포넌트, Custom Hook)
+
+```jsx
+// ❌ 잘못된 사용
+function Component({ condition }) {
+  if (condition) {
+    const [state, setState] = useState(0); // 순서 변경됨
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const [state, setState] = useState(i); // 반복문 안
+  }
+
+  const handleClick = () => {
+    const [state, setState] = useState(0); // 일반 함수 안
+  };
+}
+
+// ✅ 올바른 사용
+function Component({ condition }) {
+  const [state, setState] = useState(0);
+
+  if (condition) {
+    setState(1); // Hook 호출은 밖에서, 사용은 안에서
+  }
+}
+```
+
+**useState 내부 동작 (단순화):**
+
+```jsx
+// React 내부 구현 개념
+let hooks = []; // Fiber 노드의 memoizedState
+let currentHook = 0;
+
+function useState(initialValue) {
+  const hookIndex = currentHook;
+
+  // 첫 렌더링: 초기값 설정
+  if (hooks[hookIndex] === undefined) {
+    hooks[hookIndex] = initialValue;
+  }
+
+  const setState = (newValue) => {
+    // 함수형 업데이트 지원
+    const value = typeof newValue === "function" ? newValue(hooks[hookIndex]) : newValue;
+
+    hooks[hookIndex] = value;
+    render(); // 리렌더링 스케줄링
+  };
+
+  currentHook++;
+  return [hooks[hookIndex], setState];
+}
+
+function render() {
+  currentHook = 0; // 렌더링마다 초기화
+  Component(); // 컴포넌트 재실행
+}
+```
+
+**왜 순서가 중요한가:**
+
+```jsx
+// 첫 렌더링
+useState("name"); // hooks[0] = 'name'
+useState(0); // hooks[1] = 0
+
+// 조건문으로 순서 깨짐
+if (condition) {
+  useState("email"); // hooks[0] = 'email' ← name이 사라짐!
+}
+useState("name"); // hooks[1] = 'name' ← 0을 덮어씀!
+useState(0); // hooks[2] = 0 ← 새 위치
+```
+
+**배치 업데이트:**
+
+```jsx
+function Component() {
+  const [count, setCount] = useState(0);
+
+  const handleClick = () => {
+    setCount(count + 1); // count = 0 + 1 = 1
+    setCount(count + 1); // count = 0 + 1 = 1 (같은 값)
+    setCount(count + 1); // count = 0 + 1 = 1
+    // 결과: 1
+
+    // ✅ 함수형 업데이트
+    setCount((c) => c + 1); // 1
+    setCount((c) => c + 1); // 2
+    setCount((c) => c + 1); // 3
+    // 결과: 3
+  };
+}
+```
+
+---
+
+### Q3. useEffect와 useLayoutEffect의 차이, 그리고 클린업 함수의 역할을 설명해주세요.
+
+**키워드:** `생명주기`, `Side Effect`, `동기/비동기`, `클린업`, `의존성 배열`, `메모리 누수`
+
+**답변:**
+
+**실행 타이밍:**
+
+```
+렌더링 → DOM 업데이트 → useLayoutEffect → 브라우저 Paint → useEffect
+                       (동기)                              (비동기)
+```
+
+**useEffect:**
+
+```jsx
+useEffect(() => {
+  // 화면 렌더링 후 실행 (비동기)
+  // 사용자가 이미 화면을 볼 수 있음
+
+  console.log("Component mounted");
+  fetchData(); // 데이터 페칭
+  trackEvent(); // 분석
+
+  return () => {
+    // 클린업: 언마운트 또는 재실행 전
+    console.log("Cleanup");
+  };
+}, [deps]);
+```
+
+**useLayoutEffect:**
+
+```jsx
+useLayoutEffect(() => {
+  // DOM 업데이트 직후, 브라우저 Paint 전 실행 (동기)
+  // 레이아웃 측정/조정 시 사용
+
+  const width = ref.current.offsetWidth;
+  setPosition(width / 2); // 깜빡임 방지
+}, []);
+```
+
+**사용 시나리오:**
+
+```jsx
+// useEffect - 대부분의 경우 (95%)
+useEffect(() => {
+  // 데이터 페칭
+  fetch("/api/data").then(setData);
+
+  // 이벤트 리스너
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+
+  // 외부 라이브러리
+  const chart = new Chart(ref.current);
+  return () => chart.destroy();
+}, []);
+
+// useLayoutEffect - 레이아웃 관련 (5%)
+useLayoutEffect(() => {
+  // DOM 측정
+  const height = ref.current.getBoundingClientRect().height;
+
+  // 스크롤 위치 조정
+  window.scrollTo(0, savedPosition);
+
+  // 애니메이션 초기 위치 (깜빡임 방지)
+  ref.current.style.opacity = "0";
+}, []);
+```
+
+**클린업 함수 역할:**
+
+```jsx
+// 1. 타이머 정리
+useEffect(() => {
+  const timer = setInterval(() => {
+    setCount((c) => c + 1);
+  }, 1000);
+
+  return () => clearInterval(timer); // 메모리 누수 방지
+}, []);
+
+// 2. 구독 해제
+useEffect(() => {
+  const subscription = props.source.subscribe(handleData);
+
+  return () => subscription.unsubscribe();
+}, [props.source]);
+
+// 3. 이벤트 리스너 제거
+useEffect(() => {
+  const handleClick = () => console.log("clicked");
+  document.addEventListener("click", handleClick);
+
+  return () => document.removeEventListener("click", handleClick);
+}, []);
+
+// 4. abort 요청
+useEffect(() => {
+  const controller = new AbortController();
+
+  fetch("/api/data", { signal: controller.signal })
+    .then((res) => res.json())
+    .then(setData);
+
+  return () => controller.abort(); // 언마운트 시 요청 취소
+}, []);
+```
+
+**클린업 실행 타이밍:**
+
+```jsx
+useEffect(() => {
+  console.log("Effect");
+
+  return () => {
+    console.log("Cleanup");
+  };
+}, [dep]);
+
+// 1. 최초 렌더링: Effect 실행
+// 2. dep 변경: Cleanup → Effect
+// 3. 언마운트: Cleanup
+```
+
+**의존성 배열:**
+
+```jsx
+// 빈 배열: 마운트 시 한 번만
+useEffect(() => {}, []);
+
+// 의존성 있음: 의존성 변경 시마다
+useEffect(() => {}, [count, user.id]);
+
+// 의존성 없음: 매 렌더링마다 (비권장)
+useEffect(() => {});
+```
+
+---
+
+### Q4. useMemo와 useCallback의 차이와 올바른 사용 시점을 설명해주세요.
+
+**키워드:** `메모이제이션`, `성능 최적화`, `참조 동일성`, `React.memo`, `의존성`
+
+**답변:**
+
+**기본 차이:**
+
+- `useMemo`: **값**을 메모이제이션
+- `useCallback`: **함수**를 메모이제이션
+
+```jsx
+// useMemo - 계산 비용이 큰 값
+const expensiveValue = useMemo(() => {
+  return heavyCalculation(a, b);
+}, [a, b]);
+
+// useCallback - 함수 참조 유지
+const handleClick = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
+
+// 사실 useCallback은 useMemo의 특수 케이스
+const handleClick = useMemo(() => {
+  return () => doSomething(a, b);
+}, [a, b]);
+```
+
+**올바른 사용 시점:**
+
+```jsx
+// ✅ 1. 무거운 연산
+function DataTable({ data }) {
+  const sortedData = useMemo(() => {
+    console.log("Sorting..."); // 의존성 변경 시에만 실행
+    return [...data].sort((a, b) => a.value - b.value);
+  }, [data]); // data가 변경될 때만 재계산
+
+  return <Table data={sortedData} />;
+}
+
+// ✅ 2. 자식 컴포넌트 최적화 (React.memo와 함께)
+function Parent() {
+  const [count, setCount] = useState(0);
+  const [text, setText] = useState("");
+
+  const handleClick = useCallback(() => {
+    console.log("Button clicked");
+  }, []); // 참조 유지
+
+  return (
+    <>
+      <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+      <input value={text} onChange={(e) => setText(e.target.value)} />
+      <Child onClick={handleClick} /> {/* count, text 변경 시 리렌더링 안됨 */}
+    </>
+  );
+}
+
+const Child = React.memo(({ onClick }) => {
+  console.log("Child rendered");
+  return <button onClick={onClick}>Click</button>;
+});
+
+// ✅ 3. useEffect 의존성
+function Component({ id }) {
+  const fetchData = useCallback(async () => {
+    const response = await fetch(`/api/${id}`);
+    return response.json();
+  }, [id]);
+
+  useEffect(() => {
+    fetchData(); // fetchData가 변경되지 않으면 재실행 안됨
+  }, [fetchData]);
+}
+```
+
+**불필요한 사용 (안티패턴):**
+
+```jsx
+// ❌ 1. 단순 계산
+function Component() {
+  const value = useMemo(() => 1 + 1, []); // 오버헤드만 추가
+  const simple = 1 + 1; // 이게 더 빠름
+}
+
+// ❌ 2. 사용처가 없는 함수
+function Component() {
+  const fn = useCallback(() => {}, []); // 어디에도 전달 안함
+  return <div>{value}</div>;
+}
+
+// ❌ 3. 원시값 메모이제이션
+const count = useMemo(() => 5, []); // 의미 없음
+const count = 5; // 그냥 이렇게
+
+// ❌ 4. 모든 것을 메모이제이션
+function Component() {
+  const a = useMemo(() => 1, []);
+  const b = useMemo(() => 2, []);
+  const c = useMemo(() => a + b, [a, b]);
+  // 코드만 복잡해지고 성능 향상 없음
+}
+```
+
+**성능 측정 후 적용:**
+
+```jsx
+// React DevTools Profiler로 측정
+// 1. 렌더링 시간이 긴 컴포넌트 찾기
+// 2. 불필요한 리렌더링 확인
+// 3. useMemo/useCallback 적용
+// 4. 다시 측정하여 개선 확인
+```
+
+**trade-off 이해:**
+
+```jsx
+// 메모이제이션의 비용:
+// - 메모리 사용 (이전 값 저장)
+// - 의존성 비교 오버헤드
+// - 코드 복잡도 증가
+
+// 메모이제이션의 이점:
+// - 불필요한 재계산 방지
+// - 참조 동일성 유지
+// - 자식 컴포넌트 리렌더링 방지
+```
+
+---
+
+### Q5. Context API의 동작 원리와 성능 최적화 방법을 설명해주세요.
+
+**키워드:** `전역 상태`, `props drilling`, `Provider`, `Consumer`, `리렌더링 최적화`, `Context 분리`
+
+**답변:**
+
+**기본 사용:**
+
+```jsx
+const ThemeContext = createContext("light");
+
+function App() {
+  const [theme, setTheme] = useState("light");
+
+  return (
+    <ThemeContext.Provider value={theme}>
+      <Child />
+    </ThemeContext.Provider>
+  );
+}
+
+function Child() {
+  const theme = useContext(ThemeContext);
+  return <div className={theme}>Content</div>;
+}
+```
+
+**성능 문제:**
+Provider의 value가 변경되면 모든 Consumer가 리렌더링됩니다.
+
+```jsx
+// ❌ 문제: 매 렌더링마다 새 객체 생성
+function App() {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState("light");
+
+  return (
+    <Context.Provider value={{ user, theme, setUser, setTheme }}>
+      <Child />
+    </Context.Provider>
+  );
+}
+// user나 theme만 변경돼도 모든 Consumer 리렌더링
+
+// ✅ 해결: useMemo로 최적화
+function App() {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState("light");
+
+  const value = useMemo(() => ({ user, theme, setUser, setTheme }), [user, theme]);
+
+  return (
+    <Context.Provider value={value}>
+      <Child />
+    </Context.Provider>
+  );
+}
+```
+
+**Context 분리 전략:**
+
+```jsx
+// ❌ 하나의 Context에 모든 상태
+const AppContext = createContext();
+
+function Provider({ children }) {
+  const [user, setUser] = useState(null); // 거의 변경 안됨
+  const [theme, setTheme] = useState("light"); // 자주 변경
+  const [count, setCount] = useState(0); // 매우 자주 변경
+
+  return <AppContext.Provider value={{ user, theme, count }}>{children}</AppContext.Provider>;
+}
+// count만 변경돼도 모든 컴포넌트 리렌더링
+
+// ✅ 변경 빈도별로 Context 분리
+const UserContext = createContext();
+const ThemeContext = createContext();
+const CountContext = createContext();
+
+function Provider({ children }) {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState("light");
+  const [count, setCount] = useState(0);
+
+  return (
+    <UserContext.Provider value={user}>
+      <ThemeContext.Provider value={theme}>
+        <CountContext.Provider value={count}>{children}</CountContext.Provider>
+      </ThemeContext.Provider>
+    </UserContext.Provider>
+  );
+}
+
+// 컴포넌트는 필요한 Context만 구독
+function UserProfile() {
+  const user = useContext(UserContext); // count 변경 시 리렌더링 안됨
+  return <div>{user?.name}</div>;
+}
+```
+
+**값과 업데이트 함수 분리:**
+
+```jsx
+const StateContext = createContext();
+const DispatchContext = createContext();
+
+function Provider({ children }) {
+  const [state, setState] = useState(initialState);
+
+  // dispatch는 변경되지 않음
+  const dispatch = useCallback((action) => {
+    setState((prev) => reducer(prev, action));
+  }, []);
+
+  return (
+    <StateContext.Provider value={state}>
+      <DispatchContext.Provider value={dispatch}>{children}</DispatchContext.Provider>
+    </StateContext.Provider>
+  );
+}
+
+// 상태만 필요한 컴포넌트
+function Display() {
+  const state = useContext(StateContext);
+  return <div>{state.count}</div>;
+}
+
+// 업데이트만 필요한 컴포넌트 (리렌더링 안됨!)
+function Controls() {
+  const dispatch = useContext(DispatchContext);
+  return <button onClick={() => dispatch({ type: "INCREMENT" })}>+</button>;
+}
+```
+
+**Selector 패턴:**
+
+```jsx
+// Context에서 필요한 부분만 선택
+function createSelector(context) {
+  return function useSelector(selector) {
+    const value = useContext(context);
+    return useMemo(() => selector(value), [value, selector]);
+  };
+}
+
+const useAppSelector = createSelector(AppContext);
+
+function Component() {
+  // user만 변경될 때만 리렌더링
+  const user = useAppSelector((state) => state.user);
+  return <div>{user.name}</div>;
+}
+```
+
+**대안 고려:**
+
+```jsx
+// Context가 복잡해지면 상태 관리 라이브러리 고려
+// - Zustand: 간단하고 가벼움
+// - Recoil: Atom 기반, 세밀한 제어
+// - Redux Toolkit: 표준화된 패턴, 미들웨어
+
+// 단순 props drilling은 그대로 두는 것이 나을 수 있음
+// 2-3단계 정도는 Context 없이 props로 전달
+```
+
+---
+
+### Q6. React 18의 주요 변경사항과 Concurrent Rendering을 설명해주세요.
+
+**키워드:** `Automatic Batching`, `Transitions`, `Suspense`, `useTransition`, `useDeferredValue`, `Concurrent Mode`
+
+**답변:**
+
+**1. Automatic Batching**
+
+```jsx
+// React 17: 이벤트 핸들러만 배칭
+function Component() {
+  const [count, setCount] = useState(0);
+  const [flag, setFlag] = useState(false);
+
+  function handleClick() {
+    setCount((c) => c + 1); // 배칭 O
+    setFlag((f) => !f); // 한 번만 렌더링
+  }
+
+  setTimeout(() => {
+    setCount((c) => c + 1); // 배칭 X
+    setFlag((f) => !f); // 두 번 렌더링
+  }, 1000);
+}
+
+// React 18: 모든 업데이트 자동 배칭
+setTimeout(() => {
+  setCount((c) => c + 1);
+  setFlag((f) => !f); // 한 번만 렌더링
+}, 1000);
+
+// 배칭 비활성화
+import { flushSync } from "react-dom";
+
+flushSync(() => {
+  setCount((c) => c + 1); // 즉시 렌더링
+});
+setFlag((f) => !f); // 별도 렌더링
+```
+
+**2. Transitions (긴급/지연 업데이트 구분)**
+
+```jsx
+import { useTransition, useState } from "react";
+
+function SearchPage() {
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  function handleChange(e) {
+    const value = e.target.value;
+
+    // 긴급 업데이트: 즉시 반영 (사용자 입력)
+    setQuery(value);
+
+    // 지연 가능한 업데이트: 백그라운드 처리
+    startTransition(() => {
+      const filtered = searchData(value); // 무거운 작업
+      setResults(filtered);
+    });
+  }
+
+  return (
+    <>
+      <input value={query} onChange={handleChange} />
+      {isPending && <Spinner />} {/* 로딩 상태 */}
+      <Results data={results} />
+    </>
+  );
+}
+
+// 사용자는 입력이 즉각 반응하는 것을 보지만
+// 결과는 백그라운드에서 계산됨 (응답성 유지)
+```
+
+**3. useDeferredValue**
+
+```jsx
+function SearchResults({ query }) {
+  // query는 즉시 업데이트, deferredQuery는 지연 업데이트
+  const deferredQuery = useDeferredValue(query);
+
+  // deferredQuery로 무거운 작업
+  const results = useMemo(() => {
+    return searchData(deferredQuery);
+  }, [deferredQuery]);
+
+  return (
+    <>
+      {query !== deferredQuery && <div>Loading...</div>}
+      <List items={results} />
+    </>
+  );
+}
+```
+
+**4. Suspense for Data Fetching**
+
+```jsx
+// React 18 이전: 로딩 상태 직접 관리
+function UserProfile({ id }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchUser(id).then((data) => {
+      setUser(data);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) return <Spinner />;
+  return <div>{user.name}</div>;
+}
+
+// React 18: Suspense로 선언적 관리
+<Suspense fallback={<Spinner />}>
+  <UserProfile id={123} />
+</Suspense>;
+
+// 컴포넌트는 데이터를 동기적으로 읽음
+function UserProfile({ id }) {
+  const user = readUser(id); // Suspense 경계로 throw
+  return <div>{user.name}</div>;
+}
+```
+
+**5. Concurrent Rendering**
+
+```jsx
+// 개념: 렌더링을 중단하고 재개 가능
+// 1. 높은 우선순위 작업이 들어오면
+// 2. 현재 렌더링 중단
+// 3. 긴급 작업 먼저 처리
+// 4. 이전 작업 재개
+
+// 예시: 타이핑 중 무거운 리스트 렌더링
+function App() {
+  const [input, setInput] = useState("");
+  const [list, setList] = useState([]);
+
+  return (
+    <>
+      {/* 높은 우선순위 */}
+      <input value={input} onChange={(e) => setInput(e.target.value)} />
+
+      {/* 낮은 우선순위 */}
+      <HeavyList items={list} />
+    </>
+  );
+}
+// 타이핑은 즉시 반응, 리스트는 백그라운드 렌더링
+```
+
+**6. startTransition API**
+
+```jsx
+import { startTransition } from "react";
+
+function handleClick() {
+  // 긴급: 탭 전환
+  setTab("photos");
+
+  // 지연: 데이터 로드
+  startTransition(() => {
+    setPhotos(loadPhotos());
+  });
+}
+```
+
+**React 18 마이그레이션:**
+
+```jsx
+// index.js
+// React 17
+import ReactDOM from "react-dom";
+ReactDOM.render(<App />, document.getElementById("root"));
+
+// React 18
+import { createRoot } from "react-dom/client";
+const root = createRoot(document.getElementById("root"));
+root.render(<App />);
+```
+
+**주요 이점:**
+
+- 응답성 향상: 사용자 입력이 항상 우선
+- 부드러운 전환: 로딩 상태 관리 개선
+- 성능 최적화: 자동 배칭으로 렌더링 최소화
+
+---
+
+### Q7. Custom Hook을 만들 때 고려해야 할 사항과 Best Practice를 설명해주세요.
+
+**키워드:** `재사용성`, `관심사 분리`, `명명 규칙`, `의존성 관리`, `클린업`
+
+**답변:**
+
+**Custom Hook 설계 원칙:**
+
+1. `use`로 시작하는 이름
+2. 재사용 가능한 로직 추출
+3. Hook 규칙 준수 (최상위, React 함수)
+4. 적절한 반환값 설계
+
+**기본 예제:**
+
+```jsx
+// useFetch - 데이터 페칭 추상화
+function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    setLoading(true);
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!isCancelled) {
+          setData(data);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          setError(err);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true; // cleanup
+    };
+  }, [url]);
+
+  return { data, loading, error };
+}
+
+// 사용
+function UserProfile({ userId }) {
+  const { data, loading, error } = useFetch(`/api/users/${userId}`);
+
+  if (loading) return <Spinner />;
+  if (error) return <Error message={error.message} />;
+  return <Profile user={data} />;
+}
+```
+
+**고급 패턴:**
+
+```jsx
+// 1. useLocalStorage - 로컬 스토리지 동기화
+function useLocalStorage(key, initialValue) {
+  const [value, setValue] = useState(() => {
+    const stored = localStorage.getItem(key);
+    return stored ? JSON.parse(stored) : initialValue;
+  });
+
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
+// 2. useDebounce - 입력 디바운싱
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// 3. useInterval - 간격 실행
+function useInterval(callback, delay) {
+  const savedCallback = useRef(callback);
+
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  useEffect(() => {
+    if (delay === null) return;
+
+    const timer = setInterval(() => {
+      savedCallback.current();
+    }, delay);
+
+    return () => clearInterval(timer);
+  }, [delay]);
+}
+
+// 4. useMediaQuery - 반응형 체크
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    setMatches(media.matches);
+
+    const listener = (e) => setMatches(e.matches);
+    media.addEventListener("change", listener);
+
+    return () => media.removeEventListener("change", listener);
+  }, [query]);
+
+  return matches;
+}
+
+// 5. usePrevious - 이전 값 저장
+function usePrevious(value) {
+  const ref = useRef();
+
+  useEffect(() => {
+    ref.current = value;
+  }, [value]);
+
+  return ref.current;
+}
+
+// 6. useToggle - boolean 토글
+function useToggle(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+
+  const toggle = useCallback(() => {
+    setValue((v) => !v);
+  }, []);
+
+  return [value, toggle];
+}
+```
+
+**복잡한 상태 관리:**
+
+```jsx
+// useAsync - 비동기 작업 관리
+function useAsync(asyncFunction, immediate = true) {
+  const [status, setStatus] = useState("idle");
+  const [value, setValue] = useState(null);
+  const [error, setError] = useState(null);
+
+  const execute = useCallback(
+    async (...params) => {
+      setStatus("pending");
+      setValue(null);
+      setError(null);
+
+      try {
+        const response = await asyncFunction(...params);
+        setValue(response);
+        setStatus("success");
+        return response;
+      } catch (error) {
+        setError(error);
+        setStatus("error");
+        throw error;
+      }
+    },
+    [asyncFunction]
+  );
+
+  useEffect(() => {
+    if (immediate) {
+      execute();
+    }
+  }, [execute, immediate]);
+
+  return { execute, status, value, error };
+}
+
+// 사용
+function UserList() {
+  const { execute, status, value, error } = useAsync(fetchUsers);
+
+  if (status === "pending") return <Spinner />;
+  if (status === "error") return <Error error={error} />;
+
+  return (
+    <>
+      <button onClick={execute}>Refresh</button>
+      <List users={value} />
+    </>
+  );
+}
+```
+
+**Best Practices:**
+
+```jsx
+// 1. ✅ 명확한 반환값
+function useUser(id) {
+  // 객체로 반환 (이름으로 접근)
+  return { user, loading, error, refetch };
+
+  // 배열로 반환 (순서로 접근, 이름 변경 가능)
+  return [user, { loading, error, refetch }];
+}
+
+// 2. ✅ 의존성 명확히
+function useFetch(url, options) {
+  useEffect(() => {
+    fetchData(url, options);
+  }, [url, options]); // options 변경 시 재실행
+
+  // 안정적인 options
+  const stableOptions = useMemo(
+    () => options,
+    [
+      /* 필요한 의존성 */
+    ]
+  );
+}
+
+// 3. ✅ 에러 처리
+function useData(id) {
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchData(id).catch((err) => {
+      setError(err);
+      console.error("Failed to fetch:", err);
+    });
+  }, [id]);
+
+  return { data, error };
+}
+
+// 4. ✅ 조건부 실행 지원
+function useFetch(url, options = {}) {
+  const { enabled = true } = options;
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    fetchData(url);
+  }, [url, enabled]);
+}
+
+// 5. ✅ TypeScript 지원
+function useUser(id: string): {
+  user: User | null,
+  loading: boolean,
+  error: Error | null,
+} {
+  // ...
+}
+```
+
+**주의사항:**
+
+```jsx
+// ❌ Hook 안에서 조건부로 다른 Hook 호출
+function useBadHook(condition) {
+  if (condition) {
+    const [state] = useState(0); // 순서 변경!
+  }
+}
+
+// ✅ Hook은 항상 같은 순서로
+function useGoodHook(condition) {
+  const [state] = useState(0);
+
+  useEffect(() => {
+    if (condition) {
+      // 조건은 내부에서
+    }
+  }, [condition]);
+}
+```
+
+## 🚀 Next.js
+
+### Q1. Next.js의 렌더링 전략(SSG, SSR, ISR, CSR)을 비교하고, 각각의 사용 사례를 설명해주세요.
+
+**키워드:** `빌드 타임`, `요청 시간`, `재검증`, `SEO`, `캐싱`, `성능`
+
+**답변:**
+
+**1. SSG (Static Site Generation)**
+
+```jsx
+// 빌드 타임에 HTML 생성
+export async function getStaticProps() {
+  const posts = await fetchPosts();
+  return {
+    props: { posts },
+  };
+}
+
+// 특징:
+// ✅ 가장 빠름 (CDN 캐싱)
+// ✅ SEO 최적
+// ❌ 빌드 시간 증가
+// ❌ 실시간 데이터 X
+
+// 사용 사례: 블로그, 문서, 마케팅 페이지, 정적 콘텐츠
+```
+
+**2. SSR (Server-Side Rendering)**
+
+```jsx
+// 매 요청마다 서버에서 렌더링
+export async function getServerSideProps(context) {
+  const user = await fetchUser(context.req.cookies.token);
+  return {
+    props: { user },
+  };
+}
+
+// 특징:
+// ✅ 항상 최신 데이터
+// ✅ SEO 최적
+// ❌ 느린 TTFB (Time To First Byte)
+// ❌ 서버 부하
+
+// 사용 사례: 대시보드, 개인화된 페이지, 실시간 데이터
+```
+
+**3. ISR (Incremental Static Regeneration)**
+
+```jsx
+// 정적 생성 + 주기적 재검증
+export async function getStaticProps() {
+  const products = await fetchProducts();
+  return {
+    props: { products },
+    revalidate: 60, // 60초마다 재생성
+  };
+}
+
+// 특징:
+// ✅ SSG의 속도 + SSR의 최신성
+// ✅ 백그라운드 재생성
+// ❌ 데이터 지연 가능 (revalidate 시간)
+
+// 사용 사례: 전자상거래 제품 페이지, 뉴스 사이트
+```
+
+**4. CSR (Client-Side Rendering)**
+
+```jsx
+// 클라이언트에서 데이터 페칭
+function Dashboard() {
+  const { data, isLoading } = useSWR("/api/user", fetcher);
+
+  if (isLoading) return <Spinner />;
+  return <div>{data.name}</div>;
+}
+
+// 특징:
+// ✅ 빠른 페이지 전환
+// ✅ 인터랙티브
+// ❌ SEO 불리
+// ❌ 초기 로딩 느림
+
+// 사용 사례: 인증 필요 페이지, 관리자 페이지
+```
+
+**선택 기준:**
+
+| 전략 | 속도   | SEO    | 최신성 | 서버 부하 | 사용 사례     |
+| ---- | ------ | ------ | ------ | --------- | ------------- |
+| SSG  | ⭐⭐⭐ | ⭐⭐⭐ | ❌     | ❌        | 정적 콘텐츠   |
+| SSR  | ⭐     | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐    | 동적 콘텐츠   |
+| ISR  | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐   | ⭐        | 준정적 콘텐츠 |
+| CSR  | ⭐⭐   | ❌     | ⭐⭐⭐ | ❌        | 인증 필요     |
+
+**하이브리드 전략:**
+
+```jsx
+// 페이지별로 다른 전략 사용// / (홈) → SSG// /products → ISR// /products/[id] → ISR// /dashboard → SSR + CSR// /profile → SSR + CSR
+```
+
+---
+
+### Q2. App Router와 Pages Router의 차이점, 그리고 Server Components를 설명해주세요.
+
+**키워드:** `파일 시스템 라우팅`, `레이아웃`, `서버 컴포넌트`, `클라이언트 컴포넌트`, `데이터 페칭`
+
+**답변:**
+
+**Pages Router (기존):**
+
+```jsx
+// pages/users/[id].js
+export async function getServerSideProps({ params }) {
+  const user = await fetchUser(params.id);
+  return { props: { user } };
+}
+
+export default function UserPage({ user }) {
+  return <div>{user.name}</div>;
+}
+
+// 특징:
+// - pages/ 디렉토리
+// - getServerSideProps, getStaticProps로 데이터 페칭
+// - _app.js로 레이아웃
+// - 모든 컴포넌트가 Client Component
+```
+
+**App Router (Next.js 13+):**
+
+```jsx
+// app/users/[id]/page.js
+async function UserPage({ params }) {
+  const user = await fetchUser(params.id); // 직접 fetch
+  return <div>{user.name}</div>;
+}
+
+export default UserPage;
+
+// 특징:
+// - app/ 디렉토리
+// - 컴포넌트 내에서 직접 데이터 페칭
+// - layout.js로 중첩 레이아웃
+// - 기본이 Server Component
+```
+
+**주요 차이점:**
+
+| 특징          | Pages Router         | App Router              |
+| ------------- | -------------------- | ----------------------- |
+| 위치          | `pages/`             | `app/`                  |
+| 라우팅        | 파일 기반            | 폴더 기반               |
+| 레이아웃      | `_app.js`            | `layout.js` (중첩 가능) |
+| 데이터 페칭   | `getServerSideProps` | 직접 fetch              |
+| 기본 컴포넌트 | Client               | Server                  |
+| 스트리밍      | 제한적               | Suspense 지원           |
+
+**Server Components:**
+
+```jsx
+// app/users/page.js (Server Component - 기본)
+async function Users() {
+  // 서버에서만 실행
+  const users = await db.users.findMany(); // DB 직접 접근
+  const secret = process.env.SECRET_KEY; // 비밀 키 안전
+
+  return (
+    <div>
+      {users.map((user) => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  );
+}
+
+// app/components/Counter.js (Client Component)
+("use client"); // 명시적 선언
+
+import { useState } from "react";
+
+export function Counter() {
+  const [count, setCount] = useState(0);
+
+  return <button onClick={() => setCount(count + 1)}>{count}</button>;
+}
+```
+
+**Server vs Client Components:**
+
+| 기능                | Server    | Client |
+| ------------------- | --------- | ------ |
+| 데이터 페칭         | ✅        | ✅     |
+| DB 접근             | ✅        | ❌     |
+| 비밀 키 사용        | ✅        | ❌     |
+| useState, useEffect | ❌        | ✅     |
+| 이벤트 핸들러       | ❌        | ✅     |
+| 브라우저 API        | ❌        | ✅     |
+| Context             | ❌        | ✅     |
+| 번들 크기           | 포함 안됨 | 포함됨 |
+
+**레이아웃 시스템:**
+
+```jsx
+// app/layout.js (루트 레이아웃)
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <Header />
+        {children}
+        <Footer />
+      </body>
+    </html>
+  );
+}
+
+// app/dashboard/layout.js (중첩 레이아웃)
+export default function DashboardLayout({ children }) {
+  return (
+    <div>
+      <Sidebar />
+      <main>{children}</main>
+    </div>
+  );
+}
+
+// app/dashboard/page.js
+// 자동으로 RootLayout → DashboardLayout 적용
+```
+
+**언제 Client Component를 사용하나:**
+
+```jsx
+"use client";
+
+// 1. useState, useEffect 등 Hook 사용
+const [state, setState] = useState(0);
+
+// 2. 이벤트 핸들러
+<button onClick={handleClick}>Click</button>;
+
+// 3. 브라우저 API
+useEffect(() => {
+  localStorage.setItem("key", "value");
+}, []);
+
+// 4. React Context
+const value = useContext(MyContext);
+
+// 5. 클래스 컴포넌트
+class MyComponent extends React.Component {}
+```
+
+---
+
+### Q3. Next.js의 이미지 최적화(next/image)와 폰트 최적화(next/font)를 설명해주세요.
+
+**키워드:** `자동 최적화`, `WebP`, `lazy loading`, `placeholder`, `srcset`, `FOUT 방지`
+
+**답변:**
+
+**next/image 최적화:**
+
+```jsx
+import Image from "next/image";
+
+function ProductCard() {
+  return (
+    <Image
+      src="/product.jpg"
+      alt="Product"
+      width={500}
+      height={300}
+      priority // LCP 최적화 (Above the fold)
+      placeholder="blur" // 블러 효과
+      blurDataURL="data:image/..." // 또는 자동 생성
+      quality={80} // 1-100 (기본 75)
+      sizes="(max-width: 768px) 100vw, 50vw" // 반응형
+    />
+  );
+}
+```
+
+**자동 최적화 기능:**
+
+1. **지연 로딩**: viewport에 들어올 때 로드
+2. **WebP/AVIF 변환**: 최신 포맷으로 자동 변환
+3. **반응형**: srcset 자동 생성
+4. **크기 최적화**: 디바이스에 맞는 크기 제공
+5. **캐싱**: 자동 캐시 관리
+6. **레이아웃 시프트 방지**: width/height 필수
+
+**설정:**
+
+```jsx
+// next.config.js
+module.exports = {
+  images: {
+    domains: ["example.com", "cdn.example.com"], // 외부 이미지 허용
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920], // 생성할 이미지 크기
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ["image/avif", "image/webp"], // 포맷 우선순위
+    minimumCacheTTL: 60, // 캐시 시간 (초)
+    dangerouslyAllowSVG: true, // SVG 허용
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+};
+```
+
+**fill 모드:**
+
+```jsx
+// 부모 크기에 맞춤 (반응형)
+<div style={{ position: "relative", width: "100%", height: "400px" }}>
+  <Image src="/hero.jpg" alt="Hero" fill style={{ objectFit: "cover" }} />
+</div>
+```
+
+**next/font 최적화:**
+
+```jsx
+// app/layout.js
+import { Inter, Noto_Sans_KR, Roboto_Mono } from "next/font/google";
+
+// Google Fonts
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap", // FOUT 방지
+  variable: "--font-inter", // CSS 변수
+});
+
+const notoSansKR = Noto_Sans_KR({
+  weight: ["400", "700"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// 로컬 폰트
+const robotoMono = localFont({
+  src: "./fonts/RobotoMono-Regular.woff2",
+  display: "swap",
+  variable: "--font-roboto-mono",
+});
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ko" className={`${inter.variable} ${robotoMono.variable}`}>
+      <body className={notoSansKR.className}>{children}</body>
+    </html>
+  );
+}
+```
+
+**장점:**
+
+```jsx
+// 1. 자동 자체 호스팅 (Google Fonts도)
+// - 빌드 시 폰트 다운로드
+// - 자체 서버에서 제공
+// - 외부 요청 없음
+
+// 2. 레이아웃 시프트 제거
+// - 폰트 메트릭 자동 계산
+// - CSS로 예약 공간 확보
+
+// 3. FOUT/FOIT 방지
+// - display: swap 자동 적용
+// - 폴백 폰트와 크기 맞춤
+
+// 4. CSS 변수로 사용
+.title {
+  font-family: var(--font-inter);
+}
+```
+
+**여러 폰트 사용:**
+
+```jsx
+// 페이지별 다른 폰트
+export default function SpecialPage() {
+  return (
+    <div className={specialFont.className}>
+      <h1>Special Font</h1>
+    </div>
+  );
+}
+
+// 특정 요소만
+<p className={inter.className}>Inter font</p>
+<code className={robotoMono.className}>Roboto Mono</code>
+```
+
+---
+
+### Q4. API Routes와 Route Handlers의 차이, 그리고 Middleware의 활용 방법을 설명해주세요.
+
+**키워드:** `REST API`, `인증`, `CORS`, `에러 처리`, `미들웨어`, `리다이렉트`
+
+**답변:**
+
+**Pages Router - API Routes:**
+
+```jsx
+// pages/api/users.js
+export default function handler(req, res) {
+  if (req.method === "GET") {
+    const users = getUsers();
+    res.status(200).json({ users });
+  } else if (req.method === "POST") {
+    const user = req.body;
+    createUser(user);
+    res.status(201).json(user);
+  } else {
+    res.status(405).json({ error: "Method not allowed" });
+  }
+}
+```
+
+**App Router - Route Handlers:**
+
+```jsx
+// app/api/users/route.js
+import { NextResponse } from "next/server";
+
+export async function GET(request) {
+  // Query params
+  const searchParams = request.nextUrl.searchParams;
+  const query = searchParams.get("query");
+
+  const users = await db.users.findMany({
+    where: { name: { contains: query } },
+  });
+
+  return NextResponse.json({ users });
+}
+
+export async function POST(request) {
+  const body = await request.json();
+
+  // 검증
+  if (!body.email) {
+    return NextResponse.json({ error: "Email required" }, { status: 400 });
+  }
+
+  const user = await db.users.create({ data: body });
+
+  return NextResponse.json(user, { status: 201 });
+}
+```
+
+**동적 라우트:**
+
+```jsx
+// app/api/users/[id]/route.js
+export async function GET(request, { params }) {
+  const user = await db.users.findUnique({
+    where: { id: params.id },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: "User not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(user);
+}
+
+export async function PUT(request, { params }) {
+  const body = await request.json();
+
+  const user = await db.users.update({
+    where: { id: params.id },
+    data: body,
+  });
+
+  return NextResponse.json(user);
+}
+
+export async function DELETE(request, { params }) {
+  await db.users.delete({
+    where: { id: params.id },
+  });
+
+  return new Response(null, { status: 204 });
+}
+```
+
+**에러 처리:**
+
+```jsx
+export async function POST(request) {
+  try {
+    const body = await request.json();
+
+    // 비즈니스 로직
+    const result = await processData(body);
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("API Error:", error);
+
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+```
+
+**Middleware:**
+
+```jsx
+// middleware.js
+import { NextResponse } from "next/server";
+
+export function middleware(request) {
+  // 1. 인증 체크
+  const token = request.cookies.get("token");
+
+  if (!token && request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // 2. 헤더 추가
+  const response = NextResponse.next();
+  response.headers.set("X-Custom-Header", "value");
+  response.headers.set("X-Request-Time", Date.now().toString());
+
+  // 3. 쿠키 설정
+  response.cookies.set("visited", "true", { maxAge: 60 * 60 * 24 });
+
+  return response;
+}
+
+// 특정 경로에만 적용
+export const config = {
+  matcher: [
+    "/dashboard/:path*",
+    "/api/:path*",
+    "/((?!_next|static|favicon.ico).*)", // 정규식
+  ],
+};
+```
+
+**Middleware 활용 사례:**
+
+```jsx
+// 1. 인증/인가
+export function middleware(request) {
+  const session = request.cookies.get("session");
+
+  if (!session) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // JWT 검증
+  try {
+    const user = verifyJWT(session.value);
+
+    // 권한 체크
+    if (request.nextUrl.pathname.startsWith("/admin") && !user.isAdmin) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  } catch (error) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+// 2. A/B 테스팅
+export function middleware(request) {
+  const bucket = Math.random() < 0.5 ? "A" : "B";
+
+  const response = NextResponse.next();
+  response.cookies.set("bucket", bucket);
+
+  return response;
+}
+
+// 3. 국제화 (i18n)
+export function middleware(request) {
+  const locale = request.cookies.get("locale")?.value || "ko";
+  const pathname = request.nextUrl.pathname;
+
+  if (!pathname.startsWith(`/${locale}`)) {
+    return NextResponse.redirect(new URL(`/${locale}${pathname}`, request.url));
+  }
+
+  return NextResponse.next();
+}
+
+// 4. 로깅
+export function middleware(request) {
+  console.log({
+    method: request.method,
+    url: request.url,
+    userAgent: request.headers.get("user-agent"),
+    time: new Date().toISOString(),
+  });
+
+  return NextResponse.next();
+}
+
+// 5. 봇 감지
+export function middleware(request) {
+  const userAgent = request.headers.get("user-agent") || "";
+
+  const isBot = /bot|crawler|spider/i.test(userAgent);
+
+  if (isBot && request.nextUrl.pathname.startsWith("/api")) {
+    return NextResponse.json({ error: "Bots not allowed" }, { status: 403 });
+  }
+
+  return NextResponse.next();
+}
+```
+
+**Middleware vs API Route:**
+
+- **Middleware**: 모든 요청에 대해 실행 (빠름)
+- **API Route**: 특정 엔드포인트만 (무거운 로직 가능)
+
+---
+
+### Q5. Next.js의 캐싱 전략과 revalidate 옵션을 설명해주세요.
+
+**키워드:** `Data Cache`, `Full Route Cache`, `Request Memoization`, `On-Demand Revalidation`, `태그 기반`
+
+**답변:**
+
+**캐싱 레벨:**
+
+**1. Full Route Cache (빌드 타임)**
+
+```jsx
+// app/posts/page.js
+export const revalidate = 3600; // 1시간
+
+async function PostsPage() {
+  const posts = await fetch("https://api.example.com/posts");
+  return <PostList posts={posts} />;
+}
+
+// 빌드 시 HTML 생성 → 1시간 동안 재사용
+```
+
+**2. Data Cache (fetch 레벨)**
+
+```jsx
+// 기본: 무제한 캐시 (SSG)
+const data = await fetch("https://api.example.com/data");
+
+// 캐시 비활성화 (SSR)
+const data = await fetch("https://api.example.com/data", {
+  cache: "no-store",
+});
+
+// 시간 기반 재검증 (ISR)
+const data = await fetch("https://api.example.com/data", {
+  next: { revalidate: 3600 }, // 1시간
+});
+
+// 태그 기반 재검증
+const data = await fetch("https://api.example.com/data", {
+  next: { tags: ["posts"] },
+});
+```
+
+**3. Request Memoization (요청 중복 제거)**
+
+```jsx
+// 같은 렌더링 사이클에서 동일 요청은 한 번만
+async function Layout() {
+  const user = await fetch("/api/user"); // 첫 요청
+  return <Header user={user} />;
+}
+
+async function Page() {
+  const user = await fetch("/api/user"); // 중복 제거됨
+  return <Profile user={user} />;
+}
+
+// 내부적으로 React Cache 사용
+```
+
+**revalidate 옵션:**
+
+```jsx
+// 1. 페이지 레벨
+// app/products/page.js
+export const revalidate = 60; // 60초
+
+export default async function Products() {
+  const products = await getProducts();
+  return <ProductList products={products} />;
+}
+
+// 2. fetch 레벨 (우선순위 높음)
+const data1 = await fetch('/api/data1', { next: { revalidate: 30 } });
+const data2 = await fetch('/api/data2', { next: { revalidate: 60 } });
+// 이 페이지는 30초마다 재검증
+
+// 3. 레이아웃 레벨
+// app/layout.js
+export const revalidate = 3600;
+
+// 4. 동적 함수 사용 시 자동 no-store
+export default async function Page({ searchParams }) {
+  // cookies(), headers(), searchParams 사용 시 동적
+  const query = searchParams.query;
+  return <Results query={query} />;
+}
+```
+
+**On-Demand Revalidation:**
+
+```jsx
+// app/api/revalidate/route.js
+import { revalidatePath, revalidateTag } from "next/cache";
+
+export async function POST(request) {
+  const { path, tag, secret } = await request.json();
+
+  // 보안 검증
+  if (secret !== process.env.REVALIDATE_SECRET) {
+    return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
+  }
+
+  try {
+    // 경로 기반
+    if (path) {
+      revalidatePath(path);
+      console.log(`Revalidated path: ${path}`);
+    }
+
+    // 태그 기반
+    if (tag) {
+      revalidateTag(tag);
+      console.log(`Revalidated tag: ${tag}`);
+    }
+
+    return NextResponse.json({ revalidated: true });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// CMS 웹훅에서 호출
+// POST /api/revalidate
+// { "path": "/posts", "secret": "..." }
+// { "tag": "posts", "secret": "..." }
+```
+
+**태그 기반 재검증:**
+
+```jsx
+// 데이터 페칭 시 태그 지정
+async function getPosts() {
+  const res = await fetch("https://api.example.com/posts", {
+    next: { tags: ["posts"] },
+  });
+  return res.json();
+}
+
+async function getPost(id) {
+  const res = await fetch(`https://api.example.com/posts/${id}`, {
+    next: { tags: ["posts", `post-${id}`] },
+  });
+  return res.json();
+}
+
+// 재검증
+revalidateTag("posts"); // 모든 posts 관련 캐시 무효화
+revalidateTag("post-1"); // 특정 post만 무효화
+```
+
+**캐싱 전략 선택:**
+
+```jsx
+// 1. 정적 데이터 (변경 거의 없음)
+export const revalidate = false; // 또는 명시 안함
+// 예: 블로그 글, 문서
+
+// 2. 자주 변경되는 데이터
+export const revalidate = 60; // 1분
+// 예: 제품 가격, 재고
+
+// 3. 실시간 데이터
+export const dynamic = "force-dynamic"; // no-store
+// 예: 대시보드, 사용자별 데이터
+
+// 4. 혼합
+async function Page() {
+  // 정적
+  const config = await fetch("/api/config", { next: { revalidate: 3600 } });
+
+  // 동적
+  const user = await fetch("/api/user", { cache: "no-store" });
+
+  return <PageContent config={config} user={user} />;
+}
+```
+
+**캐시 무효화:**
+
+```jsx
+// 1. 시간 기반 (자동)
+export const revalidate = 60;
+
+// 2. On-Demand (수동)
+revalidatePath("/posts");
+revalidateTag("posts");
+
+// 3. 클라이언트에서 (router)
+("use client");
+import { useRouter } from "next/navigation";
+
+function Component() {
+  const router = useRouter();
+
+  const handleUpdate = async () => {
+    await updateData();
+    router.refresh(); // 현재 경로 재검증
+  };
+}
+```
+
+---
+
+### Q6. Dynamic Routes와 Catch-all Routes, generateStaticParams를 설명해주세요.
+
+**키워드:** `동적 라우팅`, `정적 생성`, `fallback`, `빌드 최적화`, `SEO`
+
+**답변:**
+
+**Dynamic Routes:**
+
+```jsx
+// app/posts/[slug]/page.js
+// 매칭: /posts/hello, /posts/world
+
+async function PostPage({ params }) {
+  const post = await getPost(params.slug);
+
+  return (
+    <article>
+      <h1>{post.title}</h1>
+      <div>{post.content}</div>
+    </article>
+  );
+}
+
+export default PostPage;
+```
+
+**Catch-all Routes:**
+
+```jsx
+// app/docs/[...slug]/page.js
+// 매칭: /docs/a, /docs/a/b, /docs/a/b/c
+
+async function DocsPage({ params }) {
+  const segments = params.slug; // ['a', 'b', 'c']
+  const path = segments.join("/");
+
+  const doc = await getDoc(path);
+  return <Documentation doc={doc} />;
+}
+
+// app/docs/[[...slug]]/page.js (Optional Catch-all)
+// 매칭: /docs, /docs/a, /docs/a/b
+
+async function DocsPage({ params }) {
+  // params.slug가 undefined일 수 있음
+  const segments = params.slug || [];
+  const doc = segments.length > 0 ? await getDoc(segments.join("/")) : await getHomePage();
+
+  return <Documentation doc={doc} />;
+}
+```
+
+**generateStaticParams (SSG):**
+
+```jsx
+// app/posts/[slug]/page.js
+
+// 빌드 시 생성할 경로 지정
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+async function PostPage({ params }) {
+  const post = await getPost(params.slug);
+  return <Article post={post} />;
+}
+
+// 빌드 시 생성:
+// /posts/first-post
+// /posts/second-post
+// /posts/third-post
+```
+
+**중첩 동적 라우트:**
+
+```jsx
+// app/categories/[category]/posts/[slug]/page.js
+
+export async function generateStaticParams() {
+  const categories = await getCategories();
+
+  const paths = [];
+
+  for (const category of categories) {
+    const posts = await getPostsByCategory(category.id);
+
+    posts.forEach((post) => {
+      paths.push({
+        category: category.slug,
+        slug: post.slug,
+      });
+    });
+  }
+
+  return paths;
+}
+
+// 생성 경로:
+// /categories/tech/posts/nextjs-guide
+// /categories/tech/posts/react-tips
+// /categories/design/posts/ui-patterns
+```
+
+**dynamicParams 옵션:**
+
+```jsx
+// generateStaticParams에 없는 경로 처리
+export const dynamicParams = true; // 기본값
+
+// true: ISR 방식 (요청 시 생성)
+// false: generateStaticParams에 없으면 404
+
+export const dynamicParams = false;
+
+export async function generateStaticParams() {
+  return [{ slug: "post-1" }, { slug: "post-2" }];
+}
+
+// dynamicParams = true: /posts/post-3 → 생성됨
+// dynamicParams = false: /posts/post-3 → 404
+```
+
+**성능 최적화:**
+
+```jsx
+// 많은 경로가 있을 때
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+
+  // 상위 N개만 빌드 타임에 생성
+  const topPosts = posts.slice(0, 100);
+
+  return topPosts.map((post) => ({
+    slug: post.slug,
+  }));
+}
+
+// 나머지는 요청 시 생성 (ISR)
+export const dynamicParams = true;
+```
+
+**메타데이터 생성:**
+
+```jsx
+// app/posts/[slug]/page.js
+
+export async function generateMetadata({ params }) {
+  const post = await getPost(params.slug);
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      images: [post.image],
+    },
+  };
+}
+
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({ slug: post.slug }));
+}
+
+export default async function PostPage({ params }) {
+  const post = await getPost(params.slug);
+  return <Article post={post} />;
+}
+```
+
+---
+
+### Q7. Next.js의 성능 최적화 기법과 Bundle Analyzer 사용법을 설명해주세요.
+
+**키워드:** `코드 스플리팅`, `Dynamic Import`, `Tree Shaking`, `번들 분석`, `Lazy Loading`
+
+**답변:**
+
+**1. Dynamic Import (코드 스플리팅)**
+
+```jsx
+import dynamic from "next/dynamic";
+
+// 클라이언트 사이드에서만 로드
+const HeavyComponent = dynamic(() => import("./HeavyComponent"), {
+  loading: () => <Spinner />,
+  ssr: false, // SSR 비활성화
+});
+
+// Named Export
+const Chart = dynamic(() => import("./Chart").then((mod) => mod.Chart));
+
+// 조건부 로드
+function Page() {
+  const [show, setShow] = useState(false);
+
+  return (
+    <>
+      <button onClick={() => setShow(true)}>Show</button>
+      {show && <HeavyComponent />}
+    </>
+  );
+}
+```
+
+**2. Script 최적화**
+
+```jsx
+import Script from "next/script";
+
+function Page() {
+  return (
+    <>
+      {/* beforeInteractive: 페이지 로드 전 (중요한 스크립트) */}
+      <Script src="https://polyfill.io/v3/polyfill.min.js" strategy="beforeInteractive" />
+
+      {/* afterInteractive: 페이지 로드 후 (기본값) */}
+      <Script src="https://analytics.com/script.js" strategy="afterInteractive" onLoad={() => console.log("Loaded")} />
+
+      {/* lazyOnload: 모든 리소스 로드 후 */}
+      <Script src="https://widget.com/script.js" strategy="lazyOnload" />
+
+      {/* worker: Web Worker에서 실행 (실험적) */}
+      <Script src="/scripts/my-script.js" strategy="worker" />
+    </>
+  );
+}
+```
+
+**4. webpack 최적화**
+
+```jsx
+// next.config.js
+module.exports = {
+  webpack: (config, { isServer }) => {
+    // 클라이언트 번들에서 제외
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      };
+    }
+
+    // 번들 크기가 큰 라이브러리 별도 청크
+    config.optimization.splitChunks = {
+      chunks: "all",
+      cacheGroups: {
+        default: false,
+        vendors: false,
+        // 벤더 청크
+        vendor: {
+          name: "vendor",
+          chunks: "all",
+          test: /node_modules/,
+          priority: 20,
+        },
+        // 공통 청크
+        common: {
+          name: "common",
+          minChunks: 2,
+          chunks: "async",
+          priority: 10,
+          reuseExistingChunk: true,
+          enforce: true,
+        },
+        // 특정 라이브러리 분리
+        lodash: {
+          test: /[\\/]node_modules[\\/]lodash[\\/]/,
+          name: "lodash",
+          priority: 30,
+        },
+      },
+    };
+
+    return config;
+  },
+};
+```
+
+**5. 모듈 최적화**
+
+```jsx
+// Package.json에서 불필요한 의존성 제거
+// moment.js → date-fns (더 작음)
+import { format } from "date-fns";
+
+// lodash → lodash-es (Tree Shaking 지원)
+import { debounce } from "lodash-es";
+
+// 전체 import 피하기
+// ❌
+import _ from "lodash";
+// ✅
+import debounce from "lodash/debounce";
+```
+
+**6. CSS 최적화**
+
+```jsx
+// next.config.js
+module.exports = {
+  // CSS Modules 자동 최적화
+  // Unused CSS 제거
+
+  // Tailwind CSS 최적화
+  experimental: {
+    optimizeCss: true, // Critters 사용
+  },
+};
+```
+
+**8. 성능 체크리스트**
+
+```jsx
+// ✅ 1. Image 최적화
+<Image src="/hero.jpg" width={1200} height={600} priority />;
+
+// ✅ 2. Font 최적화
+import { Inter } from "next/font/google";
+
+// ✅ 3. 적절한 렌더링 전략
+// SSG > ISR > SSR > CSR
+
+// ✅ 4. Dynamic Import
+const Chart = dynamic(() => import("./Chart"), { ssr: false });
+
+// ✅ 5. 불필요한 의존성 제거
+// npm uninstall unused-package
+
+// ✅ 6. Tree Shaking 확인
+// import { specific } from 'library';
+
+// ✅ 7. Lighthouse CI 설정
+// npm install -g @lhci/cli
+
+// ✅ 8. 코드 스플리팅 확인
+// Bundle Analyzer로 확인
+
+// ✅ 9. 캐싱 전략
+export const revalidate = 3600;
+
+// ✅ 10. API 최적화
+// 불필요한 데이터 페칭 제거
+```
+
+**9. 프로덕션 빌드 최적화**
+
+```jsx
+// next.config.js
+module.exports = {
+  // SWC 미니파이어 (Terser보다 빠름)
+  swcMinify: true,
+
+  // 소스맵 비활성화 (프로덕션)
+  productionBrowserSourceMaps: false,
+
+  // 압축
+  compress: true,
+
+  // 불필요한 기능 제거
+  poweredByHeader: false,
+
+  // 리다이렉트 최적화
+  async redirects() {
+    return [
+      {
+        source: "/old-path",
+        destination: "/new-path",
+        permanent: true,
+      },
+    ];
+  },
+};
+```

@@ -1,0 +1,702 @@
+---
+title: 프론트엔드 면접 질문 - JS
+summary: 프론트엔드 면접 시 Javascript 면접 질문들입니다.
+keywords:
+  - Tech
+status: published
+tags:
+  - 면접
+createdAt: 2025-10-21
+updatedAt: 2025-10-21
+---
+
+## JavaScript 기본기
+
+### Q1. 클로저(Closure)란 무엇이며, 실무에서 어떻게 활용하나요?
+
+**키워드:** `렉시컬 환경`, `스코프 체인`, `데이터 은닉`, `메모리 누수`, `커링`
+
+**답변:**
+클로저는 함수가 선언될 당시의 렉시컬 환경(Lexical Environment)을 기억하여, 함수가 스코프 밖에서 실행될 때도 그 환경에 접근할 수 있는 것을 말합니다.
+
+**실무 활용 사례:**
+
+```jsx
+// 1. 데이터 은닉 (private 변수)
+function createCounter() {
+  let count = 0; // private 변수
+  return {
+    increment: () => ++count,
+    decrement: () => --count,
+    getCount: () => count,
+  };
+}
+
+// 2. 이벤트 핸들러에서 상태 유지
+function setupButtons() {
+  for (let i = 0; i < 5; i++) {
+    button[i].addEventListener("click", () => {
+      console.log(`Button ${i} clicked`); // i 값 기억
+    });
+  }
+}
+
+// 3. 커링(Currying)
+const multiply = (a) => (b) => a * b;
+const double = multiply(2);
+console.log(double(5)); // 10
+```
+
+**주의점:** 메모리 누수를 방지하기 위해 불필요한 클로저는 제거해야 합니다.
+
+---
+
+### Q2. Event Loop의 동작 원리를 설명하고, Microtask와 Macrotask의 차이를 설명해주세요.
+
+**키워드:** `Call Stack`, `Task Queue`, `Microtask Queue`, `Web APIs`, `이벤트 루프`, `실행 우선순위`
+
+**답변:**
+Event Loop는 JavaScript의 비동기 처리를 담당하는 메커니즘입니다.
+
+**구성 요소:**
+
+- **Call Stack**: 실행 중인 함수가 쌓이는 곳
+- **Web APIs**: 브라우저가 제공하는 비동기 API (setTimeout, fetch 등)
+- **Task Queue (Macrotask)**: setTimeout, setInterval, I/O
+- **Microtask Queue**: Promise, queueMicrotask, MutationObserver
+
+**실행 순서:**
+
+1. Call Stack의 모든 동기 코드 실행
+2. Microtask Queue 비우기 (Promise, queueMicrotask)
+3. 렌더링 (필요시)
+4. Macrotask Queue에서 하나 실행 (setTimeout, setInterval)
+5. 1번으로 돌아가기
+
+**예제:**
+
+```jsx
+console.log("1"); // 동기
+
+setTimeout(() => console.log("2"), 0); // Macrotask
+
+Promise.resolve().then(() => console.log("3")); // Microtask
+
+console.log("4"); // 동기
+
+// 출력 순서: 1 → 4 → 3 → 2
+```
+
+**Microtask가 우선 실행되는 이유:**
+Promise는 더 높은 우선순위를 가지며, 현재 작업 완료 후 즉시 처리됩니다.
+
+---
+
+### Q3. `==`와 `===`의 차이, 그리고 언제 `==`를 사용해야 하나요?
+
+**키워드:** `타입 강제 변환`, `loose equality`, `strict equality`, `null/undefined 체크`
+
+**답변:**
+
+**차이점:**
+
+- `==`: 타입 변환 후 비교 (loose equality)
+- `===`: 타입과 값 모두 비교 (strict equality)
+
+```jsx
+"5" == 5; // true (타입 변환)
+"5" === 5; // false (타입 다름)
+
+null == undefined; // true
+null === undefined; // false
+
+0 == false; // true
+0 === false; // false
+```
+
+**`==` 사용 케이스:**
+
+```jsx
+// null/undefined 체크 시에만 사용 권장
+if (value == null) {
+  // value가 null 또는 undefined
+}
+
+// 위 코드는 아래와 동일
+if (value === null || value === undefined) {
+  // ...
+}
+```
+
+**실무 권장사항:** 거의 항상 `===`를 사용하고, ESLint로 강제하는 것이 좋습니다.
+
+---
+
+### Q4. 호이스팅(Hoisting)에 대해 설명하고, var, let, const의 차이를 설명해주세요.
+
+**키워드:** `스코프`, `TDZ(Temporal Dead Zone)`, `재선언`, `재할당`, `함수 스코프`, `블록 스코프`
+
+**답변:**
+
+**호이스팅:** 변수 및 함수 선언이 스코프의 최상단으로 끌어올려지는 현상
+
+```jsx
+console.log(a); // undefined (호이스팅)
+var a = 5;
+
+console.log(b); // ReferenceError: TDZ
+let b = 5;
+
+sayHi(); // "Hi!" (함수 선언문은 완전히 호이스팅)
+function sayHi() {
+  console.log("Hi!");
+}
+```
+
+**var, let, const 비교:**
+
+| 구분     | var         | let            | const          |
+| -------- | ----------- | -------------- | -------------- |
+| 스코프   | 함수 스코프 | 블록 스코프    | 블록 스코프    |
+| 재선언   | 가능        | 불가능         | 불가능         |
+| 재할당   | 가능        | 가능           | 불가능         |
+| TDZ      | 없음        | 있음           | 있음           |
+| 호이스팅 | undefined   | ReferenceError | ReferenceError |
+
+**TDZ (Temporal Dead Zone):**
+let/const는 선언 전까지 접근 불가능한 구간이 존재합니다.
+
+```jsx
+// TDZ 시작
+console.log(x); // ReferenceError
+let x = 5; // TDZ 종료
+```
+
+---
+
+### Q5. this 키워드의 동작 원리와 바인딩 방법을 설명해주세요.
+
+**키워드:** `실행 컨텍스트`, `bind`, `call`, `apply`, `화살표 함수`, `렉시컬 this`
+
+**답변:**
+
+**this 결정 규칙:**
+
+1. **생성자 함수:** 새로 생성되는 객체
+2. **메서드 호출:** 메서드를 호출한 객체
+3. **일반 함수:** 전역 객체 (strict mode에서는 undefined)
+4. **화살표 함수:** 상위 스코프의 this (렉시컬 바인딩)
+
+```jsx
+// 1. 생성자 함수
+function Person(name) {
+  this.name = name; // 새 객체
+}
+
+// 2. 메서드
+const obj = {
+  name: "Kim",
+  greet() {
+    console.log(this.name); // obj
+  },
+};
+
+// 3. this 손실 문제
+const greet = obj.greet;
+greet(); // undefined (this 손실)
+
+// 4. 명시적 바인딩
+const boundGreet = greet.bind(obj);
+boundGreet(); // 'Kim'
+
+greet.call(obj); // 'Kim' (즉시 호출)
+greet.apply(obj, []); // 'Kim' (배열 인자)
+
+// 5. 화살표 함수
+class Component {
+  name = "React";
+
+  // 일반 함수
+  handleClick1() {
+    console.log(this.name); // this 손실 가능
+  }
+
+  // 화살표 함수
+  handleClick2 = () => {
+    console.log(this.name); // 항상 Component 인스턴스
+  };
+}
+```
+
+**바인딩 우선순위:**
+
+1. new 바인딩 (생성자)
+2. 명시적 바인딩 (bind, call, apply)
+3. 암시적 바인딩 (메서드 호출)
+4. 기본 바인딩 (전역)
+
+---
+
+### Q6. 프로토타입(Prototype)과 프로토타입 체인을 설명해주세요.
+
+**키워드:** `__proto__`, `prototype`, `상속`, `Object.create`, `프로토타입 체인`, `constructor`
+
+**답변:**
+
+JavaScript는 프로토타입 기반 언어로, 객체 간 상속을 프로토타입 체인으로 구현합니다.
+
+```jsx
+function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.greet = function () {
+  return `Hello, ${this.name}`;
+};
+
+const kim = new Person("Kim");
+
+// 프로토타입 체인
+kim.greet(); // kim → Person.prototype → Object.prototype → null
+
+// 관계 확인
+kim.__proto__ === Person.prototype; // true
+Person.prototype.constructor === Person; // true
+kim instanceof Person; // true
+```
+
+**프로토타입 체인 동작:**
+
+1. 객체의 속성/메서드 찾기
+2. 없으면 `__proto__` (= 생성자의 prototype) 탐색
+3. 반복하여 null까지 올라감
+
+**ES6 Class와의 관계:**
+
+```jsx
+class Person {
+  constructor(name) {
+    this.name = name;
+  }
+  greet() {
+    return `Hello, ${this.name}`;
+  }
+}
+
+// 내부적으로 프로토타입 사용
+Person.prototype.greet; // 존재함
+typeof Person; // 'function'
+```
+
+**Object.create 활용:**
+
+```jsx
+const personProto = {
+  greet() {
+    return `Hello, ${this.name}`;
+  },
+};
+
+const kim = Object.create(personProto);
+kim.name = "Kim";
+kim.greet(); // 'Hello, Kim'
+```
+
+---
+
+### Q7. Promise와 async/await의 차이와 에러 처리 방법을 설명해주세요.
+
+**키워드:** `비동기`, `then`, `catch`, `finally`, `try-catch`, `Promise.all`, `Promise.race`, `병렬 처리`
+
+**답변:**
+
+**Promise 체이닝:**
+
+```jsx
+fetch("/api/user")
+  .then((res) => res.json())
+  .then((data) => {
+    console.log(data);
+    return fetch(`/api/posts/${data.id}`);
+  })
+  .then((res) => res.json())
+  .then((posts) => console.log(posts))
+  .catch((err) => console.error(err))
+  .finally(() => console.log("Done"));
+```
+
+**async/await (더 읽기 쉬움):**
+
+```jsx
+async function fetchUserPosts() {
+  try {
+    const userRes = await fetch("/api/user");
+    const user = await userRes.json();
+
+    const postsRes = await fetch(`/api/posts/${user.id}`);
+    const posts = await postsRes.json();
+
+    console.log(posts);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    console.log("Done");
+  }
+}
+```
+
+**차이점:**
+
+- Promise: 체이닝 방식, 콜백 기반
+- async/await: 동기 코드처럼 작성, 가독성 향상
+
+**병렬 처리:**
+
+```jsx
+// ❌ 순차 실행 (느림)
+const user = await fetchUser();
+const posts = await fetchPosts();
+// 총 시간: 2초 + 3초 = 5초
+
+// ✅ 병렬 실행 (빠름)
+const [user, posts] = await Promise.all([fetchUser(), fetchPosts()]);
+// 총 시간: max(2초, 3초) = 3초
+
+// Promise.race: 가장 빠른 것만
+const fastest = await Promise.race([fetchFromAPI1(), fetchFromAPI2()]);
+
+// Promise.allSettled: 모두 완료 대기 (실패해도 계속)
+const results = await Promise.allSettled([promise1, promise2, promise3]);
+```
+
+**에러 처리 패턴:**
+
+```jsx
+// 개별 에러 처리
+try {
+  const user = await fetchUser();
+} catch (err) {
+  console.error("User fetch failed:", err);
+}
+
+try {
+  const posts = await fetchPosts();
+} catch (err) {
+  console.error("Posts fetch failed:", err);
+}
+
+// Promise.all 에러 처리
+try {
+  const [user, posts] = await Promise.all([fetchUser(), fetchPosts()]);
+} catch (err) {
+  // 하나라도 실패하면 전체 실패
+  console.error("Fetch failed:", err);
+}
+```
+
+---
+
+### Q8. 이벤트 버블링, 캡처링, 위임을 설명해주세요.
+
+**키워드:** `이벤트 전파`, `stopPropagation`, `preventDefault`, `target`, `currentTarget`, `성능 최적화`
+
+**답변:**
+
+**이벤트 전파 3단계:**
+
+1. **캡처링 단계**: 루트에서 타겟까지 (위→아래)
+2. **타겟 단계**: 이벤트가 실제 발생한 요소
+3. **버블링 단계**: 타겟에서 루트까지 (아래→위)
+
+```jsx
+// 버블링 (기본)
+parent.addEventListener("click", () => {
+  console.log("Parent clicked");
+});
+
+child.addEventListener("click", () => {
+  console.log("Child clicked");
+});
+
+// child 클릭 시 출력:
+// Child clicked → Parent clicked
+
+// 캡처링 (세 번째 인자 true)
+parent.addEventListener(
+  "click",
+  () => {
+    console.log("Parent clicked");
+  },
+  true
+);
+
+// child 클릭 시 출력:
+// Parent clicked → Child clicked
+```
+
+**전파 제어:**
+
+```jsx
+child.addEventListener("click", (e) => {
+  e.stopPropagation(); // 버블링 중단
+  console.log("Child clicked");
+});
+
+// 이제 parent의 핸들러는 실행 안됨
+
+link.addEventListener("click", (e) => {
+  e.preventDefault(); // 기본 동작 막기 (링크 이동 등)
+  console.log("Link clicked but not navigated");
+});
+```
+
+**이벤트 위임 (Event Delegation):**
+
+```jsx
+// ❌ 비효율적: 각 항목마다 리스너 등록
+items.forEach((item) => {
+  item.addEventListener("click", handleClick);
+});
+
+// ✅ 효율적: 부모에 하나만 등록
+list.addEventListener("click", (e) => {
+  if (e.target.matches(".item")) {
+    handleClick(e);
+  }
+});
+
+// 동적으로 추가되는 요소도 자동 처리
+const newItem = document.createElement("li");
+newItem.className = "item";
+list.appendChild(newItem); // 별도 리스너 등록 불필요
+```
+
+**target vs currentTarget:**
+
+```jsx
+parent.addEventListener("click", (e) => {
+  console.log("target:", e.target); // 실제 클릭된 요소
+  console.log("currentTarget:", e.currentTarget); // 리스너가 등록된 요소
+});
+```
+
+---
+
+### Q9. 얕은 복사(Shallow Copy)와 깊은 복사(Deep Copy)의 차이를 설명해주세요.
+
+**키워드:** `참조`, `불변성`, `spread operator`, `structuredClone`, `JSON.parse`, `재귀 복사`
+
+**답변:**
+
+**얕은 복사 (Shallow Copy):**
+
+```jsx
+// 1. Spread operator
+const original = { a: 1, b: { c: 2 } };
+const shallow = { ...original };
+
+shallow.a = 10; // ✅ 영향 없음
+shallow.b.c = 20; // ❌ original도 변경됨
+
+console.log(original.b.c); // 20
+
+// 2. Object.assign
+const shallow2 = Object.assign({}, original);
+
+// 3. 배열
+const arr = [1, 2, [3, 4]];
+const shallowArr = [...arr];
+shallowArr[2][0] = 99; // arr도 변경됨
+```
+
+**깊은 복사 (Deep Copy):**
+
+```jsx
+// 1. structuredClone (최신, 권장)
+const original = { a: 1, b: { c: 2 }, date: new Date() };
+const deep = structuredClone(original);
+
+deep.b.c = 20; // ✅ original 영향 없음
+
+// 2. JSON 방식 (간단하지만 제한적)
+const deep2 = JSON.parse(JSON.stringify(original));
+// 단점: Date, Function, undefined, Symbol 손실
+
+const obj = {
+  date: new Date(),
+  fn: () => {},
+  undef: undefined,
+};
+const copied = JSON.parse(JSON.stringify(obj));
+console.log(copied); // { date: "2024-..." } (fn, undef 손실)
+
+// 3. 재귀 함수 (완전한 제어)
+function deepCopy(obj) {
+  if (obj === null || typeof obj !== "object") return obj;
+
+  if (obj instanceof Date) return new Date(obj);
+  if (obj instanceof Array) return obj.map((item) => deepCopy(item));
+
+  const cloned = {};
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      cloned[key] = deepCopy(obj[key]);
+    }
+  }
+  return cloned;
+}
+
+// 4. 라이브러리 (lodash)
+import _ from "lodash";
+const deep3 = _.cloneDeep(original);
+```
+
+**React에서의 불변성:**
+
+```jsx
+// ❌ 잘못된 상태 업데이트
+const [user, setUser] = useState({ name: "Kim", age: 20 });
+user.age = 21; // 직접 수정
+setUser(user); // 리렌더링 안됨 (같은 참조)
+
+// ✅ 올바른 상태 업데이트
+setUser({ ...user, age: 21 }); // 새 객체 생성
+
+// 중첩 객체
+setUser({
+  ...user,
+  address: {
+    ...user.address,
+    city: "Seoul",
+  },
+});
+```
+
+---
+
+### Q10. 디바운싱(Debouncing)과 쓰로틀링(Throttling)의 차이와 구현 방법을 설명해주세요.
+
+**키워드:** `성능 최적화`, `이벤트 제어`, `검색 입력`, `스크롤`, `리사이즈`
+
+**답변:**
+
+**개념 차이:**
+
+- **Debouncing**: 연속된 이벤트를 하나로 묶어 마지막(또는 처음) 한 번만 실행
+- **Throttling**: 일정 시간 간격으로 최대 한 번만 실행
+
+**Debouncing 구현:**
+
+```jsx
+// 직접 구현
+function debounce(func, delay) {
+  let timeoutId;
+
+  return function (...args) {
+    clearTimeout(timeoutId);
+
+    timeoutId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
+// 사용 예제: 검색 입력
+const handleSearch = debounce((query) => {
+  console.log("Searching:", query);
+  // API 호출
+}, 500);
+
+input.addEventListener("input", (e) => {
+  handleSearch(e.target.value);
+});
+// 타이핑 멈춘 후 500ms 뒤에 한 번만 실행
+```
+
+**Throttling 구현:**
+
+```jsx
+// 직접 구현
+function throttle(func, limit) {
+  let inThrottle;
+
+  return function (...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    }
+  };
+}
+
+// 사용 예제: 스크롤 이벤트
+const handleScroll = throttle(() => {
+  console.log("Scroll position:", window.scrollY);
+}, 200);
+
+window.addEventListener("scroll", handleScroll);
+// 200ms마다 최대 한 번만 실행
+```
+
+**React에서 사용:**
+
+```jsx
+import { useCallback, useRef } from "react";
+
+// Custom Hook - useDebounce
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef(null);
+
+  return useCallback(
+    (...args) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  );
+}
+
+// 사용
+function SearchComponent() {
+  const debouncedSearch = useDebounce((query) => {
+    console.log("Searching:", query);
+  }, 500);
+
+  return <input onChange={(e) => debouncedSearch(e.target.value)} placeholder="Search..." />;
+}
+
+// lodash 사용
+import { debounce, throttle } from "lodash";
+
+const debouncedFn = debounce(handleInput, 500);
+const throttledFn = throttle(handleScroll, 200);
+```
+
+**사용 시나리오:**
+
+| 기법       | 사용 사례                                  |
+| ---------- | ------------------------------------------ |
+| Debouncing | 검색 입력, 폼 검증, 창 리사이즈 이벤트     |
+| Throttling | 무한 스크롤, 스크롤 위치 추적, 마우스 이동 |
+
+**시각적 비교:**
+
+```
+이벤트: ----x-x-x-x------x-x-x------
+
+Debouncing:
+          ---------------o-----------o
+
+Throttling:
+          ----o-----o----o-----o----
+```
+
+---
