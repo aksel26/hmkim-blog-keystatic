@@ -3,14 +3,11 @@
 @variant dark (&:where(.dark, .dark *));
 @import "./prism-theme.css";
 
-
-
-
 :root {
   --background: #ffffff;
   --foreground: #171717;
   --electric-blue: #000000;
-  --tech-blue: #0984E3;
+  --tech-blue: #0984e3;
   --life-orange: #ff6900;
   --blue-light: #525252;
   --blue-dark: #000000;
@@ -61,7 +58,7 @@ body {
   font-family: var(--font-sans);
 }
 
-.prose{
+.prose {
   font-size: 1.1rem;
 }
 /* Remove automatic quotes from code and blockquote */
@@ -87,10 +84,11 @@ body {
 }
 
 .prose code[class*="language-"] {
-  font-family: var(--font-geist-mono), Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: var(--font-geist-mono), Consolas, Monaco, "Andale Mono",
+    "Ubuntu Mono", monospace;
 }
 
-.prose :not(pre)>code {
+.prose :not(pre) > code {
   background-color: var(--gray-100);
   color: var(--electric-blue);
   padding: 0.2em 0.4em;
@@ -99,29 +97,31 @@ body {
   font-family: var(--font-geist-mono), monospace;
 }
 
-.dark .prose :not(pre)>code {
+.dark .prose :not(pre) > code {
   background-color: var(--gray-800);
   color: var(--blue-light);
 }
 
 /* Override prose heading font weight */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-weight: 300 !important;
-  /* font-size: 1.2rem; */
-}
-h2{
+
+h2 {
   font-size: 1.4em;
 }
-h3{
+h3 {
   font-size: 1.1em;
 }
-h4{
+h4 {
   font-size: 1em;
+}
+
+/* Apply font-weight 500 to headings with id (for TOC links) */
+.prose h1[id],
+.prose h2[id],
+.prose h3[id],
+.prose h4[id],
+.prose h5[id],
+.prose h6[id] {
+  font-weight: 500;
 }
 
 /* Smooth theme transition - only body background */
