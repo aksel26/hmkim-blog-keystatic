@@ -39,24 +39,35 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
             <ScrollButtons />
 
             {/* Back Navigation */}
-            <div className="container mx-auto px-6 py-8 max-w-[800px]">
+            <div className="container mx-auto px-6 py-8 max-w-6xl">
                 <Link
                     href="/tech"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground/60 transition-colors hover:text-electric-blue"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground/60 transition-colors hover:text-tech-blue"
                 >
                     ← Back to Tech Archive
                 </Link>
             </div>
 
             {/* Text Hero Section */}
-            <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-4xl">
-                <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+            <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-6xl">
+            
+
+                <h1 className="mb-12 text-3xl font-light leading-tight tracking-tight md:text-5xl lg:text-5xl">
+                    {post.title}
+                </h1>
+
+                <p className="mb-8 text-base text-foreground/45 md:text-lg max-w-3xl mx-auto">
+                    {post.summary}
+                </p>
+
+              
+    <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
                     {post.tags.map((tag) => (
                         <span
                             key={tag}
-                            className="rounded-md bg-electric-blue/10 dark:bg-electric-blue/20 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-electric-blue dark:text-blue-400"
+                            className="rounded-md bg-transparent dark:bg-tech-blue/10 px-3 py-1 text-xs font-light tracking-wider text-tech-blue border border-tech-blue/60 dark:border-gray-400 dark:text-gray-100"
                         >
-                            #{tag}
+                            {tag}
                         </span>
                     ))}
                     {post.status === 'draft' && (
@@ -65,41 +76,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                         </span>
                     )}
                 </div>
-
-                <h1 className="mb-8 text-3xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-5xl">
-                    {post.title}
-                </h1>
-
-                <p className="mb-8 text-lg text-foreground/70 md:text-xl max-w-2xl mx-auto">
-                    {post.summary}
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
-                    <time className="flex items-center gap-2">
-                        <span>📅</span>
-                        등록: {formatDate(post.createdAt || '')}
-                    </time>
-                    {post.updatedAt && post.updatedAt !== post.createdAt && (
-                        <time className="flex items-center gap-2">
-                            <span>✏️</span>
-                            수정: {formatDate(post.updatedAt)}
-                        </time>
-                    )}
-                </div>
-
-                {/* Keywords */}
-                {post.keywords && post.keywords.length > 0 && (
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                        {post.keywords.map((keyword) => (
-                            <span
-                                key={keyword}
-                                className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 text-xs text-foreground/70"
-                            >
-                                {keyword}
-                            </span>
-                        ))}
-                    </div>
-                )}
+              
             </div>
 
             {/* Thumbnail */}
@@ -139,7 +116,18 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
-
+  <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
+                    <time className="flex items-center gap-2">
+                        <span>📅</span>
+                        등록: {formatDate(post.createdAt || '')}
+                    </time>
+                    {post.updatedAt && post.updatedAt !== post.createdAt && (
+                        <time className="flex items-center gap-2">
+                            <span>✏️</span>
+                            수정: {formatDate(post.updatedAt)}
+                        </time>
+                    )}
+                </div>
             {/* Navigation */}
             <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-20">
                 <div className="container mx-auto max-w-5xl px-6 text-center">

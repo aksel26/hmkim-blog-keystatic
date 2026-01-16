@@ -61,7 +61,9 @@ body {
   font-family: var(--font-sans);
 }
 
-
+.prose{
+  font-size: 1.1rem;
+}
 /* Remove automatic quotes from code and blockquote */
 .prose code::before,
 .prose code::after {
@@ -100,6 +102,26 @@ body {
 .dark .prose :not(pre)>code {
   background-color: var(--gray-800);
   color: var(--blue-light);
+}
+
+/* Override prose heading font weight */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 300 !important;
+  /* font-size: 1.2rem; */
+}
+h2{
+  font-size: 1.4em;
+}
+h3{
+  font-size: 1.1em;
+}
+h4{
+  font-size: 1em;
 }
 
 /* Smooth theme transition - only body background */

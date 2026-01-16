@@ -39,72 +39,36 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
             <ScrollButtons />
 
             {/* Back Navigation */}
-            <div className="container mx-auto px-6 py-8 max-w-[800px]">
+            <div className="container mx-auto px-6 py-8 max-w-6xl">
                 <Link
                     href="/life"
-                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
+                    className="inline-flex items-center gap-2 text-sm font-medium text-foreground/60 transition-colors hover:text-life-orange"
                 >
                     ← Back to Life Logs
                 </Link>
             </div>
 
             {/* Text Hero Section */}
-            <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-4xl">
-                <span className="mb-6 inline-block rounded-full bg-gray-100 dark:bg-gray-800 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground/80 dark:text-foreground/90">
-                    Life
-                </span>
-                <h1 className="mb-8 text-3xl font-semibold leading-tight tracking-tight md:text-5xl lg:text-5xl">
+            <div className="container mx-auto px-6 pt-12 pb-16 text-center max-w-6xl">
+                <h1 className="mb-12 text-3xl font-light leading-tight tracking-tight md:text-5xl lg:text-5xl">
                     {post.title}
                 </h1>
 
                 {post.summary && (
-                    <p className="mb-8 text-lg text-foreground/70 md:text-xl max-w-2xl mx-auto">
+                    <p className="mb-8 text-base text-foreground/45 md:text-lg max-w-3xl mx-auto">
                         {post.summary}
                     </p>
                 )}
 
-                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
-                    <time className="flex items-center gap-2">
-                        <span>📅</span>
-                        등록: {formatDate(post.createdAt || '')}
-                    </time>
-                    {post.updatedAt && post.updatedAt !== post.createdAt && (
-                        <time className="flex items-center gap-2">
-                            <span>✏️</span>
-                            수정: {formatDate(post.updatedAt)}
-                        </time>
-                    )}
-                    {post.status === 'draft' && (
-                        <span className="flex items-center gap-2 text-yellow-600">
-                            <span>📝</span>
-                            초안
-                        </span>
-                    )}
-                </div>
-
                 {/* Tags */}
                 {post.tags && post.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                    <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
                         {post.tags.map((tag) => (
                             <span
                                 key={tag}
-                                className="rounded-md bg-orange-100 dark:bg-orange-900/30 px-3 py-1 text-xs font-semibold text-orange-600 dark:text-orange-400"
+                                className="rounded-md bg-transparent px-3 py-1 text-xs font-light tracking-wider dark:text-white text-life-orange border border-life-orange/60 dark:border-gray-400 "
                             >
-                                #{tag}
-                            </span>
-                        ))}
-                    </div>
-                )}
-
-                {/* Keywords */}
-                {post.keywords && post.keywords.length > 0 && (
-                    <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                        {post.keywords.map((keyword) => (
-                            <span
-                                key={keyword}
-                                className="rounded-full bg-gray-100 dark:bg-gray-800 px-3 py-1 text-xs text-foreground/70"
-                            >
-                                {keyword}
+                                {tag}
                             </span>
                         ))}
                     </div>
@@ -113,15 +77,16 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
 
             {/* Thumbnail Image */}
             {post.thumbnailImage && (
-                <div className="relative w-full aspect-[21/9] mb-20">
-                    <Image
-                        src={post.thumbnailImage}
-                        alt={post.title}
-                        fill
-                        fetchPriority="high"
-                        className="object-cover"
-                        priority
-                    />
+                <div className="container mx-auto px-6 max-w-4xl mb-12">
+                    <div className="relative aspect-video overflow-hidden rounded-xl">
+                        <Image
+                            src={post.thumbnailImage}
+                            alt={post.title}
+                            fill
+                            className="object-cover"
+                            priority
+                        />
+                    </div>
                 </div>
             )}
 
@@ -148,6 +113,24 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
+                    <time className="flex items-center gap-2">
+                        <span>📅</span>
+                        등록: {formatDate(post.createdAt || '')}
+                    </time>
+                    {post.updatedAt && post.updatedAt !== post.createdAt && (
+                        <time className="flex items-center gap-2">
+                            <span>✏️</span>
+                            수정: {formatDate(post.updatedAt)}
+                        </time>
+                    )}
+                    {post.status === 'draft' && (
+                        <span className="flex items-center gap-2 text-yellow-600">
+                            <span>📝</span>
+                            초안
+                        </span>
+                    )}
+                </div>
 
             {/* Navigation */}
             <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-20">
