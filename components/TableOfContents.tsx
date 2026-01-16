@@ -75,7 +75,7 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
 
     return (
         <div className="xl:hidden mb-8">
-            <div className="border border-white/20 dark:border-white/10 rounded-lg overflow-hidden backdrop-blur-md bg-white/70 dark:bg-gray-900/70 shadow-lg">
+            <div className="border border-white/20 dark:border-white/10 rounded-lg overflow-hidden backdrop-blur-md bg-white/40 dark:bg-gray-900/40 shadow-lg">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium text-foreground/80 hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
@@ -86,12 +86,11 @@ export function MobileTableOfContents({ items }: TableOfContentsProps) {
                     />
                 </button>
                 <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                        isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                    }`}
+                    className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                        }`}
                 >
                     <div className="overflow-hidden">
-                        <nav className="px-4 py-3 space-y-1">
+                        <nav className="px-4 py-3 space-y-1 max-h-[60vh] overflow-y-auto">
                             {items.map((item, index) => (
                                 <a
                                     key={`${item.id}-${index}`}
@@ -125,8 +124,8 @@ export function DesktopTableOfContents({ items }: TableOfContentsProps) {
     };
 
     return (
-        <aside className="hidden xl:block fixed top-1/2 -translate-y-1/2 right-[calc(45%-580px)] z-10 w-56">
-            <nav className="p-4 rounded-xl backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border border-white/20 dark:border-white/10 shadow-lg space-y-1">
+        <aside className="hidden xl:block fixed top-1/2 -translate-y-1/2 right-[calc(40%-580px)] z-10 w-56">
+            <nav className="p-4 rounded-xl backdrop-blur-md bg-white/40 dark:bg-gray-900/40 border border-white/20 dark:border-white/10 shadow-lg space-y-1 max-h-[70vh] overflow-y-auto">
                 <p className="text-xs font-semibold uppercase tracking-wider text-foreground/40 mb-3">
                     목차
                 </p>
