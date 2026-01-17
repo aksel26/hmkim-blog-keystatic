@@ -98,13 +98,13 @@ const commonFields = {
 
 export default config({
   storage:
-     {
-        kind: 'github',
-        repo: {
-          owner: 'aksel26',
-          name: 'hmkim-blog-keystatic',
-        },
+    {
+      kind: 'github',
+      repo: {
+        owner: 'aksel26',
+        name: 'hmkim-blog-keystatic',
       },
+    },
   collections: {
     tech: collection({
       label: 'Tech',
