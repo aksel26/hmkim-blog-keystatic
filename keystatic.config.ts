@@ -97,13 +97,14 @@ const commonFields = {
 };
 
 export default config({
-  storage: {
-    kind: process.env.NODE_ENV === 'development' ? 'local' : 'github',
-    repo: {
-      owner: 'aksel26',
-      name: 'hmkim-blog-keystatic',
-    },
-  },
+  storage:
+     {
+        kind: 'github',
+        repo: {
+          owner: 'aksel26',
+          name: 'hmkim-blog-keystatic',
+        },
+      },
   collections: {
     tech: collection({
       label: 'Tech',
