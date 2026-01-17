@@ -26,8 +26,6 @@ updatedAt: 2026-01-17
 
 먼저, 프로젝트 폴더를 만들고 필요한 라이브러리를 설치합니다.
 
-Bash
-
 ```Bash
 mkdir sse-demo
 cd sse-demo
@@ -44,9 +42,7 @@ Express는 HTTP 서버를 가장 직관적으로 구축할 수 있게 도와줍�
 
 이제 `server.js` 파일을 만들고 아래 코드를 작성해 보겠습니다. SSE의 핵심은 응답을 한 번에 끝내지 않고, 연결을 계속 열어두는(Keep-Alive) 데 있습니다.
 
-JavaScript
-
-```
+```Javascript
 const express = require('express');
 const app = express();
 const PORT = 3000;
@@ -103,9 +99,7 @@ app.listen(PORT, () => {
 
 서버가 준비되었다면, 이제 이 이벤트를 받아낼 클라이언트 화면을 만들어야겠죠? `public/index.html` 파일을 생성합니다.
 
-HTML
-
-```
+```HTML
 <!DOCTYPE html>
 <html lang="ko">
 <head>
