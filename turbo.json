@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "KEYSTATIC_STORAGE_KIND",
+    "KEYSTATIC_GITHUB_CLIENT_ID",
+    "KEYSTATIC_GITHUB_CLIENT_SECRET",
+    "KEYSTATIC_SECRET",
+    "NEXT_PUBLIC_KEYSTATIC_GITHUB_APP_SLUG"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
