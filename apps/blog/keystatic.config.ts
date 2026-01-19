@@ -31,8 +31,11 @@ const videoComponent = (directory: string, publicPath: string) => block({
 
 // 공통 스키마 필드 (base)
 const baseCommonFields = {
-  // slug (title에서 자동 생성)
-  title: fields.slug({ name: { label: '제목' } }),
+  // 제목 (slug는 파일명에서 자동 결정)
+  title: fields.text({
+    label: '제목',
+    validation: { isRequired: true },
+  }),
 
   // 요약
   summary: fields.text({
@@ -109,6 +112,7 @@ const storage = process.env.KEYSTATIC_STORAGE_KIND === 'github'
         owner: 'aksel26',
         name: 'hmkim-blog-keystatic',
       },
+      branchPrefix: 'keystatic/',
     }
   : { kind: 'local' as const };
 
@@ -120,8 +124,7 @@ export default config({
   collections: {
     tech: collection({
       label: 'Tech',
-      slugField: 'title',
-      path: `${pathPrefix}content/tech/*`,
+            path: `${pathPrefix}content/tech/*`,
       format: { contentField: 'content' },
       schema: {
         ...createCommonFields(pathPrefix),
@@ -141,8 +144,7 @@ export default config({
     }),
     life: collection({
       label: 'Life',
-      slugField: 'title',
-      path: `${pathPrefix}content/life/*`,
+            path: `${pathPrefix}content/life/*`,
       format: { contentField: 'content' },
       schema: {
         ...createCommonFields(pathPrefix),
