@@ -31,10 +31,12 @@ const videoComponent = (directory: string, publicPath: string) => block({
 
 // 공통 스키마 필드 (base)
 const baseCommonFields = {
-  // 제목 (slug는 파일명에서 자동 결정)
-  title: fields.text({
-    label: '제목',
-    validation: { isRequired: true },
+  // 제목 및 slug
+  title: fields.slug({
+    name: {
+      label: '제목',
+      validation: { isRequired: true },
+    },
   }),
 
   // 요약
@@ -124,7 +126,8 @@ export default config({
   collections: {
     tech: collection({
       label: 'Tech',
-            path: `${pathPrefix}content/tech/*`,
+      slugField: 'title',
+      path: `${pathPrefix}content/tech/*`,
       format: { contentField: 'content' },
       schema: {
         ...createCommonFields(pathPrefix),
@@ -144,7 +147,8 @@ export default config({
     }),
     life: collection({
       label: 'Life',
-            path: `${pathPrefix}content/life/*`,
+      slugField: 'title',
+      path: `${pathPrefix}content/life/*`,
       format: { contentField: 'content' },
       schema: {
         ...createCommonFields(pathPrefix),
