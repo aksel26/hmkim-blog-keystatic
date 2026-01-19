@@ -114,7 +114,6 @@ const storage = process.env.KEYSTATIC_STORAGE_KIND === 'github'
         owner: 'aksel26',
         name: 'hmkim-blog-keystatic',
       },
-      branchPrefix: 'keystatic/',
     }
   : { kind: 'local' as const };
 
