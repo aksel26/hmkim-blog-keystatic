@@ -29,8 +29,8 @@ const videoComponent = (directory: string, publicPath: string) => block({
   },
 });
 
-// 공통 스키마 필드
-const commonFields = {
+// 공통 스키마 필드 (base)
+const baseCommonFields = {
   // slug (title에서 자동 생성)
   title: fields.slug({ name: { label: '제목' } }),
 
@@ -81,48 +81,60 @@ const commonFields = {
     defaultValue: { kind: 'today' },
   }),
 
+};
+
+// Function to create commonFields with dynamic paths
+const createCommonFields = (pathPrefix: string) => ({
+  ...baseCommonFields,
   // Thumbnail (image)
   thumbnailImage: fields.image({
     label: '썸네일 이미지',
-    directory: 'public/images/thumbnails',
+    directory: `${pathPrefix}public/images/thumbnails`,
     publicPath: '/images/thumbnails/',
   }),
 
   // Thumbnail (video/mov)
   thumbnailVideo: fields.file({
     label: '썸네일 비디오',
-    directory: 'public/videos/thumbnails',
+    directory: `${pathPrefix}public/videos/thumbnails`,
     publicPath: '/videos/thumbnails/',
   }),
-};
+});
 
-export default config({
-  storage:
-    {
-      kind: 'github',
+// Storage configuration based on environment
+const storage = process.env.KEYSTATIC_STORAGE_KIND === 'github'
+  ? {
+      kind: 'github' as const,
       repo: {
         owner: 'aksel26',
         name: 'hmkim-blog-keystatic',
       },
-    },
+    }
+  : { kind: 'local' as const };
+
+// Path prefix for collections (GitHub storage uses repo root, local uses relative paths)
+const pathPrefix = process.env.KEYSTATIC_STORAGE_KIND === 'github' ? 'apps/blog/' : '';
+
+export default config({
+  storage,
   collections: {
     tech: collection({
       label: 'Tech',
       slugField: 'title',
-      path: 'content/tech/*',
+      path: `${pathPrefix}content/tech/*`,
       format: { contentField: 'content' },
       schema: {
-        ...commonFields,
+        ...createCommonFields(pathPrefix),
         content: fields.markdoc({
           label: '내용',
           options: {
             image: {
-              directory: 'public/images/tech',
+              directory: `${pathPrefix}public/images/tech`,
               publicPath: '/images/tech/',
             },
           },
           components: {
-            video: videoComponent('public/videos/tech', '/videos/tech/'),
+            video: videoComponent(`${pathPrefix}public/videos/tech`, '/videos/tech/'),
           },
         }),
       },
@@ -130,20 +142,20 @@ export default config({
     life: collection({
       label: 'Life',
       slugField: 'title',
-      path: 'content/life/*',
+      path: `${pathPrefix}content/life/*`,
       format: { contentField: 'content' },
       schema: {
-        ...commonFields,
+        ...createCommonFields(pathPrefix),
         content: fields.markdoc({
           label: '내용',
           options: {
             image: {
-              directory: 'public/images/life',
+              directory: `${pathPrefix}public/images/life`,
               publicPath: '/images/life/',
             },
           },
           components: {
-            video: videoComponent('public/videos/life', '/videos/life/'),
+            video: videoComponent(`${pathPrefix}public/videos/life`, '/videos/life/'),
           },
         }),
       },
