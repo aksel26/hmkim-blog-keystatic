@@ -1,6 +1,5 @@
 import { config, fields, collection } from '@keystatic/core';
 import { block } from '@keystatic/core/content-components';
-
 // 비디오 컴포넌트 정의
 const videoComponent = (directory: string, publicPath: string) => block({
   label: '비디오',
@@ -29,10 +28,15 @@ const videoComponent = (directory: string, publicPath: string) => block({
   },
 });
 
-// 공통 스키마 필드
-const commonFields = {
-  // slug (title에서 자동 생성)
-  title: fields.slug({ name: { label: '제목' } }),
+// 공통 스키마 필드 (base)
+const baseCommonFields = {
+  // 제목 및 slug
+  title: fields.slug({
+    name: {
+      label: '제목',
+      validation: { isRequired: true },
+    },
+  }),
 
   // 요약
   summary: fields.text({
@@ -81,48 +85,66 @@ const commonFields = {
     defaultValue: { kind: 'today' },
   }),
 
+};
+
+// Function to create commonFields with dynamic paths
+const createCommonFields = (pathPrefix: string) => ({
+  ...baseCommonFields,
   // Thumbnail (image)
   thumbnailImage: fields.image({
     label: '썸네일 이미지',
-    directory: 'public/images/thumbnails',
+    directory: `${pathPrefix}public/images/thumbnails`,
     publicPath: '/images/thumbnails/',
   }),
 
   // Thumbnail (video/mov)
   thumbnailVideo: fields.file({
     label: '썸네일 비디오',
-    directory: 'public/videos/thumbnails',
+    directory: `${pathPrefix}public/videos/thumbnails`,
     publicPath: '/videos/thumbnails/',
   }),
-};
+});
 
-export default config({
-  storage:
-    {
-      kind: 'github',
+
+
+// Storage configuration based on environment
+// 1. 브라우저 환경(Admin UI)인지 확인합니다.
+const isClient = typeof window !== 'undefined';
+
+// 2. 관리자 UI일 때는 GitHub 전체 루트 기준 경로('apps/blog/...')를 사용하고,
+//    서버(블로그 렌더링)일 때는 현재 앱 기준 경로('content/...')를 사용합니다.
+const pathPrefix = isClient ? 'apps/blog/' : '';
+
+const storage ={
+      kind: 'github' as const,
       repo: {
         owner: 'aksel26',
         name: 'hmkim-blog-keystatic',
       },
-    },
+    }
+// const pathPrefix = process.env.NEXT_KEYSTATIC_STORAGE_KIND === 'github' ? 'apps/blog/' : '';
+// console.log("🔍 ~  ~ apps/blog/keystatic.config.ts:121 ~ pathPrefix:", pathPrefix);
+
+export default config({
+  storage,
   collections: {
     tech: collection({
       label: 'Tech',
       slugField: 'title',
-      path: 'apps/blog/content/tech/*',
+      path: `${pathPrefix}content/tech/*`,
       format: { contentField: 'content' },
       schema: {
-        ...commonFields,
+        ...createCommonFields(pathPrefix),
         content: fields.markdoc({
           label: '내용',
           options: {
             image: {
-              directory: 'public/images/tech',
+              directory: `${pathPrefix}public/images/tech`,
               publicPath: '/images/tech/',
             },
           },
           components: {
-            video: videoComponent('public/videos/tech', '/videos/tech/'),
+            video: videoComponent(`${pathPrefix}public/videos/tech`, '/videos/tech/'),
           },
         }),
       },
@@ -130,20 +152,20 @@ export default config({
     life: collection({
       label: 'Life',
       slugField: 'title',
-      path: 'apps/blog/content/life/*',
+      path: `${pathPrefix}content/life/*`,
       format: { contentField: 'content' },
       schema: {
-        ...commonFields,
+        ...createCommonFields(pathPrefix),
         content: fields.markdoc({
           label: '내용',
           options: {
             image: {
-              directory: 'public/images/life',
+              directory: `${pathPrefix}public/images/life`,
               publicPath: '/images/life/',
             },
           },
           components: {
-            video: videoComponent('public/videos/life', '/videos/life/'),
+            video: videoComponent(`${pathPrefix}public/videos/life`, '/videos/life/'),
           },
         }),
       },
