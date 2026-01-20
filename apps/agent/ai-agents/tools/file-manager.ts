@@ -42,9 +42,10 @@ export async function createMdxFile(
 
     const { title, summary, keywords, status, tags, createdAt, updatedAt, slug } = state.metadata;
 
-    // content/tech 디렉토리 경로 (apps/blog/content/tech)
+    // content/{category} 디렉토리 경로 (apps/blog/content/tech 또는 apps/blog/content/life)
     const blogContentPath = process.env.BLOG_CONTENT_PATH || path.join(process.cwd(), '..', 'blog', 'content');
-    const postsDir = path.join(blogContentPath, 'tech');
+    const category = state.category || 'tech';
+    const postsDir = path.join(blogContentPath, category);
 
     // 디렉토리가 없으면 생성
     if (!fs.existsSync(postsDir)) {

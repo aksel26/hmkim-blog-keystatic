@@ -46,9 +46,11 @@ export async function geminiCreator(
       message: '콘텐츠 품질 개선 중...',
     });
 
-    // 콘텐츠 개선 프롬프트
-    const contentPrompt = `
-다음은 "${state.topic}" 주제에 대한 블로그 포스트 초안입니다.
+    // 카테고리에 따른 콘텐츠 개선 프롬프트
+    const isLifeCategory = state.category === 'life';
+
+    const techContentPrompt = `
+다음은 "${state.topic}" 주제에 대한 기술 블로그 포스트 초안입니다.
 
 ${state.draftContent}
 ${feedbackInstruction}
@@ -64,6 +66,27 @@ ${feedbackInstruction}
 개선된 콘텐츠만 Markdown 형식으로 반환해주세요.
 `;
 
+    const lifeContentPrompt = `
+다음은 "${state.topic}" 주제에 대한 라이프스타일 블로그 포스트 초안입니다.
+
+${state.draftContent}
+${feedbackInstruction}
+
+이 초안을 다음과 같이 개선해주세요:
+
+1. 문법과 맞춤법 검토
+2. 문장을 더 명확하고 읽기 쉽게 개선
+3. 개인적이고 진정성 있는 톤 유지
+4. 전체적인 흐름과 논리 개선
+5. 자연스럽고 공감가는 표현으로 개선
+6. 개발 또는 코드에 관한 내용 제거
+7. SEO를 고려한 키워드 자연스럽게 포함
+
+개선된 콘텐츠만 Markdown 형식으로 반환해주세요.
+`;
+
+    const contentPrompt = isLifeCategory ? lifeContentPrompt : techContentPrompt;
+
     const contentResponse = await geminiPro.invoke(contentPrompt);
     const finalContent = contentResponse.content.toString();
 
@@ -75,9 +98,9 @@ ${feedbackInstruction}
 
     const currentDate = getCurrentDate();
 
-    // 메타데이터 생성 프롬프트 (새 형식)
-    const metadataPrompt = `
-다음 블로그 포스트에 대한 메타데이터를 생성해주세요:
+    // 카테고리에 따른 메타데이터 생성 프롬프트
+    const techMetadataPrompt = `
+다음 기술 블로그 포스트에 대한 메타데이터를 생성해주세요:
 
 주제: ${state.topic}
 
@@ -106,6 +129,38 @@ ${finalContent.substring(0, 1000)}...
 JSON만 반환해주세요.
 `;
 
+    const lifeMetadataPrompt = `
+다음 라이프스타일 블로그 포스트에 대한 메타데이터를 생성해주세요:
+
+주제: ${state.topic}
+
+콘텐츠:
+${finalContent.substring(0, 1000)}...
+
+다음 JSON 형식으로 메타데이터를 생성해주세요:
+
+{
+  "title": "흥미롭고 공감되는 제목 (60자 이내)",
+  "summary": "매력적인 요약 (150자 이내, 검색 결과에 표시될 내용)",
+  "keywords": ["Life", "키워드2"],
+  "status": "published",
+  "tags": ["태그1", "태그2", "태그3"],
+  "slug": "url-friendly-slug"
+}
+
+규칙:
+- title: 따뜻하고 공감되는 제목, 60자 이내
+- summary: 포스트의 핵심 내용 요약, 150자 이내
+- keywords: 주요 카테고리 키워드 1-3개 (예: Life, 일상, 여행, 취미)
+- status: "published" 고정
+- tags: 관련성 높은 라이프스타일 태그 3-5개
+- slug: 소문자, 하이픈으로 연결, 영문만 사용 (예: my-morning-routine)
+
+JSON만 반환해주세요.
+`;
+
+    const metadataPrompt = isLifeCategory ? lifeMetadataPrompt : techMetadataPrompt;
+
     const metadataResponse = await geminiPro.invoke(metadataPrompt);
     const metadataContent = metadataResponse.content.toString();
 
@@ -118,10 +173,11 @@ JSON만 반환해주세요.
     const parsedMetadata = JSON.parse(jsonMatch[0]);
 
     // 새 형식에 맞게 메타데이터 구성
+    const defaultKeyword = isLifeCategory ? 'Life' : 'Tech';
     const metadata: PostMetadata = {
       title: parsedMetadata.title,
       summary: parsedMetadata.summary || parsedMetadata.description,
-      keywords: parsedMetadata.keywords || ['Tech'],
+      keywords: parsedMetadata.keywords || [defaultKeyword],
       status: 'published',
       tags: parsedMetadata.tags,
       createdAt: currentDate,

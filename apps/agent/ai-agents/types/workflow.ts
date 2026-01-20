@@ -39,11 +39,17 @@ export interface ValidationResult {
 }
 
 /**
+ * 카테고리 타입
+ */
+export type Category = 'tech' | 'life';
+
+/**
  * 워크플로우 전체 상태 관리
  */
 export interface BlogPostState {
   // 기본 정보
   topic: string;
+  category?: Category;
   currentStep: string;
   progress: number; // 0-100
 
@@ -84,10 +90,12 @@ export interface StreamEvent {
   step: string;
   status: EventStatus;
   message: string;
+  progress?: number; // 0-100, 워크플로우 전체 진행률
   data?: any;
 }
 
 /**
  * 진행 상황 콜백 타입
+ * async 콜백을 지원하여 DB 업데이트 등이 완료될 때까지 대기 가능
  */
-export type OnProgressCallback = (event: StreamEvent) => void;
+export type OnProgressCallback = (event: StreamEvent) => void | Promise<void>;

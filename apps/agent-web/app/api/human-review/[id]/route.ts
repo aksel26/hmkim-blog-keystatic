@@ -31,12 +31,25 @@ export async function POST(
       );
     }
 
-    // Verify job is in human_review status (check both status and current_step for timing issues)
-    if (job.status !== "human_review" && job.current_step !== "human_review") {
-      return NextResponse.json(
-        { error: "Job is not awaiting human review" },
-        { status: 400 }
+    // Verify job is in human_review status
+    // Check status, current_step, or progress_logs for timing issues
+    const isHumanReview =
+      job.status === "human_review" ||
+      job.current_step === "human_review";
+
+    if (!isHumanReview) {
+      // Also check progress_logs for human_review step
+      const logs = await jobManager.getProgressLogs(jobId);
+      const hasHumanReviewLog = logs.some(
+        log => log.step === "human_review" || log.step === "review"
       );
+
+      if (!hasHumanReviewLog) {
+        return NextResponse.json(
+          { error: "Job is not awaiting human review" },
+          { status: 400 }
+        );
+      }
     }
 
     let nextStep: string;

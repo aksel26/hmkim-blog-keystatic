@@ -31,15 +31,34 @@ export async function POST(
       );
     }
 
-    // Verify job is in pending_deploy status (check both status and current_step for timing issues)
-    if (job.status !== "pending_deploy" && job.current_step !== "pending_deploy") {
-      return NextResponse.json(
-        { error: `Job is not awaiting deploy approval. Current status: ${job.status}` },
-        { status: 400 }
+    // Verify job is in pending_deploy status
+    // Check status, current_step, or progress_logs for timing issues
+    const isPendingDeploy =
+      job.status === "pending_deploy" ||
+      job.current_step === "pending_deploy";
+
+    if (!isPendingDeploy) {
+      // Also check progress_logs for pending_deploy step
+      const logs = await jobManager.getProgressLogs(jobId);
+      const hasPendingDeployLog = logs.some(
+        log => log.step === "pending_deploy" || log.step === "validate"
       );
+
+      if (!hasPendingDeployLog) {
+        return NextResponse.json(
+          { error: `Job is not awaiting deploy approval. Current status: ${job.status}` },
+          { status: 400 }
+        );
+      }
     }
 
     if (body.action === "approve") {
+      // Ensure status is pending_deploy before calling executeDeploy
+      // This handles timing issues where status might not be synced yet
+      if (job.status !== "pending_deploy") {
+        await jobManager.updateJob(jobId, { status: "pending_deploy" });
+      }
+
       // Execute deploy in background
       setImmediate(() => {
         executeDeploy(jobId).catch((error) => {
