@@ -250,13 +250,13 @@ export default function JobDetailPage() {
       </Card>
 
       {/* Step Indicator */}
-      {isActive && (
+      {/* {isActive && (
         <Card>
           <CardContent className="pt-6">
             <StepIndicator currentStep={displayStep} status={displayStatus} />
           </CardContent>
         </Card>
-      )}
+      )} */}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

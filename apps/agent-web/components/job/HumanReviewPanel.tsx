@@ -25,7 +25,7 @@ export function HumanReviewPanel({
 
   const handleSubmit = async (selectedAction: HumanReviewAction) => {
     if (selectedAction !== "approve" && !feedback.trim()) {
-      setError("Please provide feedback for revision");
+      setError("수정 요청 시 피드백을 작성해주세요");
       return;
     }
 
@@ -62,26 +62,26 @@ export function HumanReviewPanel({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="h-5 w-5 text-warning" />
-          Human Review Required
+          사용자 검토 필요
         </CardTitle>
         <CardDescription>
-          Please review the generated content and provide your feedback.
+          생성된 콘텐츠를 검토하고 피드백을 제공해주세요.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* AI Review Summary */}
         {reviewResult && (
           <div className="p-4 bg-muted rounded-lg space-y-3">
-            <h4 className="font-medium">AI Review Summary</h4>
+            <h4 className="font-medium">AI 검토 요약</h4>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <span className="text-sm text-muted-foreground">SEO Score</span>
+                <span className="text-sm text-muted-foreground">SEO 점수</span>
                 <p className="text-lg font-semibold">{reviewResult.seoScore}/100</p>
               </div>
               <div>
                 <span className="text-sm text-muted-foreground">
-                  Technical Accuracy
+                  기술 정확도
                 </span>
                 <p className="text-lg font-semibold">
                   {reviewResult.techAccuracy}/100
@@ -91,7 +91,7 @@ export function HumanReviewPanel({
 
             {reviewResult?.suggestions?.length > 0 && (
               <div>
-                <span className="text-sm text-muted-foreground">Suggestions</span>
+                <span className="text-sm text-muted-foreground">제안 사항</span>
                 <ul className="list-disc list-inside text-sm mt-1">
                   {reviewResult.suggestions.map((s, i) => (
                     <li key={i}>{s}</li>
@@ -103,7 +103,7 @@ export function HumanReviewPanel({
             {reviewResult?.issues?.length > 0 && (
               <div>
                 <span className="text-sm text-muted-foreground text-destructive">
-                  Issues
+                  문제점
                 </span>
                 <ul className="list-disc list-inside text-sm mt-1 text-destructive">
                   {reviewResult.issues.map((issue, i) => (
@@ -118,10 +118,10 @@ export function HumanReviewPanel({
         {/* Feedback Input */}
         <div className="space-y-2">
           <label className="text-sm font-medium">
-            Feedback (required for revision)
+            피드백 (수정 요청 시 필수)
           </label>
           <Textarea
-            placeholder="Provide specific feedback for improving the content..."
+            placeholder="콘텐츠 개선을 위한 구체적인 피드백을 작성해주세요..."
             value={feedback}
             onChange={(e) => setFeedback(e.target.value)}
             className="min-h-[100px]"
@@ -148,7 +148,7 @@ export function HumanReviewPanel({
             ) : (
               <CheckCircle className="mr-2 h-4 w-4" />
             )}
-            Approve
+            승인
           </Button>
 
           <Button
@@ -165,7 +165,7 @@ export function HumanReviewPanel({
             ) : (
               <MessageSquare className="mr-2 h-4 w-4" />
             )}
-            Request Revision
+            수정 요청
           </Button>
 
           <Button
@@ -182,7 +182,7 @@ export function HumanReviewPanel({
             ) : (
               <RotateCcw className="mr-2 h-4 w-4" />
             )}
-            Rewrite
+            재작성
           </Button>
         </div>
       </CardContent>

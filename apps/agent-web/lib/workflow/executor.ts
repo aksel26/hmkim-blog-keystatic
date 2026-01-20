@@ -35,15 +35,18 @@ export async function executeWorkflow(
         data: event.data as Record<string, unknown>,
       });
 
-      // 단계별 진행률 계산
+      // 단계별 진행률 계산 (워크플로우에서 전달된 progress 값 사용)
       const stepProgress: Record<string, number> = {
-        research: 10,
-        write: 25,
+        research: 15,
+        write: 30,
         review: 40,
         human_review: 50,
-        create: 60,
-        createFile: 75,
-        validate: 85,
+        create: 65,
+        create_file: 80,
+        createFile: 80,
+        validate: 90,
+        deploy: 95,
+        completed: 100,
         workflow: 90,
       };
 
@@ -54,14 +57,17 @@ export async function executeWorkflow(
         review: "review",
         human_review: "human_review",
         create: "creating",
+        create_file: "createFile",
         createFile: "createFile",
         validate: "validating",
         pending_deploy: "pending_deploy",
         deploy: "deploying",
+        completed: "completed",
         workflow: "running",
       };
 
-      const progress = stepProgress[event.step] || 0;
+      // event.progress가 있으면 우선 사용, 없으면 stepProgress 매핑 사용
+      const progress = event.progress ?? stepProgress[event.step] ?? 0;
       const currentStep = event.step;
       const stepStatus: JobStatus = stepToStatus[event.step] || "running";
 
@@ -92,8 +98,11 @@ export async function executeWorkflow(
       console.log(`[Workflow] Human review requested for job ${jobId}`);
 
       // 상태를 human_review로 변경하고 draft_content 저장
+      // human_approval과 human_feedback을 리셋하여 새로운 입력을 대기
       await jobManager.updateJob(jobId, {
         status: "human_review",
+        human_approval: null,
+        human_feedback: null,
         draft_content: state.draftContent,
         review_result: state.reviewResult ?? null,
         current_step: "human_review",
@@ -142,7 +151,8 @@ export async function executeWorkflow(
     const result = await runBlogWorkflowWithoutDeploy(
       topic,
       onProgress,
-      onHumanReview
+      onHumanReview,
+      category
     );
 
     // 검증 결과 확인
@@ -340,14 +350,17 @@ export async function skipDeploy(jobId: string): Promise<void> {
 async function runBlogWorkflowWithoutDeploy(
   topic: string,
   onProgress: (event: StreamEvent) => void | Promise<void>,
-  onHumanReview: (state: BlogPostState) => Promise<{ approved: boolean; feedback?: string }>
+  onHumanReview: (state: BlogPostState) => Promise<{ approved: boolean; feedback?: string }>,
+  category: string = "tech"
 ): Promise<BlogPostState> {
-  // 원래 runBlogWorkflow를 호출하되, deploy 단계는 건너뛰도록 함
-  // 현재 구조상 runBlogWorkflow 내부에서 deploy가 실행되므로,
-  // 이를 분리하기 위해 직접 workflow 단계를 실행
-
-  // 임시로 기존 runBlogWorkflow 사용 (deploy 포함)
-  // 실제로는 deploy 단계를 분리해야 함
-  const result = await runBlogWorkflow(topic, onProgress, onHumanReview);
+  // skipDeploy: true를 전달하여 deploy 단계를 건너뜀
+  // 사용자가 PR 생성을 승인하면 executeDeploy에서 별도로 처리
+  const result = await runBlogWorkflow(
+    topic,
+    onProgress,
+    onHumanReview,
+    category as "tech" | "life",
+    true // skipDeploy
+  );
   return result;
 }
