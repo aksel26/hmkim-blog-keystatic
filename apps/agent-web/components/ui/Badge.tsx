@@ -46,7 +46,17 @@ export function getStatusBadgeVariant(
     case "queued":
       return "secondary";
     case "human_review":
+    case "pending_deploy":
       return "warning";
+    case "running":
+    case "research":
+    case "writing":
+    case "review":
+    case "creating":
+    case "createFile":
+    case "validating":
+    case "deploying":
+      return "default";
     default:
       return "default";
   }
@@ -55,16 +65,19 @@ export function getStatusBadgeVariant(
 // Helper function to get status display text
 export function getStatusDisplayText(status: JobStatus): string {
   const statusMap: Record<JobStatus, string> = {
-    queued: "Queued",
-    research: "Researching",
-    writing: "Writing",
-    review: "AI Review",
-    human_review: "Pending Review",
-    creating: "Creating",
-    validating: "Validating",
-    deploying: "Deploying",
-    completed: "Completed",
-    failed: "Failed",
+    queued: "대기중",
+    running: "실행중",
+    research: "리서치 중",
+    writing: "작성 중",
+    review: "AI 검토 중",
+    human_review: "사용자 검토 대기",
+    creating: "콘텐츠 개선 중",
+    createFile: "파일 생성 중",
+    validating: "검증 중",
+    pending_deploy: "PR 승인 대기",
+    deploying: "PR 생성 중",
+    completed: "완료",
+    failed: "실패",
   };
   return statusMap[status] || status;
 }

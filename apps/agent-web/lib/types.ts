@@ -3,12 +3,15 @@
  */
 export type JobStatus =
   | "queued"
+  | "running"
   | "research"
   | "writing"
   | "review"
   | "human_review"
   | "creating"
+  | "createFile"
   | "validating"
+  | "pending_deploy"
   | "deploying"
   | "completed"
   | "failed";
@@ -135,6 +138,7 @@ export interface ProgressLog {
 export type SSEEventType =
   | "progress"
   | "review-required"
+  | "pending-deploy"
   | "complete"
   | "error";
 
@@ -165,9 +169,16 @@ export interface SSEErrorEvent {
   step: string;
 }
 
+export interface SSEPendingDeployEvent {
+  type: "pending-deploy";
+  filepath: string;
+  metadata: PostMetadata | null;
+}
+
 export type SSEEvent =
   | SSEProgressEvent
   | SSEReviewRequiredEvent
+  | SSEPendingDeployEvent
   | SSECompleteEvent
   | SSEErrorEvent;
 
