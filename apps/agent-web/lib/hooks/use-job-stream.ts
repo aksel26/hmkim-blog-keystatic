@@ -77,25 +77,32 @@ export function useJobStream(
             setProgress(data.progress);
 
             const newStatus = data.status as JobStatus;
+            const currentStep = data.step;
 
-            // 특수 상태(human_review, pending_deploy)가 일반 상태로 덮어쓰이지 않도록 보호
-            // 단, 특수 상태 간 전환(human_review → pending_deploy)이나
-            // 새로운 특수 상태로의 전환은 허용
+            // step 기반으로 상태 결정 (status보다 step이 더 정확함)
+            // human_review, pending_deploy step이면 해당 상태로 설정
+            // 그 외의 step(write, review 등)이면 해당 status 사용
             setStatus((prev) => {
               const specialStatuses: JobStatus[] = ["human_review", "pending_deploy"];
 
-              // 이전 상태가 특수 상태이고, 새 상태가 일반 상태면 무시
-              if (prev && specialStatuses.includes(prev) && !specialStatuses.includes(newStatus)) {
-                return prev;
+              // step이 특수 상태면 해당 상태로 설정
+              if (currentStep === "human_review") {
+                return "human_review";
               }
+              if (currentStep === "pending_deploy") {
+                return "pending_deploy";
+              }
+
+              // step이 일반 상태(write, review 등)면 status 사용
+              // 이전이 특수 상태여도 현재 step이 일반이면 변경 허용 (workflow 진행 중)
               return newStatus;
             });
 
             // progress 이벤트에서도 status가 특수 상태면 해당 콜백 호출
             // (review-required/pending-deploy 이벤트가 누락된 경우를 대비)
-            if (newStatus === "human_review") {
+            if (newStatus === "human_review" || currentStep === "human_review") {
               onReviewRequired?.(data as unknown as SSEEvent);
-            } else if (newStatus === "pending_deploy") {
+            } else if (newStatus === "pending_deploy" || currentStep === "pending_deploy") {
               onPendingDeploy?.(data as unknown as SSEEvent);
             }
 
