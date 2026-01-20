@@ -12,6 +12,8 @@ import { BlogPostState, OnProgressCallback } from '../types/workflow';
 export interface ReviewResult {
   passed: boolean;
   score: number; // 0-100
+  seoScore: number; // 0-100
+  techAccuracy: number; // 0-100
   codeIssues: Array<{
     line?: number;
     issue: string;
@@ -25,6 +27,8 @@ export interface ReviewResult {
     issue: string;
     suggestion: string;
   }>;
+  suggestions: string[];
+  issues: string[];
   improvedContent?: string;
 }
 
@@ -86,7 +90,8 @@ ${contentToReview}
 다음 JSON 형식으로 반환해주세요:
 
 {
-  "score": 85,
+  "seoScore": 85,
+  "techAccuracy": 90,
   "codeIssues": [
     {"issue": "문제 설명", "suggestion": "수정 제안"}
   ],
@@ -100,7 +105,7 @@ ${contentToReview}
   "improvedContent": "수정이 필요한 경우 개선된 콘텐츠 (선택적)"
 }
 
-점수 기준:
+점수 기준 (seoScore, techAccuracy 각각):
 - 90-100: 우수 (바로 게시 가능)
 - 70-89: 양호 (소소한 수정 권장)
 - 50-69: 보통 (수정 필요)
@@ -120,12 +125,33 @@ JSON만 반환해주세요.
 
     const parsedReview = JSON.parse(jsonMatch[0]);
 
+    // 개별 점수에서 평균 점수 계산
+    const seoScore = parsedReview.seoScore || 0;
+    const techAccuracy = parsedReview.techAccuracy || 0;
+    const avgScore = Math.round((seoScore + techAccuracy) / 2);
+
+    // issues와 suggestions 추출
+    const allIssues: string[] = [
+      ...(parsedReview.codeIssues || []).map((i: { issue: string }) => i.issue),
+      ...(parsedReview.techIssues || []).map((i: { issue: string }) => i.issue),
+      ...(parsedReview.seoIssues || []).map((i: { issue: string }) => i.issue),
+    ];
+    const allSuggestions: string[] = [
+      ...(parsedReview.codeIssues || []).map((i: { suggestion: string }) => i.suggestion),
+      ...(parsedReview.techIssues || []).map((i: { suggestion: string }) => i.suggestion),
+      ...(parsedReview.seoIssues || []).map((i: { suggestion: string }) => i.suggestion),
+    ];
+
     const reviewResult: ReviewResult = {
-      passed: parsedReview.score >= 70,
-      score: parsedReview.score,
+      passed: avgScore >= 70,
+      score: avgScore,
+      seoScore,
+      techAccuracy,
       codeIssues: parsedReview.codeIssues || [],
       techIssues: parsedReview.techIssues || [],
       seoIssues: parsedReview.seoIssues || [],
+      suggestions: allSuggestions.filter(Boolean),
+      issues: allIssues.filter(Boolean),
       improvedContent: parsedReview.improvedContent,
     };
 
@@ -138,8 +164,8 @@ JSON만 반환해주세요.
       step: 'review',
       status: reviewResult.passed ? 'completed' : 'progress',
       message: reviewResult.passed
-        ? `검토 완료! 점수: ${reviewResult.score}/100 (${totalIssues}개 개선 제안)`
-        : `검토 완료. 점수: ${reviewResult.score}/100 - 수정이 필요합니다.`,
+        ? `검토 완료! SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100 (${totalIssues}개 개선 제안)`
+        : `검토 완료. SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100 - 수정이 필요합니다.`,
       data: { reviewResult, summary: parsedReview.summary },
     });
 
@@ -157,7 +183,7 @@ JSON만 반환해주세요.
     onProgress?.({
       step: 'review',
       status: 'completed',
-      message: `리뷰 완료! 점수: ${reviewResult.score}/100`,
+      message: `리뷰 완료! SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100`,
       data: { reviewResult },
     });
 
