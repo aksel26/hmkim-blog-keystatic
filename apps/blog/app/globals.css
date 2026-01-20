@@ -58,9 +58,6 @@ body {
   font-family: var(--font-sans);
 }
 
-.prose {
-  font-size: 1rem;
-}
 /* Remove automatic quotes from code and blockquote */
 .prose code::before,
 .prose code::after {
