@@ -89,7 +89,7 @@ export function HumanReviewPanel({
               </div>
             </div>
 
-            {reviewResult.suggestions.length > 0 && (
+            {reviewResult?.suggestions?.length > 0 && (
               <div>
                 <span className="text-sm text-muted-foreground">Suggestions</span>
                 <ul className="list-disc list-inside text-sm mt-1">
@@ -100,7 +100,7 @@ export function HumanReviewPanel({
               </div>
             )}
 
-            {reviewResult.issues.length > 0 && (
+            {reviewResult?.issues?.length > 0 && (
               <div>
                 <span className="text-sm text-muted-foreground text-destructive">
                   Issues

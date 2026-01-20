@@ -31,8 +31,8 @@ export async function POST(
       );
     }
 
-    // Verify job is in human_review status
-    if (job.status !== "human_review") {
+    // Verify job is in human_review status (check both status and current_step for timing issues)
+    if (job.status !== "human_review" && job.current_step !== "human_review") {
       return NextResponse.json(
         { error: "Job is not awaiting human review" },
         { status: 400 }
