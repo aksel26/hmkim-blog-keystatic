@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
+import { executeWorkflow } from "@/lib/workflow/executor";
 import type { GenerateRequest, GenerateResponse } from "@/lib/types";
 
 export async function POST(request: NextRequest) {
@@ -28,8 +29,15 @@ export async function POST(request: NextRequest) {
       message: "Job created and queued",
     });
 
-    // TODO: Trigger workflow execution in background
-    // For now, we'll handle this separately via the stream endpoint
+    // Execute workflow in background (non-blocking)
+    // Using setImmediate to ensure response is sent first
+    setImmediate(() => {
+      executeWorkflow(job.id, body.topic.trim(), body.category || "tech").catch(
+        (error) => {
+          console.error(`Background workflow failed for job ${job.id}:`, error);
+        }
+      );
+    });
 
     const response: GenerateResponse = {
       jobId: job.id,
