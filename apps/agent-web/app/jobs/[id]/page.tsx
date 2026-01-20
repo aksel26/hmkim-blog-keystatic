@@ -11,6 +11,7 @@ import { StepIndicator } from "@/components/job/StepIndicator";
 import { JobProgress } from "@/components/job/JobProgress";
 import { ContentPreview } from "@/components/job/ContentPreview";
 import { HumanReviewPanel } from "@/components/job/HumanReviewPanel";
+import { DeployApprovalPanel } from "@/components/job/DeployApprovalPanel";
 import { useJobStream } from "@/lib/hooks/use-job-stream";
 import { formatDate } from "@/lib/utils";
 import type { Job, JobStatus, ProgressLog } from "@/lib/types";
@@ -55,17 +56,20 @@ export default function JobDetailPage() {
       if (data.status === "completed" || data.status === "failed") {
         return false;
       }
-      return 3000; // Poll every 3 seconds for active jobs
+      return 10000; // Poll every 10 seconds (SSE handles real-time updates)
     },
+    staleTime: 5000, // Consider data stale after 5 seconds
   });
 
   // Connect to SSE stream for real-time updates
-  const { isConnected, progress: streamProgress } = useJobStream(
-    job && job.status !== "completed" && job.status !== "failed" ? jobId : null,
+  // completed/failed 상태에서만 SSE 연결 해제
+  const shouldConnect = job &&
+    job.status !== "completed" &&
+    job.status !== "failed";
+
+  const { isConnected, progress: streamProgress, currentStep: streamStep, status: streamStatus } = useJobStream(
+    shouldConnect ? jobId : null,
     {
-      onProgress: () => {
-        refetch();
-      },
       onComplete: () => {
         refetch();
       },
@@ -73,6 +77,9 @@ export default function JobDetailPage() {
         refetch();
       },
       onReviewRequired: () => {
+        refetch();
+      },
+      onPendingDeploy: () => {
         refetch();
       },
     }
@@ -127,7 +134,33 @@ export default function JobDetailPage() {
     );
   }
 
-  const isActive = job.status !== "completed" && job.status !== "failed";
+  // Use SSE values when connected, fallback to job data
+  const displayProgress = isConnected && streamProgress > 0 ? streamProgress : job.progress;
+  const displayStep = isConnected && streamStep ? streamStep : job.currentStep;
+
+  // 특수 상태(human_review, pending_deploy)는 step, streamStatus, job.status 중 하나라도 맞으면 표시
+  const specialStatuses: JobStatus[] = ["human_review", "pending_deploy"];
+  const getDisplayStatus = (): JobStatus => {
+    // step이 특수 상태면 해당 status로 간주 (status가 아직 업데이트되지 않은 경우 대비)
+    if (displayStep === "human_review") {
+      return "human_review";
+    }
+    if (displayStep === "pending_deploy") {
+      return "pending_deploy";
+    }
+    // streamStatus가 특수 상태면 우선
+    if (streamStatus && specialStatuses.includes(streamStatus as JobStatus)) {
+      return streamStatus as JobStatus;
+    }
+    // job.status가 특수 상태면 사용
+    if (specialStatuses.includes(job.status)) {
+      return job.status;
+    }
+    // 그 외에는 SSE 상태 또는 job 상태
+    return isConnected && streamStatus ? streamStatus : job.status;
+  };
+  const displayStatus = getDisplayStatus();
+  const isActive = displayStatus !== "completed" && displayStatus !== "failed";
 
   return (
     <div className="space-y-6">
@@ -149,8 +182,8 @@ export default function JobDetailPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant={getStatusBadgeVariant(job.status)} className="text-sm">
-            {getStatusDisplayText(job.status)}
+          <Badge variant={getStatusBadgeVariant(displayStatus)} className="text-sm">
+            {getStatusDisplayText(displayStatus)}
           </Badge>
 
           {isConnected && (
@@ -204,12 +237,12 @@ export default function JobDetailPage() {
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Progress</span>
-              <p className="font-medium">{job.progress}%</p>
+              <p className="font-medium">{displayProgress}%</p>
             </div>
             <div>
               <span className="text-sm text-muted-foreground">Current Step</span>
               <p className="font-medium capitalize">
-                {job.currentStep || "Queued"}
+                {displayStep || "Queued"}
               </p>
             </div>
           </div>
@@ -220,7 +253,7 @@ export default function JobDetailPage() {
       {isActive && (
         <Card>
           <CardContent className="pt-6">
-            <StepIndicator currentStep={job.currentStep} status={job.status} />
+            <StepIndicator currentStep={displayStep} status={displayStatus} />
           </CardContent>
         </Card>
       )}
@@ -229,9 +262,13 @@ export default function JobDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Progress */}
         <JobProgress
-          progress={streamProgress || job.progress}
+          progress={displayProgress}
           logs={job.progressLogs}
           isLive={isConnected}
+          currentStep={displayStep}
+          jobId={jobId}
+          jobStatus={displayStatus}
+          onActionComplete={() => refetch()}
         />
 
         {/* Content Preview */}
@@ -243,7 +280,7 @@ export default function JobDetailPage() {
       </div>
 
       {/* Human Review Panel */}
-      {job.status === "human_review" && (
+      {displayStatus === "human_review" && (
         <HumanReviewPanel
           jobId={jobId}
           reviewResult={job.reviewResult}
@@ -251,8 +288,17 @@ export default function JobDetailPage() {
         />
       )}
 
+      {/* Deploy Approval Panel */}
+      {displayStatus === "pending_deploy" && (
+        <DeployApprovalPanel
+          jobId={jobId}
+          filepath={job.filepath}
+          onDeployCompleted={handleReviewSubmitted}
+        />
+      )}
+
       {/* Error Display */}
-      {job.status === "failed" && job.error && (
+      {displayStatus === "failed" && job.error && (
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
@@ -264,7 +310,7 @@ export default function JobDetailPage() {
       )}
 
       {/* Completion Info */}
-      {job.status === "completed" && (
+      {displayStatus === "completed" && (
         <Card className="border-success">
           <CardHeader>
             <CardTitle className="text-success">Completed Successfully</CardTitle>
