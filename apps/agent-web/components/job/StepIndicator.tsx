@@ -7,22 +7,49 @@ import {
   Eye,
   User,
   Sparkles,
+  FileText,
   FileCheck,
-  Rocket,
+  GitPullRequest,
   CheckCircle,
 } from "lucide-react";
 import type { JobStatus } from "@/lib/types";
 
+// 워크플로우 단계 정의 (agent 앱의 실제 step 이름과 일치)
 const steps = [
-  { id: "research", label: "Research", icon: Search },
-  { id: "writing", label: "Writing", icon: PenTool },
-  { id: "review", label: "AI Review", icon: Eye },
-  { id: "human_review", label: "Human Review", icon: User },
-  { id: "creating", label: "Creating", icon: Sparkles },
-  { id: "validating", label: "Validating", icon: FileCheck },
-  { id: "deploying", label: "Deploying", icon: Rocket },
-  { id: "completed", label: "Completed", icon: CheckCircle },
+  { id: "research", label: "리서치", icon: Search },
+  { id: "write", label: "초안 작성", icon: PenTool },
+  { id: "review", label: "AI 검토", icon: Eye },
+  { id: "human_review", label: "사용자 검토", icon: User },
+  { id: "create", label: "콘텐츠 개선", icon: Sparkles },
+  { id: "createFile", label: "파일 생성", icon: FileText },
+  { id: "validate", label: "검증", icon: FileCheck },
+  { id: "deploy", label: "PR 생성", icon: GitPullRequest },
 ];
+
+// step 이름 매핑 (다양한 이름을 통일)
+const stepMapping: Record<string, string> = {
+  // 워크플로우 단계
+  research: "research",
+  write: "write",
+  writing: "write",
+  review: "review",
+  human_review: "human_review",
+  create: "create",
+  creating: "create",
+  createFile: "createFile",
+  validate: "validate",
+  validating: "validate",
+  deploy: "deploy",
+  deploying: "deploy",
+  pending_deploy: "deploy",
+  // 초기/완료 상태
+  init: "research",
+  queued: "research",
+  running: "research",
+  workflow: "research",
+  complete: "deploy",
+  completed: "deploy",
+};
 
 interface StepIndicatorProps {
   currentStep: string | null;
@@ -30,64 +57,69 @@ interface StepIndicatorProps {
 }
 
 export function StepIndicator({ currentStep, status }: StepIndicatorProps) {
-  const getCurrentStepIndex = () => {
-    if (status === "failed") return -1;
-    if (status === "queued") return -1;
-    return steps.findIndex((s) => s.id === currentStep || s.id === status);
+  const getNormalizedStep = () => {
+    if (status === "failed") return null;
+    if (status === "completed") return "deploy"; // 완료시 마지막 단계
+
+    const step = currentStep || status;
+    return stepMapping[step] || step;
   };
 
-  const currentIndex = getCurrentStepIndex();
+  const normalizedStep = getNormalizedStep();
+  const currentIndex = normalizedStep
+    ? steps.findIndex((s) => s.id === normalizedStep)
+    : -1;
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between">
+    <div className="w-full overflow-x-auto">
+      <div className="flex items-center min-w-max">
         {steps.map((step, index) => {
-          const isCompleted = index < currentIndex;
-          const isCurrent = index === currentIndex;
-          const isFailed = status === "failed" && isCurrent;
+          const isCompleted = status === "completed" || index < currentIndex;
+          const isCurrent = index === currentIndex && status !== "completed";
+          const isFailed = status === "failed" && index === currentIndex;
+          const isPending = index > currentIndex;
 
           return (
-            <div
-              key={step.id}
-              className="flex flex-col items-center flex-1"
-            >
+            <div key={step.id} className="flex items-center">
               {/* Step Circle */}
-              <div
-                className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors",
-                  isCompleted && "bg-success border-success text-success-foreground",
-                  isCurrent && !isFailed && "bg-primary border-primary text-primary-foreground",
-                  isFailed && "bg-destructive border-destructive text-destructive-foreground",
-                  !isCompleted && !isCurrent && "bg-muted border-border text-muted-foreground"
-                )}
-              >
-                <step.icon className="w-5 h-5" />
-              </div>
+              <div className="flex flex-col items-center">
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all",
+                    isCompleted && "bg-success border-success text-white",
+                    isCurrent && !isFailed && "bg-primary border-primary text-white animate-pulse",
+                    isFailed && "bg-destructive border-destructive text-white",
+                    isPending && !isFailed && "bg-muted border-border text-muted-foreground"
+                  )}
+                >
+                  {isCompleted && !isCurrent ? (
+                    <CheckCircle className="w-5 h-5" />
+                  ) : (
+                    <step.icon className="w-5 h-5" />
+                  )}
+                </div>
 
-              {/* Step Label */}
-              <span
-                className={cn(
-                  "mt-2 text-xs font-medium text-center",
-                  isCompleted && "text-success",
-                  isCurrent && !isFailed && "text-primary",
-                  isFailed && "text-destructive",
-                  !isCompleted && !isCurrent && "text-muted-foreground"
-                )}
-              >
-                {step.label}
-              </span>
+                {/* Step Label */}
+                <span
+                  className={cn(
+                    "mt-2 text-xs font-medium text-center whitespace-nowrap",
+                    isCompleted && "text-success",
+                    isCurrent && !isFailed && "text-primary font-bold",
+                    isFailed && "text-destructive",
+                    isPending && "text-muted-foreground"
+                  )}
+                >
+                  {step.label}
+                </span>
+              </div>
 
               {/* Connector Line */}
               {index < steps.length - 1 && (
                 <div
                   className={cn(
-                    "absolute top-5 left-1/2 w-full h-0.5 -z-10",
+                    "w-8 h-0.5 mx-1",
                     isCompleted ? "bg-success" : "bg-border"
                   )}
-                  style={{
-                    width: "calc(100% - 2.5rem)",
-                    left: "calc(50% + 1.25rem)",
-                  }}
                 />
               )}
             </div>
