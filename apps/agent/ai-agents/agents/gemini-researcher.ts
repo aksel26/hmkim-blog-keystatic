@@ -40,7 +40,7 @@ async function searchWithTavily(query: string): Promise<TavilySearchResult[]> {
       body: JSON.stringify({
         api_key: apiKey,
         query: query,
-        max_results: 5,
+        max_results: 10,
         search_depth: 'basic',
         include_answer: false,
         include_raw_content: false,
