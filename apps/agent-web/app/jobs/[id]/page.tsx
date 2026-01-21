@@ -12,6 +12,7 @@ import { JobProgress } from "@/components/job/JobProgress";
 import { ContentPreview } from "@/components/job/ContentPreview";
 import { HumanReviewPanel } from "@/components/job/HumanReviewPanel";
 import { DeployApprovalPanel } from "@/components/job/DeployApprovalPanel";
+import { SEOChecklist } from "@/components/editor/SEOChecklist";
 import { useJobStream } from "@/lib/hooks/use-job-stream";
 import { formatDate } from "@/lib/utils";
 import type { Job, JobStatus, ProgressLog } from "@/lib/types";
@@ -259,7 +260,7 @@ export default function JobDetailPage() {
       )} */}
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Progress */}
         <JobProgress
           progress={displayProgress}
@@ -273,10 +274,17 @@ export default function JobDetailPage() {
 
         {/* Content Preview */}
         <ContentPreview
-          draftContent={job.draftContent}
           finalContent={job.finalContent}
           metadata={job.metadata}
         />
+
+        {/* SEO Checklist - 콘텐츠가 있을 때만 표시 */}
+        {(job.draftContent || job.finalContent) && (
+          <SEOChecklist
+            content={job.finalContent || job.draftContent || ""}
+            metadata={job.metadata}
+          />
+        )}
       </div>
 
       {/* Human Review Panel */}

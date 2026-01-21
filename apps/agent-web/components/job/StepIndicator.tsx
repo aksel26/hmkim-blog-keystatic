@@ -5,24 +5,23 @@ import {
   Search,
   PenTool,
   Eye,
-  User,
   Sparkles,
-  FileText,
   FileCheck,
+  User,
   GitPullRequest,
   CheckCircle,
 } from "lucide-react";
 import type { JobStatus } from "@/lib/types";
 
-// 워크플로우 단계 정의 (agent 앱의 실제 step 이름과 일치)
+// 워크플로우 단계 정의 (새로운 순서)
+// Research → Write → Review → Create → Validate → Human Review → Deploy
 const steps = [
   { id: "research", label: "리서치", icon: Search },
   { id: "write", label: "초안 작성", icon: PenTool },
   { id: "review", label: "AI 검토", icon: Eye },
-  { id: "human_review", label: "사용자 검토", icon: User },
   { id: "create", label: "콘텐츠 개선", icon: Sparkles },
-  { id: "createFile", label: "파일 생성", icon: FileText },
   { id: "validate", label: "검증", icon: FileCheck },
+  { id: "human_review", label: "사용자 검토", icon: User },
   { id: "deploy", label: "PR 생성", icon: GitPullRequest },
 ];
 
@@ -33,12 +32,12 @@ const stepMapping: Record<string, string> = {
   write: "write",
   writing: "write",
   review: "review",
-  human_review: "human_review",
   create: "create",
   creating: "create",
-  createFile: "createFile",
   validate: "validate",
   validating: "validate",
+  human_review: "human_review",
+  on_hold: "human_review",
   deploy: "deploy",
   deploying: "deploy",
   pending_deploy: "deploy",
