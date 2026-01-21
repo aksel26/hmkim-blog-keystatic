@@ -58,10 +58,25 @@ export async function reviewer(
       message: '코드 블록 문법 검사 중...',
     });
 
+    // 카테고리에 따른 리뷰 프롬프트 생성
+    const isLifeCategory = state.category === 'life';
+
+    const categoryGuideline = isLifeCategory
+      ? `
+**중요: 이 글은 라이프스타일 블로그입니다.**
+- 개선 시 반드시 친근한 존댓말(~해요, ~네요, ~입니다 체)을 유지해주세요.
+- 반말은 절대 사용하지 마세요.
+- 개인적이고 진정성 있는 톤을 유지해주세요.
+`
+      : `
+**중요: 이 글은 기술 블로그입니다.**
+- 전문적이지만 친근한 존댓말을 유지해주세요.
+`;
+
     // 종합 리뷰 프롬프트
     const reviewPrompt = `
-당신은 기술 블로그 전문 리뷰어입니다. 다음 블로그 포스트를 검토해주세요.
-
+당신은 블로그 전문 리뷰어입니다. 다음 블로그 포스트를 검토해주세요.
+${categoryGuideline}
 주제: ${state.topic}
 
 콘텐츠:
@@ -75,22 +90,15 @@ ${contentToReview}
    - 콘텐츠 길이가 SEO에 적합한지 (최소 1000자)
    - 내부/외부 링크 활용 여부
 
-다음 JSON 형식으로 반환해주세요:
+다음 JSON 형식으로 반환해주세요 (점수와 요약만 반환, 개선된 콘텐츠는 반환하지 마세요):
 
 {
   "seoScore": 85,
   "techAccuracy": 90,
-  "codeIssues": [
-    {"issue": "문제 설명", "suggestion": "수정 제안"}
-  ],
-  "techIssues": [
-    {"issue": "문제 설명", "suggestion": "수정 제안"}
-  ],
-  "seoIssues": [
-    {"issue": "문제 설명", "suggestion": "수정 제안"}
-  ],
-  "summary": "전체 검토 요약",
-  "improvedContent": "수정이 필요한 경우 개선된 콘텐츠 (선택적)"
+  "codeIssues": [],
+  "techIssues": [],
+  "seoIssues": [],
+  "summary": "전체 검토 요약"
 }
 
 점수 기준 (seoScore, techAccuracy 각각):
@@ -140,7 +148,6 @@ JSON만 반환해주세요.
       seoIssues: parsedReview.seoIssues || [],
       suggestions: allSuggestions.filter(Boolean),
       issues: allIssues.filter(Boolean),
-      improvedContent: parsedReview.improvedContent,
     };
 
     const totalIssues =
@@ -150,33 +157,12 @@ JSON만 반환해주세요.
 
     onProgress?.({
       step: 'review',
-      status: reviewResult.passed ? 'completed' : 'progress',
-      message: reviewResult.passed
-        ? `검토 완료! SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100 (${totalIssues}개 개선 제안)`
-        : `검토 완료. SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100 - 수정이 필요합니다.`,
+      status: 'completed',
+      message: `리뷰 완료! SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100 (${totalIssues}개 개선 제안)`,
       data: { reviewResult, summary: parsedReview.summary },
     });
 
-    // 점수가 낮으면 개선된 콘텐츠로 교체
-    let updatedContent = state.draftContent;
-    if (!reviewResult.passed && reviewResult.improvedContent) {
-      updatedContent = reviewResult.improvedContent;
-      onProgress?.({
-        step: 'review',
-        status: 'progress',
-        message: '콘텐츠가 자동으로 개선되었습니다.',
-      });
-    }
-
-    onProgress?.({
-      step: 'review',
-      status: 'completed',
-      message: `리뷰 완료! SEO: ${reviewResult.seoScore}/100, 기술: ${reviewResult.techAccuracy}/100`,
-      data: { reviewResult },
-    });
-
     return {
-      draftContent: updatedContent,
       currentStep: 'review_completed',
       progress: 35,
       reviewResult,
