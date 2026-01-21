@@ -100,7 +100,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             <Link href={`/tech/${post.slug}`} className="block">
               {/* Thumbnail */}
               {post.thumbnailImage && (
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative aspect-video rounded-xl overflow-hidden">
                   <Image
                     src={post.thumbnailImage}
                     alt={post.title}
@@ -110,7 +110,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                 </div>
               )}
 
-              <div className="">
+              <div className="pt-4 flex flex-col flex-1">
                 {/* Title */}
                 <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-tech-blue">
                   {post.title}
