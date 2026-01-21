@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -8,41 +8,57 @@ import ReactMarkdown from "react-markdown";
 import type { PostMetadata } from "@/lib/types";
 
 interface ContentPreviewProps {
-  draftContent: string | null;
+  draftContent?: string | null;
   finalContent: string | null;
   metadata: PostMetadata | null;
 }
 
-type Tab = "draft" | "final" | "metadata";
+type Tab = "content" | "metadata";
+
+/**
+ * 마크다운 코드 블록 래퍼 제거
+ * ```markdown ... ``` 형태로 감싸진 콘텐츠에서 래퍼를 제거
+ */
+function unwrapMarkdownCodeBlock(content: string): string {
+  if (!content) return "";
+
+  const trimmed = content.trim();
+
+  // ```markdown 또는 ```md로 시작하고 ```로 끝나는 경우
+  const codeBlockRegex = /^```(?:markdown|md)?\s*\n?([\s\S]*?)\n?```$/i;
+  const match = trimmed.match(codeBlockRegex);
+
+  if (match) {
+    return match[1].trim();
+  }
+
+  return trimmed;
+}
 
 export function ContentPreview({
-  draftContent,
   finalContent,
   metadata,
 }: ContentPreviewProps) {
   const [activeTab, setActiveTab] = useState<Tab>(
-    finalContent ? "final" : draftContent ? "draft" : "metadata"
+    finalContent ? "content" : "metadata"
   );
 
+  // 마크다운 코드 블록 래퍼 제거된 콘텐츠
+  const cleanContent = useMemo(() => {
+    return unwrapMarkdownCodeBlock(finalContent || "");
+  }, [finalContent]);
+
   const tabs: Array<{ id: Tab; label: string; disabled: boolean }> = [
-    { id: "draft", label: "Draft", disabled: !draftContent },
-    { id: "final", label: "Final", disabled: !finalContent },
+    { id: "content", label: "Content", disabled: !finalContent },
     { id: "metadata", label: "Metadata", disabled: !metadata },
   ];
 
   const renderContent = () => {
     switch (activeTab) {
-      case "draft":
+      case "content":
         return (
           <div className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown>{draftContent || ""}</ReactMarkdown>
-          </div>
-        );
-
-      case "final":
-        return (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
-            <ReactMarkdown>{finalContent || ""}</ReactMarkdown>
+            <ReactMarkdown>{cleanContent}</ReactMarkdown>
           </div>
         );
 

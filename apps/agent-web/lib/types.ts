@@ -7,10 +7,10 @@ export type JobStatus =
   | "research"
   | "writing"
   | "review"
-  | "human_review"
   | "creating"
-  | "createFile"
   | "validating"
+  | "human_review"
+  | "on_hold"
   | "pending_deploy"
   | "deploying"
   | "completed"
@@ -20,6 +20,34 @@ export type JobStatus =
  * Category types
  */
 export type Category = "tech" | "life";
+
+/**
+ * Tone types for writing style
+ */
+export type Tone = "formal" | "casual" | "friendly" | "professional";
+
+/**
+ * Category-specific field interfaces
+ */
+export interface TechLifeFields {
+  topic: string;
+}
+
+/**
+ * Common fields for all categories
+ */
+export interface CommonFields {
+  tone: Tone;
+  targetReader: string;
+  keywords: string;
+}
+
+/**
+ * Category form data (union type)
+ */
+export type CategoryFormData =
+  | ({ category: "tech" } & TechLifeFields & Partial<CommonFields>)
+  | ({ category: "life" } & TechLifeFields & Partial<CommonFields>);
 
 /**
  * Template types
@@ -83,7 +111,7 @@ export interface PRResult {
 /**
  * Human review action
  */
-export type HumanReviewAction = "approve" | "feedback" | "rewrite";
+export type HumanReviewAction = "approve" | "feedback" | "rewrite" | "hold";
 
 /**
  * Job entity
@@ -190,6 +218,9 @@ export interface GenerateRequest {
   category?: Category;
   template?: Template;
   autoApprove?: boolean;
+  tone?: Tone;
+  targetReader?: string;
+  keywords?: string[];
 }
 
 export interface GenerateResponse {
