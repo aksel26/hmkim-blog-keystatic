@@ -1,8 +1,9 @@
 /**
  * Git Manager Tool
- * PR 생성 관리 (파일 생성 없이 콘텐츠만 관리)
+ * GitHub API를 통한 PR 생성 관리
  */
 
+import { Octokit } from '@octokit/rest';
 import { BlogPostState, OnProgressCallback } from '../types/workflow';
 
 /**
@@ -13,6 +14,32 @@ export interface PRResult {
   prUrl?: string;
   branchName: string;
   content?: string;
+}
+
+/**
+ * GitHub 클라이언트 초기화
+ */
+function getOctokit(): Octokit {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new Error('GITHUB_TOKEN 환경 변수가 설정되지 않았습니다.');
+  }
+  return new Octokit({ auth: token });
+}
+
+/**
+ * GitHub 설정 가져오기
+ */
+function getGitHubConfig() {
+  const owner = process.env.GITHUB_OWNER;
+  const repo = process.env.GITHUB_REPO;
+  const baseBranch = process.env.GITHUB_BASE_BRANCH || 'main';
+
+  if (!owner || !repo) {
+    throw new Error('GITHUB_OWNER 또는 GITHUB_REPO 환경 변수가 설정되지 않았습니다.');
+  }
+
+  return { owner, repo, baseBranch };
 }
 
 /**
@@ -27,8 +54,7 @@ function getDateForBranch(): string {
 }
 
 /**
- * Deploy 단계 - 콘텐츠 완료 처리
- * 파일 생성 없이 콘텐츠와 메타데이터만 반환
+ * Deploy 단계 - GitHub API를 통해 브랜치 생성 및 PR 생성
  */
 export async function gitCommitAndPush(
   state: BlogPostState,
@@ -49,7 +75,11 @@ export async function gitCommitAndPush(
       throw new Error('최종 콘텐츠가 없습니다.');
     }
 
-    // 브랜치명 생성 (참고용)
+    // GitHub 설정 확인
+    const { owner, repo, baseBranch } = getGitHubConfig();
+    const octokit = getOctokit();
+
+    // 브랜치명 생성
     const slug = state.metadata.slug || 'new-post';
     const dateStr = getDateForBranch();
     const branchName = `post/${dateStr}-${slug}`;
@@ -57,7 +87,7 @@ export async function gitCommitAndPush(
     onProgress?.({
       step: 'deploy',
       status: 'progress',
-      message: '콘텐츠 검증 완료',
+      message: `브랜치 생성 중: ${branchName}`,
       data: { branchName },
     });
 
@@ -83,7 +113,97 @@ updatedAt: ${updatedAt}
     // 전체 콘텐츠 (Frontmatter + 본문)
     const fullContent = frontmatter + state.finalContent;
 
+    // 카테고리에 따른 파일 경로
+    const category = state.category || 'tech';
+    const filePath = `apps/blog/content/${category}/${slug}.mdoc`;
+
+    // 1. base branch의 최신 커밋 SHA 가져오기
+    const { data: refData } = await octokit.git.getRef({
+      owner,
+      repo,
+      ref: `heads/${baseBranch}`,
+    });
+    const baseSha = refData.object.sha;
+
+    // 2. 새 브랜치 생성
+    try {
+      await octokit.git.createRef({
+        owner,
+        repo,
+        ref: `refs/heads/${branchName}`,
+        sha: baseSha,
+      });
+    } catch (error: unknown) {
+      // 브랜치가 이미 존재하는 경우 타임스탬프 추가
+      if (error instanceof Error && error.message.includes('Reference already exists')) {
+        const timestamp = Date.now();
+        const newBranchName = `${branchName}-${timestamp}`;
+        await octokit.git.createRef({
+          owner,
+          repo,
+          ref: `refs/heads/${newBranchName}`,
+          sha: baseSha,
+        });
+        onProgress?.({
+          step: 'deploy',
+          status: 'progress',
+          message: `브랜치 이름 변경: ${newBranchName}`,
+        });
+      } else {
+        throw error;
+      }
+    }
+
+    onProgress?.({
+      step: 'deploy',
+      status: 'progress',
+      message: '파일 커밋 중...',
+    });
+
+    // 3. 파일 생성/업데이트
+    await octokit.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: filePath,
+      message: `feat(content): Add new post - ${title}`,
+      content: Buffer.from(fullContent).toString('base64'),
+      branch: branchName,
+    });
+
+    onProgress?.({
+      step: 'deploy',
+      status: 'progress',
+      message: 'PR 생성 중...',
+    });
+
+    // 4. PR 생성
+    const { data: prData } = await octokit.pulls.create({
+      owner,
+      repo,
+      title: `[Content] ${title}`,
+      head: branchName,
+      base: baseBranch,
+      body: `## 새 콘텐츠 추가
+
+**제목**: ${title}
+
+**요약**: ${summary}
+
+**카테고리**: ${category}
+
+**태그**: ${tags.join(', ')}
+
+**키워드**: ${keywords.join(', ')}
+
+---
+
+*이 PR은 AI Agent에 의해 자동 생성되었습니다.*
+`,
+    });
+
     const prResult: PRResult = {
+      prNumber: prData.number,
+      prUrl: prData.html_url,
       branchName,
       content: fullContent,
     };
@@ -91,8 +211,10 @@ updatedAt: ${updatedAt}
     onProgress?.({
       step: 'deploy',
       status: 'completed',
-      message: '콘텐츠 생성 완료! 에디터에서 확인하세요.',
+      message: `PR 생성 완료! #${prData.number}`,
       data: {
+        prNumber: prData.number,
+        prUrl: prData.html_url,
         branchName,
         slug,
         title,
