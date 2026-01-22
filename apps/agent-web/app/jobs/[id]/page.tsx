@@ -1,26 +1,30 @@
 "use client";
 
-import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/Badge";
-import { StepIndicator } from "@/components/job/StepIndicator";
 import { JobProgress } from "@/components/job/JobProgress";
 import { ContentPreview } from "@/components/job/ContentPreview";
 import { HumanReviewPanel } from "@/components/job/HumanReviewPanel";
 import { DeployApprovalPanel } from "@/components/job/DeployApprovalPanel";
 import { useJobStream } from "@/lib/hooks/use-job-stream";
 import { formatDate } from "@/lib/utils";
-import type { Job, JobStatus, ProgressLog } from "@/lib/types";
+import type { Job, JobStatus } from "@/lib/types";
 import {
   ArrowLeft,
   ExternalLink,
   Trash2,
   RefreshCw,
   Loader2,
+  FolderOpen,
+  FileText,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Radio,
 } from "lucide-react";
 
 interface JobWithLogs extends Job {
@@ -162,120 +166,130 @@ export default function JobDetailPage() {
   const displayStatus = getDisplayStatus();
   const isActive = displayStatus !== "completed" && displayStatus !== "failed";
 
+  // 상태에 따른 배경색 및 아이콘
+  const getStatusStyle = () => {
+    switch (displayStatus) {
+      case "completed":
+        return { bg: "bg-green-50 dark:bg-green-950/30", icon: CheckCircle2, iconColor: "text-green-600" };
+      case "failed":
+        return { bg: "bg-red-50 dark:bg-red-950/30", icon: AlertCircle, iconColor: "text-red-600" };
+      case "human_review":
+      case "pending_deploy":
+        return { bg: "bg-amber-50 dark:bg-amber-950/30", icon: Clock, iconColor: "text-amber-600" };
+      default:
+        return { bg: "bg-blue-50 dark:bg-blue-950/30", icon: Radio, iconColor: "text-blue-600" };
+    }
+  };
+
+  const statusStyle = getStatusStyle();
+  const StatusIcon = statusStyle.icon;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/jobs">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-semibold">{job.topic}</h1>
-            <p className="text-sm text-muted-foreground">
-              Created {formatDate(job.createdAt)}
-            </p>
-          </div>
-        </div>
-
+      {/* Header - 심플하게 */}
+      <div className="flex items-center justify-between">
+        <Link href="/jobs">
+          <Button variant="ghost" size="sm" className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            목록으로
+          </Button>
+        </Link>
         <div className="flex items-center gap-2">
-          <Badge variant={getStatusBadgeVariant(displayStatus)} className="text-sm">
-            {getStatusDisplayText(displayStatus)}
-          </Badge>
-
-          {isConnected && (
-            <Badge variant="outline" className="text-xs">
-              <span className="mr-1 h-2 w-2 rounded-full bg-success inline-block animate-pulse" />
-              Live
-            </Badge>
-          )}
-
           <Button variant="ghost" size="icon" onClick={() => refetch()}>
             <RefreshCw className="h-4 w-4" />
           </Button>
-
-          {job.prResult?.prUrl && (
-            <a
-              href={job.prResult.prUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" size="sm">
-                View PR
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </Button>
-            </a>
-          )}
-
           <Button
             variant="ghost"
             size="icon"
             onClick={handleDelete}
-            className="text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {/* Job Info */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div>
-              <span className="text-sm text-muted-foreground">Category</span>
-              <p className="font-medium capitalize">{job.category}</p>
+      {/* 상태 카드 - 핵심 정보 */}
+      <Card className={`${statusStyle.bg} border-0`}>
+        <CardContent className="pt-6 pb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+            {/* 상태 아이콘 + 제목 */}
+            <div className="flex items-start gap-4 flex-1">
+              <div className={`p-3 rounded-xl bg-background shadow-sm`}>
+                <StatusIcon className={`h-6 w-6 ${statusStyle.iconColor}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-1">
+                  <h1 className="text-xl font-semibold truncate">{job.topic}</h1>
+                  {isConnected && (
+                    <span className="flex items-center gap-1.5 text-xs text-primary font-medium">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                      </span>
+                      실시간
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    {formatDate(job.createdAt)}
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    <span className="capitalize">{job.category}</span>
+                  </span>
+                  {job.template && (
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="h-3.5 w-3.5" />
+                      <span className="capitalize">{job.template}</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Template</span>
-              <p className="font-medium capitalize">
-                {job.template || "Default"}
-              </p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Progress</span>
-              <p className="font-medium">{displayProgress}%</p>
-            </div>
-            <div>
-              <span className="text-sm text-muted-foreground">Current Step</span>
-              <p className="font-medium capitalize">
-                {displayStep || "Queued"}
-              </p>
+
+            {/* 상태 + 액션 */}
+            <div className="flex items-center gap-3">
+              <Badge variant={getStatusBadgeVariant(displayStatus)} className="text-sm px-3 py-1">
+                {getStatusDisplayText(displayStatus)}
+              </Badge>
+              {job.prResult?.prUrl && (
+                <a href={job.prResult.prUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    PR #{job.prResult.prNumber}
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </Button>
+                </a>
+              )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Step Indicator */}
-      {/* {isActive && (
-        <Card>
-          <CardContent className="pt-6">
-            <StepIndicator currentStep={displayStep} status={displayStatus} />
-          </CardContent>
-        </Card>
-      )} */}
+      {/* Main Content Grid - 2컬럼 */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Progress - 좌측 (2/5) */}
+        <div className="lg:col-span-2">
+          <JobProgress
+            progress={displayProgress}
+            logs={job.progressLogs}
+            isLive={isConnected}
+            currentStep={displayStep}
+            jobId={jobId}
+            jobStatus={displayStatus}
+            onActionComplete={() => refetch()}
+          />
+        </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Progress */}
-        <JobProgress
-          progress={displayProgress}
-          logs={job.progressLogs}
-          isLive={isConnected}
-          currentStep={displayStep}
-          jobId={jobId}
-          jobStatus={displayStatus}
-          onActionComplete={() => refetch()}
-        />
-
-        {/* Content Preview (SEO 체크리스트 포함) */}
-        <ContentPreview
-          finalContent={job.finalContent}
-          metadata={job.metadata}
-        />
+        {/* Content Preview - 우측 (3/5) */}
+        <div className="lg:col-span-3">
+          <ContentPreview
+            finalContent={job.finalContent}
+            metadata={job.metadata}
+          />
+        </div>
       </div>
 
       {/* Human Review Panel */}
@@ -298,50 +312,56 @@ export default function JobDetailPage() {
 
       {/* Error Display */}
       {displayStatus === "failed" && job.error && (
-        <Card className="border-destructive">
-          <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">{job.error}</p>
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-destructive mb-1">오류가 발생했습니다</p>
+                <p className="text-sm text-muted-foreground">{job.error}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Completion Info */}
       {displayStatus === "completed" && (
-        <Card className="border-success">
-          <CardHeader>
-            <CardTitle className="text-success">Completed Successfully</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {job.filepath && (
-              <p className="text-sm">
-                <span className="text-muted-foreground">File:</span>{" "}
-                <code className="bg-muted px-2 py-1 rounded">{job.filepath}</code>
-              </p>
-            )}
-            {job.commitHash && (
-              <p className="text-sm">
-                <span className="text-muted-foreground">Commit:</span>{" "}
-                <code className="bg-muted px-2 py-1 rounded">
-                  {job.commitHash.slice(0, 7)}
-                </code>
-              </p>
-            )}
-            {job.prResult && (
-              <p className="text-sm">
-                <span className="text-muted-foreground">PR:</span>{" "}
-                <a
-                  href={job.prResult.prUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  #{job.prResult.prNumber}
-                </a>
-              </p>
-            )}
+        <Card className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="font-medium text-green-700 dark:text-green-400">작업이 완료되었습니다</p>
+                <div className="flex flex-wrap gap-4 text-sm">
+                  {job.filepath && (
+                    <span className="flex items-center gap-2">
+                      <span className="text-muted-foreground">파일:</span>
+                      <code className="bg-background px-2 py-0.5 rounded text-xs">{job.filepath}</code>
+                    </span>
+                  )}
+                  {job.commitHash && (
+                    <span className="flex items-center gap-2">
+                      <span className="text-muted-foreground">커밋:</span>
+                      <code className="bg-background px-2 py-0.5 rounded text-xs">{job.commitHash.slice(0, 7)}</code>
+                    </span>
+                  )}
+                  {job.prResult && (
+                    <span className="flex items-center gap-2">
+                      <span className="text-muted-foreground">PR:</span>
+                      <a
+                        href={job.prResult.prUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        #{job.prResult.prNumber}
+                      </a>
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
