@@ -257,6 +257,7 @@ export async function executeDeploy(jobId: string): Promise<void> {
       finalContent: job.final_content || undefined,
       metadata: job.metadata as BlogPostState["metadata"],
       validationResult: job.validation_result as BlogPostState["validationResult"],
+      category: job.category as "tech" | "life",
     };
 
     // 진행 상황 콜백
