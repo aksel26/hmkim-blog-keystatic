@@ -1,0 +1,86 @@
+name: Send Newsletter on New Post
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+    paths:
+      - 'apps/blog/content/**/*.mdoc'
+
+jobs:
+  send-newsletter:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Get added mdoc files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            apps/blog/content/**/*.mdoc
+
+      - name: Setup Node.js
+        if: steps.changed-files.outputs.added_files != ''
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Extract post info and send newsletter
+        if: steps.changed-files.outputs.added_files != ''
+        env:
+          NEWSLETTER_API_KEY: ${{ secrets.NEWSLETTER_API_KEY }}
+          AGENT_WEB_URL: ${{ vars.AGENT_WEB_URL }}
+          BLOG_URL: ${{ vars.BLOG_URL }}
+        run: |
+          # 첫 번째 추가된 파일 처리
+          FILE="${{ steps.changed-files.outputs.added_files }}"
+          FIRST_FILE=$(echo "$FILE" | cut -d' ' -f1)
+
+          if [ -z "$FIRST_FILE" ]; then
+            echo "No new mdoc files found"
+            exit 0
+          fi
+
+          echo "Processing file: $FIRST_FILE"
+
+          # 파일에서 frontmatter 추출
+          CONTENT=$(cat "$FIRST_FILE")
+
+          # YAML frontmatter에서 title과 summary 추출 (간단한 방법)
+          TITLE=$(echo "$CONTENT" | grep -m1 "^title:" | sed 's/title: *//' | tr -d '"' | tr -d "'")
+          SUMMARY=$(echo "$CONTENT" | grep -m1 "^summary:" | sed 's/summary: *//' | tr -d '"' | tr -d "'")
+
+          # 카테고리와 슬러그 추출
+          if [[ "$FIRST_FILE" == *"/tech/"* ]]; then
+            CATEGORY="tech"
+          else
+            CATEGORY="life"
+          fi
+
+          SLUG=$(basename "$FIRST_FILE" .mdoc)
+          POST_URL="${BLOG_URL}/${CATEGORY}/${SLUG}"
+
+          echo "Title: $TITLE"
+          echo "Summary: $SUMMARY"
+          echo "URL: $POST_URL"
+
+          # 뉴스레터 발송 API 호출
+          if [ -n "$TITLE" ] && [ -n "$SUMMARY" ]; then
+            curl -X POST "${AGENT_WEB_URL}/api/newsletter/send" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${NEWSLETTER_API_KEY}" \
+              -d "{
+                \"postTitle\": \"${TITLE}\",
+                \"postSummary\": \"${SUMMARY}\",
+                \"postUrl\": \"${POST_URL}\",
+                \"postCategory\": \"${CATEGORY}\"
+              }"
+          else
+            echo "Could not extract title or summary from file"
+          fi
