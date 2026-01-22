@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import ReactMarkdown from "react-markdown";
-import { CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { CheckCircle, AlertCircle, XCircle, FileText } from "lucide-react";
 import type { PostMetadata } from "@/lib/types";
 
 interface ContentPreviewProps {
@@ -327,11 +327,11 @@ export function ContentPreview({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle>Content Preview</CardTitle>
-          <div className="flex gap-1">
+          <CardTitle className="text-base">콘텐츠 미리보기</CardTitle>
+          <div className="flex gap-1 bg-muted p-1 rounded-lg">
             {tabs.map((tab) => (
               <Button
                 key={tab.id}
@@ -339,6 +339,7 @@ export function ContentPreview({
                 size="sm"
                 onClick={() => setActiveTab(tab.id)}
                 disabled={tab.disabled}
+                className={`text-xs h-7 px-3 ${activeTab === tab.id ? "" : "hover:bg-background/50"}`}
               >
                 {tab.label}
               </Button>
@@ -346,11 +347,13 @@ export function ContentPreview({
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="min-h-[300px] max-h-[600px] overflow-y-auto">
+      <CardContent className="flex-1 overflow-hidden">
+        <div className="h-full min-h-[400px] max-h-[600px] overflow-y-auto pr-2">
           {renderContent() || (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              No content available yet
+            <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
+              <FileText className="h-12 w-12 mb-3 opacity-30" />
+              <p>아직 콘텐츠가 없습니다</p>
+              <p className="text-xs mt-1">작업이 진행되면 여기에 표시됩니다</p>
             </div>
           )}
         </div>

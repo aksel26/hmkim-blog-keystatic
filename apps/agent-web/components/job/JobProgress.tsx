@@ -174,10 +174,10 @@ export function JobProgress({
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             진행 상황
             {isLive && (
               <span className="flex h-2 w-2">
@@ -186,15 +186,15 @@ export function JobProgress({
               </span>
             )}
           </CardTitle>
-          <span className="text-2xl font-bold">{progress}%</span>
+          <span className="text-2xl font-bold text-primary">{progress}%</span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         {/* Progress Bar */}
-        <Progress value={progress} className="h-3" />
+        <Progress value={progress} className="h-2" />
 
         {/* Step Checklist */}
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           {workflowSteps.map((step, index) => {
             // 현재 인덱스 기준으로 상태 결정
             let status: "pending" | "current" | "completed" | "error" = "pending";
