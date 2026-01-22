@@ -8,6 +8,9 @@ import {
   ListTodo,
   BarChart3,
   Bot,
+  Users,
+  FileText,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +18,10 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Generate", href: "/generate", icon: PenTool },
   { name: "Jobs", href: "/jobs", icon: ListTodo },
+  { name: "Schedules", href: "/schedules", icon: Calendar },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
+  { name: "Subscribers", href: "/subscribers", icon: Users },
+  { name: "Templates", href: "/templates", icon: FileText },
 ];
 
 export function Sidebar() {
