@@ -53,7 +53,7 @@ export async function geminiCreator(
 다음은 "${state.topic}" 주제에 대한 기술 블로그 포스트 초안입니다.
 
 ${state.draftContent}
-${feedbackInstruction}
+
 
 이 초안을 다음과 같이 개선해주세요:
 
@@ -63,26 +63,31 @@ ${feedbackInstruction}
 4. 전체적인 흐름과 논리 개선
 5. SEO를 고려한 키워드 자연스럽게 포함
 
-개선된 콘텐츠만 Markdown 형식으로 반환해주세요.
+추가로 아래의 피드백도 자연스럽게 반영해주세요.
+${feedbackInstruction}
+
 `;
 
     const lifeContentPrompt = `
 다음은 "${state.topic}" 주제에 대한 라이프스타일 블로그 포스트 초안입니다.
 
 ${state.draftContent}
-${feedbackInstruction}
+
 
 이 초안을 다음과 같이 개선해주세요:
 
 1. 문법과 맞춤법 검토
 2. 문장을 더 명확하고 읽기 쉽게 개선
 3. 개인적이고 진정성 있는 톤 유지
-4. 전체적인 흐름과 논리 개선
-5. 자연스럽고 공감가는 표현으로 개선
-6. 개발 또는 코드에 관한 내용 제거
-7. SEO를 고려한 키워드 자연스럽게 포함
+4. **반드시 차분하고 전문적인 존댓말 유지 (~합니다, ~입니다, ~됩니다 체), 반말 절대 금지**
+5. 전체적인 흐름과 논리 개선
+6. 자연스럽고 공감가는 표현으로 개선
+7. 개발 또는 코드에 관한 내용 제거
+8. SEO를 고려한 키워드 자연스럽게 포함
 
-개선된 콘텐츠만 Markdown 형식으로 반환해주세요.
+추가로 아래의 피드백도 자연스럽게 반영해주세요.
+${feedbackInstruction}
+
 `;
 
     const contentPrompt = isLifeCategory ? lifeContentPrompt : techContentPrompt;
@@ -121,10 +126,15 @@ ${finalContent.substring(0, 1000)}...
 규칙:
 - title: 명확하고 클릭하고 싶게, 60자 이내
 - summary: 포스트의 핵심 내용 요약, 150자 이내
-- keywords: 주요 카테고리 키워드 1-3개 (예: Tech, DevOps, Frontend)
+- keywords: "Tech"는 반드시 포함. 주요 카테고리 키워드 1-3개 (예: Tech, DevOps, Frontend)
 - status: "published" 고정
 - tags: 관련성 높은 기술 태그 3-5개
 - slug: 소문자, 하이픈으로 연결, 영문만 사용 (예: next-js-app-router-guide)
+
+**중요 - 콜론 사용 금지**:
+- title과 summary 텍스트 안에 콜론(:) 뒤에 공백이 오면 YAML 파싱 오류가 발생합니다.
+- 콜론 대신 하이픈(-)이나 쉼표(,)를 사용하세요.
+- 잘못된 예: "주식 분석: 미래 전망" → 올바른 예: "주식 분석 - 미래 전망"
 
 JSON만 반환해주세요.
 `;
@@ -155,6 +165,11 @@ ${finalContent.substring(0, 1000)}...
 - status: "published" 고정
 - tags: 관련성 높은 라이프스타일 태그 3-5개
 - slug: 소문자, 하이픈으로 연결, 영문만 사용 (예: my-morning-routine)
+
+**중요 - 콜론 사용 금지**:
+- title과 summary 텍스트 안에 콜론(:) 뒤에 공백이 오면 YAML 파싱 오류가 발생합니다.
+- 콜론 대신 하이픈(-)이나 쉼표(,)를 사용하세요.
+- 잘못된 예: "주식 분석: 미래 전망" → 올바른 예: "주식 분석 - 미래 전망"
 
 JSON만 반환해주세요.
 `;

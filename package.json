@@ -7,6 +7,7 @@
     "dev": "turbo dev",
     "dev:blog": "turbo dev --filter=blog",
     "dev:agent": "turbo dev --filter=agent",
+    "dev:agent-web": "turbo dev --filter=agent-web",
     "build": "turbo build",
     "lint": "turbo lint",
     "generate-post": "turbo generate-post --filter=agent"
