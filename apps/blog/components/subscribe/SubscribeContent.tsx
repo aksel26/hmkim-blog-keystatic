@@ -73,7 +73,7 @@ export function SubscribeContent() {
         {/* Card */}
         <motion.div
           variants={itemVariants}
-          className="rounded-2xl dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800/50 p-8 md:p-10 shadow-xl"
+          className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800/50 p-8 md:p-10 shadow-xl dark:shadow-gray-900/50"
         >
           {/* Icon */}
           <motion.div
