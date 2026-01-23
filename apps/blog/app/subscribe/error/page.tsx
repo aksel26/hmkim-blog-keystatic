@@ -31,7 +31,7 @@ export default async function SubscribeErrorPage({ searchParams }: ErrorPageProp
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md text-center">
         {/* Icon */}
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
           <AlertCircle className="h-8 w-8 text-red-500" />
         </div>
 
