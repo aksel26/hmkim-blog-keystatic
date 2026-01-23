@@ -2,29 +2,14 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { Badge } from "@/components/ui/Badge";
 import { formatRelativeTime } from "@/lib/utils";
 import type { SubscribersListResponse, SubscriberStats } from "@/lib/subscribers/types";
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Users,
-  UserCheck,
-  UserX,
-  Trash2,
-  Mail,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 const statusOptions = [
-  { value: "", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "unsubscribed", label: "Unsubscribed" },
+  { value: "", label: "전체" },
+  { value: "active", label: "활성" },
+  { value: "unsubscribed", label: "해지" },
 ];
 
 async function fetchSubscribers(params: {
@@ -113,176 +98,164 @@ export default function SubscribersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Subscribers</h1>
-        <p className="text-muted-foreground">
-          Manage newsletter subscribers
-        </p>
+    <div className="container mx-auto px-4 py-12 max-w-5xl">
+      {/* Header */}
+      <div className="flex items-end justify-between mb-12 border-b border-gray-800 pb-6">
+        <div>
+          <h1 className="text-3xl font-light tracking-tight mb-2">구독자 관리</h1>
+          <p className="text-gray-500 text-sm">뉴스레터 구독자를 관리합니다</p>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total ?? 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-            <UserCheck className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats?.active ?? 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unsubscribed</CardTitle>
-            <UserX className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats?.unsubscribed ?? 0}</div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Stats */}
+      {stats && (
+        <div className="flex gap-8 mb-12 text-sm">
+          <div className="text-gray-500">
+            전체 <span className="text-white font-medium ml-2">{stats.total}</span>
+          </div>
+          <div className="text-gray-500">
+            활성 <span className="text-green-400 font-medium ml-2">{stats.active}</span>
+          </div>
+          <div className="text-gray-500">
+            해지 <span className="text-gray-400 font-medium ml-2">{stats.unsubscribed}</span>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by email or name..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-9"
-              />
-            </div>
-            <Select
-              options={statusOptions}
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
+      <div className="flex flex-col sm:flex-row gap-4 mb-8">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <input
+            type="text"
+            placeholder="이메일 또는 이름으로 검색..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-transparent border border-gray-800 rounded-lg text-sm focus:outline-none focus:border-gray-600 placeholder:text-gray-600"
+          />
+        </div>
+        <div className="flex gap-6 border-b border-gray-800 pb-1 sm:border-0 sm:pb-0">
+          {statusOptions.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                setStatus(opt.value);
                 setPage(1);
               }}
-              className="sm:w-40"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Subscribers Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{data?.pagination.total ?? 0} Subscribers</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : error ? (
-            <div className="text-center py-8 text-destructive">
-              Failed to load subscribers. Please try again.
-            </div>
-          ) : data?.subscribers && data.subscribers.length > 0 ? (
-            <div className="space-y-4">
-              {/* Table Header */}
-              <div className="hidden md:grid md:grid-cols-12 gap-4 px-4 py-2 text-sm font-medium text-muted-foreground border-b">
-                <div className="col-span-4">Email</div>
-                <div className="col-span-2">Name</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-2">Subscribed</div>
-                <div className="col-span-2 text-right">Actions</div>
-              </div>
-
-              {/* Table Rows */}
-              {data.subscribers.map((subscriber) => (
-                <div
-                  key={subscriber.id}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="md:col-span-4 flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-muted-foreground hidden md:block" />
-                    <span className="font-medium truncate">{subscriber.email}</span>
-                  </div>
-                  <div className="md:col-span-2 text-muted-foreground">
-                    {subscriber.name || "-"}
-                  </div>
-                  <div className="md:col-span-2">
-                    <Badge
-                      variant={subscriber.status === "active" ? "success" : "secondary"}
-                      className="cursor-pointer"
-                      onClick={() => handleToggleStatus(subscriber.id, subscriber.status)}
-                    >
-                      {subscriber.status === "active" ? "Active" : "Unsubscribed"}
-                    </Badge>
-                  </div>
-                  <div className="md:col-span-2 text-sm text-muted-foreground">
-                    {formatRelativeTime(subscriber.subscribed_at)}
-                  </div>
-                  <div className="md:col-span-2 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(subscriber.id, subscriber.email)}
-                      disabled={deleteMutation.isPending}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-
-              {/* Pagination */}
-              {data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Page {data.pagination.page} of {data.pagination.totalPages}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setPage((p) => Math.min(data.pagination.totalPages, p + 1))
-                      }
-                      disabled={page === data.pagination.totalPages}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+              className={`pb-3 sm:pb-0 text-sm transition-colors relative ${
+                status === opt.value
+                  ? "text-white font-medium"
+                  : "text-gray-500 hover:text-gray-300"
+              }`}
+            >
+              {opt.label}
+              {status === opt.value && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white sm:hidden" />
               )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Subscribers List */}
+      {isLoading ? (
+        <div className="text-center py-20 text-gray-500 font-light">
+          목록을 불러오는 중...
+        </div>
+      ) : error ? (
+        <div className="text-center py-20 text-red-400 font-light">
+          구독자 목록을 불러오는데 실패했습니다.
+        </div>
+      ) : data?.subscribers && data.subscribers.length > 0 ? (
+        <div className="space-y-0">
+          {/* Header Row */}
+          <div className="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-800/50">
+            <div className="col-span-4">이메일</div>
+            <div className="col-span-2">이름</div>
+            <div className="col-span-2 text-center">상태</div>
+            <div className="col-span-2">구독일</div>
+            <div className="col-span-2 text-right">작업</div>
+          </div>
+
+          {/* Table Rows */}
+          {data.subscribers.map((subscriber) => (
+            <div
+              key={subscriber.id}
+              className="group grid grid-cols-12 gap-4 px-4 py-4 items-center border-b border-gray-800 hover:bg-gray-900/30 transition-colors"
+            >
+              <div className="col-span-4">
+                <span className="font-medium text-gray-200 truncate block">
+                  {subscriber.email}
+                </span>
+              </div>
+              <div className="col-span-2 text-gray-400">
+                {subscriber.name || "-"}
+              </div>
+              <div className="col-span-2 flex justify-center">
+                <button
+                  onClick={() => handleToggleStatus(subscriber.id, subscriber.status)}
+                  disabled={toggleStatusMutation.isPending}
+                  className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                    subscriber.status === "active"
+                      ? "bg-green-900/20 text-green-400 hover:bg-green-900/40"
+                      : "bg-gray-800 text-gray-500 hover:bg-gray-700"
+                  }`}
+                >
+                  {subscriber.status === "active" ? "활성" : "해지"}
+                </button>
+              </div>
+              <div className="col-span-2 text-sm text-gray-400">
+                {formatRelativeTime(subscriber.subscribed_at)}
+              </div>
+              <div className="col-span-2 flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => handleDelete(subscriber.id, subscriber.email)}
+                  disabled={deleteMutation.isPending}
+                  className="text-xs text-gray-500 hover:text-red-400 transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
             </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              No subscribers found.
+          ))}
+
+          {/* Pagination */}
+          {data.pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between pt-6">
+              <p className="text-sm text-gray-500">
+                {data.pagination.page} / {data.pagination.totalPages} 페이지
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  이전
+                </button>
+                <button
+                  onClick={() =>
+                    setPage((p) => Math.min(data.pagination.totalPages, p + 1))
+                  }
+                  disabled={page === data.pagination.totalPages}
+                  className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  다음
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <div className="text-center py-20 text-gray-500 font-light">
+          등록된 구독자가 없습니다.
+        </div>
+      )}
     </div>
   );
 }
