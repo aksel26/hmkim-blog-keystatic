@@ -55,7 +55,7 @@ export default function Hero() {
           </motion.div>
 
           <div className="mb-8 overflow-hidden">
-            <h1 className="text-6xl font-black leading-tight tracking-tighter text-gray-900 md:text-8xl lg:text-9xl">
+            <h1 className="text-8xl font-black leading-tight tracking-tighter text-gray-900 dark:text-gray-100 md:text-8xl lg:text-9xl">
               {Array.from("STORIES.").map((char, index) => (
                 <motion.span
                   key={index}
@@ -70,7 +70,7 @@ export default function Hero() {
 
           <motion.p
             variants={item}
-            className="mx-auto max-w-2xl text-xl font-medium text-gray-700 md:text-2xl"
+            className="mx-auto max-w-2xl text-md font-medium dark:text-gray-500 text-gray-400 md:text-xl"
           >
             A collection of thoughts on technology, life, and everything in between.
           </motion.p>
