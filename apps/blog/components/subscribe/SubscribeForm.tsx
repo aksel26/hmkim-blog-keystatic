@@ -139,7 +139,7 @@ export default function SubscribeForm() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 text-gray-800 dark:bg-gray-100 dar hover:scale-105"
+          className="w-full py-3 dark:text-gray-800 text-gray-100 dark:bg-gray-100 dar hover:scale-105"
         >
           {isLoading ? (
             <>
