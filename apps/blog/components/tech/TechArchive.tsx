@@ -103,43 +103,8 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         transition={{ duration: 0.6, delay: 0.2 }}
         className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 gap-y-12"
       >
-        {filteredPosts.map((post, index) => (
-          <motion.article
-            key={post.slug}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
-            className="group relative overflow-hidden dark:border-gray-800 bg-transparent transition-all"
-          >
-            <Link href={`/tech/${post.slug}`} className="block">
-              {/* Thumbnail */}
-              {post.thumbnailImage && (
-                <div className="relative aspect-video rounded-xl overflow-hidden">
-                  <Image
-                    src={post.thumbnailImage}
-                    alt={post.title}
-                    fill
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-              )}
-
-              <div className="pt-4 flex flex-col flex-1">
-                {/* Title */}
-                <h3 className="mb-3 text-xl font-medium leading-tight tracking-tight transition-colors group-hover:text-tech-blue">
-                  {post.title}
-                </h3>
-
-                {/* Summary */}
-                <p className="mb-4 line-clamp-3 text-sm text-foreground/50">
-                  {post.summary}
-                </p>
-
-                {/* Meta Info */}
-                <div className="flex items-center justify-between text-xs text-foreground/60">
-                  <time>{formatDate(post.createdAt)}</time>
-                </div>
-
+        {displayedItems.map((post, index) => {
+          const isNewItem = index >= newItemsStartIndex;
           return (
             <motion.article
               key={post.slug}
@@ -199,7 +164,6 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                       )}
                     </div>
                   )}
-
                 </div>
               </Link>
             </motion.article>
