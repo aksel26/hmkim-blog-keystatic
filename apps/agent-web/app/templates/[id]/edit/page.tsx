@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { TEMPLATE_VARIABLES, EmailTemplate } from "@/lib/templates/types";
-import { ArrowLeft, Loader2, Info } from "lucide-react";
-import Link from "next/link";
+import TemplateForm from "@/components/templates/TemplateForm";
+import type { EmailTemplate } from "@/lib/templates/types";
 
 async function fetchTemplate(id: string): Promise<EmailTemplate> {
   const res = await fetch(`/api/templates/${id}`);
@@ -26,16 +22,20 @@ async function updateTemplate(id: string, data: Partial<EmailTemplate>) {
   return res.json();
 }
 
-export default function EditTemplatePage() {
+export default function EditTemplatePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const router = useRouter();
-  const params = useParams();
   const queryClient = useQueryClient();
-  const id = params.id as string;
-
-  const [name, setName] = useState("");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
-  const [showPreview, setShowPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [initialData, setInitialData] = useState<{
+    name: string;
+    subject: string;
+    body: string;
+  } | null>(null);
 
   const { data: template, isLoading } = useQuery({
     queryKey: ["template", id],
@@ -44,9 +44,11 @@ export default function EditTemplatePage() {
 
   useEffect(() => {
     if (template) {
-      setName(template.name);
-      setSubject(template.subject);
-      setBody(template.body);
+      setInitialData({
+        name: template.name,
+        subject: template.subject,
+        body: template.body,
+      });
     }
   }, [template]);
 
@@ -57,159 +59,47 @@ export default function EditTemplatePage() {
       queryClient.invalidateQueries({ queryKey: ["template", id] });
       router.push("/templates");
     },
+    onError: (err: Error) => {
+      setError(err.message || "템플릿 수정에 실패했습니다.");
+    },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !subject || !body) {
-      alert("모든 필드를 입력해주세요.");
-      return;
-    }
-    mutation.mutate({ name, subject, body });
-  };
+  async function handleSubmit(data: { name: string; subject: string; body: string }) {
+    setError(null);
+    mutation.mutate(data);
+  }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-12 max-w-5xl">
+        <div className="text-center py-20 text-gray-500 font-light">
+          템플릿을 불러오는 중...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/templates">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit Template</h1>
-          <p className="text-muted-foreground">{template?.name}</p>
-        </div>
+    <div className="container mx-auto px-4 py-12 max-w-5xl">
+      <div className="mb-12 text-center">
+        <h1 className="text-3xl font-light tracking-tight mb-2">템플릿 수정</h1>
+        <p className="text-gray-500 text-sm">이메일 템플릿을 수정합니다</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Form */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Template Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Template Name</label>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., New Post Notification"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email Subject</label>
-                  <Input
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    placeholder="e.g., {{blog_name}}에 새 글이 발행되었습니다: {{post_title}}"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Email Body (HTML)</label>
-                  <textarea
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    className="w-full min-h-[400px] p-3 rounded-md border border-input bg-background font-mono text-sm resize-y focus:outline-none focus:ring-2 focus:ring-ring"
-                    placeholder="Enter HTML content..."
-                    required
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preview */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Preview</CardTitle>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowPreview(!showPreview)}
-                  >
-                    {showPreview ? "Hide" : "Show"} Preview
-                  </Button>
-                </div>
-              </CardHeader>
-              {showPreview && (
-                <CardContent>
-                  <div
-                    className="bg-white border rounded-lg p-4 text-sm"
-                    dangerouslySetInnerHTML={{ __html: body }}
-                  />
-                </CardContent>
-              )}
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="h-4 w-4" />
-                  Available Variables
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {TEMPLATE_VARIABLES.map((variable) => (
-                    <div key={variable.key} className="text-sm">
-                      <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
-                        {variable.key}
-                      </code>
-                      <p className="text-muted-foreground mt-1">
-                        {variable.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6 space-y-3">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={mutation.isPending}
-                >
-                  {mutation.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </Button>
-                <Link href="/templates" className="block">
-                  <Button type="button" variant="outline" className="w-full">
-                    Cancel
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
+      {error && (
+        <div className="max-w-2xl mx-auto mb-8 p-4 border border-red-900/50 bg-red-900/10 text-red-500 rounded text-sm text-center">
+          {error}
         </div>
-      </form>
+      )}
+
+      {initialData && (
+        <TemplateForm
+          initialData={initialData}
+          onSubmit={handleSubmit}
+          loading={mutation.isPending}
+          submitLabel="변경사항 저장"
+        />
+      )}
     </div>
   );
 }
