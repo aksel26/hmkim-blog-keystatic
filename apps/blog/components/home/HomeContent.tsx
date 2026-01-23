@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Hero from './Hero';
 import SearchTabs from './SearchTabs';
 import MasonryGrid, { Post } from './MasonryGrid';
+import { NewsletterCTA } from '@/components/NewsletterCTA';
 
 interface HomeContentProps {
     initialPosts: Post[];
@@ -45,6 +46,9 @@ export default function HomeContent({ initialPosts }: HomeContentProps) {
                 onSearchChange={setSearchQuery}
             />
             <MasonryGrid posts={filteredPosts} />
+
+            {/* Newsletter CTA */}
+            <NewsletterCTA variant="banner" className="mt-16" />
         </div>
     );
 }
