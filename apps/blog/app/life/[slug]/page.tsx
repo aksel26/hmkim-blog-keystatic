@@ -8,6 +8,7 @@ import StickySidebar from '@/components/StickySidebar';
 import ScrollButtons from '@/components/ScrollButtons';
 import { MobileTableOfContents, DesktopTableOfContents } from '@/components/TableOfContents';
 import { extractTocFromMarkdoc } from '@/lib/toc';
+import { NewsletterCTA } from '@/components/NewsletterCTA';
 
 export async function generateStaticParams() {
     const posts = await getAllLifePosts(false);
@@ -113,10 +114,9 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
+            <div className="my-7 flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
                     <time className="flex items-center gap-2">
-                        <span>📅</span>
-                        등록: {formatDate(post.createdAt || '')}
+                        {formatDate(post.createdAt || '')}
                     </time>
                     {post.updatedAt && post.updatedAt !== post.createdAt && (
                         <time className="flex items-center gap-2">
@@ -132,14 +132,19 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                     )}
                 </div>
 
+            {/* Newsletter CTA */}
+            <div className="container mx-auto max-w-3xl px-6 mt-16">
+                <NewsletterCTA />
+            </div>
+
             {/* Navigation */}
-            <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-20">
+            <div className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-background py-12 mt-16">
                 <div className="container mx-auto max-w-5xl px-6 text-center">
                     <Link
                         href="/life"
                         className="inline-flex items-center gap-2 rounded-lg bg-orange-500 px-6 py-3 font-medium text-white transition-all hover:bg-orange-600 active:scale-95"
                     >
-                        ← Browse More Life Posts
+                        ← 뒤로가기
                     </Link>
                 </div>
             </div>

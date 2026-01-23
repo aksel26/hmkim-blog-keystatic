@@ -47,13 +47,13 @@ export function getStatusBadgeVariant(
       return "secondary";
     case "human_review":
     case "pending_deploy":
+    case "on_hold":
       return "warning";
     case "running":
     case "research":
     case "writing":
     case "review":
     case "creating":
-    case "createFile":
     case "validating":
     case "deploying":
       return "default";
@@ -70,10 +70,10 @@ export function getStatusDisplayText(status: JobStatus): string {
     research: "리서치 중",
     writing: "작성 중",
     review: "AI 검토 중",
-    human_review: "사용자 검토 대기",
     creating: "콘텐츠 개선 중",
-    createFile: "파일 생성 중",
     validating: "검증 중",
+    human_review: "사용자 검토 대기",
+    on_hold: "보류 중",
     pending_deploy: "PR 승인 대기",
     deploying: "PR 생성 중",
     completed: "완료",

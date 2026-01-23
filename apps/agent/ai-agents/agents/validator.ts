@@ -1,13 +1,13 @@
 /**
  * Validator Agent
- * 생성된 블로그 포스트 검증
+ * 생성된 블로그 포스트 콘텐츠 검증 (파일 생성 전)
  */
 
-import * as fs from 'fs';
 import { BlogPostState, OnProgressCallback, ValidationResult } from '../types/workflow';
 
 /**
- * 검증 에이전트 - 파일 및 콘텐츠 검증
+ * 검증 에이전트 - 콘텐츠 및 메타데이터 검증
+ * 파일이 아직 생성되지 않은 상태에서 콘텐츠만 검증
  */
 export async function validator(
   state: BlogPostState,
@@ -17,23 +17,16 @@ export async function validator(
     onProgress?.({
       step: 'validate',
       status: 'started',
-      message: '생성된 파일 검증 중...',
+      message: '콘텐츠 검증 중...',
     });
 
     const errors: string[] = [];
 
-    // 1. 파일 존재 여부 확인
-    if (!state.filepath) {
-      errors.push('파일 경로가 지정되지 않았습니다.');
-    } else if (!fs.existsSync(state.filepath)) {
-      errors.push(`파일이 존재하지 않습니다: ${state.filepath}`);
-    }
-
-    // 2. 메타데이터 유효성 검증 (새 형식)
+    // 1. 메타데이터 유효성 검증
     if (!state.metadata) {
       errors.push('메타데이터가 생성되지 않았습니다.');
     } else {
-      const { title, summary, keywords, status, tags, createdAt, updatedAt } = state.metadata;
+      const { title, summary, keywords, status, tags, createdAt, updatedAt, slug } = state.metadata;
 
       if (!title || title.trim().length === 0) {
         errors.push('제목이 비어있습니다.');
@@ -68,9 +61,13 @@ export async function validator(
       if (!updatedAt || !/^\d{4}-\d{2}-\d{2}$/.test(updatedAt)) {
         errors.push('수정일(updatedAt)은 YYYY-MM-DD 형식이어야 합니다.');
       }
+
+      if (!slug || slug.trim().length === 0) {
+        errors.push('슬러그(slug)가 비어있습니다.');
+      }
     }
 
-    // 3. 콘텐츠 최소 길이 검증 (500자)
+    // 2. 콘텐츠 최소 길이 검증 (500자)
     if (!state.finalContent) {
       errors.push('최종 콘텐츠가 생성되지 않았습니다.');
     } else if (state.finalContent.trim().length < 500) {
@@ -79,7 +76,7 @@ export async function validator(
       );
     }
 
-    // 4. 코드 블록 닫힘 확인 (``` 짝수)
+    // 3. 코드 블록 닫힘 확인 (``` 짝수)
     if (state.finalContent) {
       const codeBlockCount = (state.finalContent.match(/```/g) || []).length;
       if (codeBlockCount % 2 !== 0) {
@@ -117,7 +114,7 @@ export async function validator(
     return {
       validationResult,
       currentStep: 'validate_completed',
-      progress: 80,
+      progress: 75,
     };
   } catch (error) {
     const validationResult: ValidationResult = {
@@ -135,7 +132,7 @@ export async function validator(
     return {
       validationResult,
       currentStep: 'validate_error',
-      progress: 80,
+      progress: 75,
     };
   }
 }

@@ -1,6 +1,15 @@
 /**
  * Workflow Executor
  * Agent 앱의 워크플로우를 실행하고 Supabase에 진행상황을 기록
+ *
+ * 워크플로우 순서:
+ * 1. Research (15%)
+ * 2. Write (30%)
+ * 3. Review (45%)
+ * 4. Create (60%)
+ * 5. Validate (75%)
+ * 6. Human Review (85%)
+ * 7. Deploy (95%)
  */
 
 import { runBlogWorkflow } from "@agent/ai-agents/workflows/blog-workflow";
@@ -10,7 +19,7 @@ import { jobManager } from "@/lib/queue/job-manager";
 import type { JobStatus } from "@/lib/types";
 
 /**
- * 워크플로우 실행 (PR 생성 전까지)
+ * 워크플로우 실행 (Deploy 전까지)
  */
 export async function executeWorkflow(
   jobId: string,
@@ -35,16 +44,15 @@ export async function executeWorkflow(
         data: event.data as Record<string, unknown>,
       });
 
-      // 단계별 진행률 계산 (워크플로우에서 전달된 progress 값 사용)
+      // 단계별 진행률 매핑
       const stepProgress: Record<string, number> = {
         research: 15,
         write: 30,
-        review: 40,
-        human_review: 50,
-        create: 65,
-        create_file: 80,
-        createFile: 80,
-        validate: 90,
+        review: 45,
+        create: 60,
+        validate: 75,
+        human_review: 85,
+        pending_deploy: 90,
         deploy: 95,
         completed: 100,
         workflow: 90,
@@ -55,11 +63,9 @@ export async function executeWorkflow(
         research: "research",
         write: "writing",
         review: "review",
-        human_review: "human_review",
         create: "creating",
-        create_file: "createFile",
-        createFile: "createFile",
         validate: "validating",
+        human_review: "human_review",
         pending_deploy: "pending_deploy",
         deploy: "deploying",
         completed: "completed",
@@ -93,26 +99,33 @@ export async function executeWorkflow(
       }
     };
 
-    // Human Review 콜백
+    // Human Review 콜백 (Validate 후에 호출됨)
     const onHumanReview = async (state: BlogPostState & { reviewResult?: unknown }) => {
       console.log(`[Workflow] Human review requested for job ${jobId}`);
 
-      // 상태를 human_review로 변경하고 draft_content 저장
-      // human_approval과 human_feedback을 리셋하여 새로운 입력을 대기
+      // 상태를 human_review로 변경
+      // 검증된 콘텐츠와 메타데이터 저장
       await jobManager.updateJob(jobId, {
         status: "human_review",
         human_approval: null,
         human_feedback: null,
         draft_content: state.draftContent,
+        final_content: state.finalContent,
+        metadata: state.metadata as unknown,
         review_result: state.reviewResult ?? null,
+        validation_result: state.validationResult as unknown,
         current_step: "human_review",
-        progress: 50,
+        progress: 85,
       });
 
       await jobManager.logProgress(jobId, {
         step: "human_review",
         status: "started",
         message: "사용자 검토를 기다리는 중입니다...",
+        data: {
+          validationPassed: state.validationResult?.passed,
+          validationErrors: state.validationResult?.errors,
+        },
       });
 
       // Human review 결과를 polling으로 대기
@@ -147,7 +160,7 @@ export async function executeWorkflow(
       return { approved: true };
     };
 
-    // 워크플로우 실행 (PR 생성 제외)
+    // 워크플로우 실행 (Deploy 제외)
     const result = await runBlogWorkflowWithoutDeploy(
       topic,
       onProgress,
@@ -164,38 +177,35 @@ export async function executeWorkflow(
         current_step: "pending_deploy",
         final_content: result.finalContent,
         metadata: result.metadata as unknown,
-        filepath: result.filepath,
         validation_result: result.validationResult as unknown,
       });
 
       await jobManager.logProgress(jobId, {
         step: "pending_deploy",
         status: "started",
-        message: "검증 완료! PR 생성을 승인해주세요.",
-        data: { filepath: result.filepath },
+        message: "검증 완료! 배포를 승인해주세요.",
       });
 
       console.log(`[Workflow] Validation passed, waiting for deploy approval for job ${jobId}`);
     } else {
-      // 검증 실패 - 완료 처리 (PR 생성 없이)
+      // 검증 실패 - 완료 처리
       await jobManager.updateJob(jobId, {
         status: "completed",
         progress: 100,
         current_step: "completed",
         final_content: result.finalContent,
         metadata: result.metadata as unknown,
-        filepath: result.filepath,
         validation_result: result.validationResult as unknown,
       });
 
       await jobManager.logProgress(jobId, {
         step: "complete",
         status: "completed",
-        message: "워크플로우 완료 (검증 실패로 PR 생성 건너뜀)",
+        message: "워크플로우 완료 (검증 실패)",
         data: { validationResult: result.validationResult },
       });
 
-      console.log(`[Workflow] Validation failed, workflow completed without PR for job ${jobId}`);
+      console.log(`[Workflow] Validation failed, workflow completed for job ${jobId}`);
     }
   } catch (error) {
     console.error(`[Workflow] Error executing workflow for job ${jobId}:`, error);
@@ -215,7 +225,7 @@ export async function executeWorkflow(
 }
 
 /**
- * PR 생성 승인 후 배포 실행
+ * Deploy 승인 후 실행
  */
 export async function executeDeploy(jobId: string): Promise<void> {
   console.log(`[Deploy] Starting deploy for job ${jobId}`);
@@ -236,7 +246,7 @@ export async function executeDeploy(jobId: string): Promise<void> {
     await jobManager.logProgress(jobId, {
       step: "deploy",
       status: "started",
-      message: "PR 생성을 시작합니다...",
+      message: "배포를 시작합니다...",
     });
 
     // Deploy 실행을 위한 상태 구성
@@ -246,8 +256,8 @@ export async function executeDeploy(jobId: string): Promise<void> {
       progress: 95,
       finalContent: job.final_content || undefined,
       metadata: job.metadata as BlogPostState["metadata"],
-      filepath: job.filepath || undefined,
       validationResult: job.validation_result as BlogPostState["validationResult"],
+      category: job.category as "tech" | "life",
     };
 
     // 진행 상황 콜백
@@ -262,26 +272,22 @@ export async function executeDeploy(jobId: string): Promise<void> {
       });
     };
 
-    // Git commit and push
+    // Deploy 실행 (콘텐츠 완료 처리)
     const deployResult = await gitCommitAndPush(state, onProgress);
 
     // 완료 처리
     await jobManager.completeJob(jobId, {
       finalContent: job.final_content || undefined,
       metadata: job.metadata as unknown as Record<string, unknown>,
-      filepath: job.filepath || undefined,
       prResult: deployResult.prResult as unknown as Record<string, unknown>,
-      commitHash: deployResult.commitHash,
     });
 
     await jobManager.logProgress(jobId, {
       step: "complete",
       status: "completed",
-      message: "PR이 성공적으로 생성되었습니다!",
+      message: "콘텐츠 생성이 완료되었습니다!",
       data: {
-        filepath: job.filepath,
-        prUrl: deployResult.prResult?.prUrl,
-        commitHash: deployResult.commitHash,
+        branchName: deployResult.prResult?.branchName,
       },
     });
 
@@ -297,14 +303,14 @@ export async function executeDeploy(jobId: string): Promise<void> {
     await jobManager.logProgress(jobId, {
       step: "deploy",
       status: "error",
-      message: `PR 생성 중 오류 발생: ${errorMessage}`,
+      message: `배포 중 오류 발생: ${errorMessage}`,
       data: { error: errorMessage },
     });
   }
 }
 
 /**
- * PR 생성 없이 완료 처리 (반려)
+ * Deploy 없이 완료 처리 (반려)
  */
 export async function skipDeploy(jobId: string): Promise<void> {
   console.log(`[Deploy] Skipping deploy for job ${jobId}`);
@@ -319,7 +325,7 @@ export async function skipDeploy(jobId: string): Promise<void> {
       throw new Error(`Invalid job status for skip deploy: ${job.status}`);
     }
 
-    // 완료 처리 (PR 없이)
+    // 완료 처리
     await jobManager.updateJob(jobId, {
       status: "completed",
       progress: 100,
@@ -329,8 +335,7 @@ export async function skipDeploy(jobId: string): Promise<void> {
     await jobManager.logProgress(jobId, {
       step: "complete",
       status: "completed",
-      message: "PR 생성이 취소되었습니다. 파일은 로컬에 저장되어 있습니다.",
-      data: { filepath: job.filepath },
+      message: "배포가 취소되었습니다.",
     });
 
     console.log(`[Deploy] Deploy skipped for job ${jobId}`);
@@ -345,7 +350,7 @@ export async function skipDeploy(jobId: string): Promise<void> {
 }
 
 /**
- * PR 생성 없이 워크플로우 실행 (내부 함수)
+ * Deploy 없이 워크플로우 실행 (내부 함수)
  */
 async function runBlogWorkflowWithoutDeploy(
   topic: string,
@@ -354,7 +359,7 @@ async function runBlogWorkflowWithoutDeploy(
   category: string = "tech"
 ): Promise<BlogPostState> {
   // skipDeploy: true를 전달하여 deploy 단계를 건너뜀
-  // 사용자가 PR 생성을 승인하면 executeDeploy에서 별도로 처리
+  // 사용자가 배포를 승인하면 executeDeploy에서 별도로 처리
   const result = await runBlogWorkflow(
     topic,
     onProgress,

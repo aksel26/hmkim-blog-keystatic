@@ -3,6 +3,33 @@ import { jobManager } from "@/lib/queue/job-manager";
 import { executeWorkflow } from "@/lib/workflow/executor";
 import type { GenerateRequest, GenerateResponse } from "@/lib/types";
 
+/**
+ * 컨텍스트 빌드 함수
+ */
+function buildContext(body: GenerateRequest): string {
+  const parts: string[] = [body.topic];
+
+  if (body.tone) {
+    const toneMap: Record<string, string> = {
+      formal: "격식체",
+      casual: "편한체",
+      friendly: "친근체",
+      professional: "전문가체",
+    };
+    parts.push(`말투: ${toneMap[body.tone] || body.tone}`);
+  }
+
+  if (body.targetReader) {
+    parts.push(`타겟 독자: ${body.targetReader}`);
+  }
+
+  if (body.keywords && body.keywords.length > 0) {
+    parts.push(`핵심 키워드: ${body.keywords.join(", ")}`);
+  }
+
+  return parts.join("\n");
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: GenerateRequest = await request.json();
@@ -22,21 +49,30 @@ export async function POST(request: NextRequest) {
       template: body.template,
     });
 
+    // 컨텍스트 생성
+    const context = buildContext(body);
+
     // Log initial progress
     await jobManager.logProgress(job.id, {
       step: "init",
       status: "started",
       message: "Job created and queued",
+      data: {
+        tone: body.tone,
+        targetReader: body.targetReader,
+        keywords: body.keywords,
+      },
     });
 
     // Execute workflow in background (non-blocking)
-    // Using setImmediate to ensure response is sent first
     setImmediate(() => {
-      executeWorkflow(job.id, body.topic.trim(), body.category || "tech").catch(
-        (error) => {
-          console.error(`Background workflow failed for job ${job.id}:`, error);
-        }
-      );
+      executeWorkflow(
+        job.id,
+        context,
+        body.category || "tech"
+      ).catch((error) => {
+        console.error(`Background workflow failed for job ${job.id}:`, error);
+      });
     });
 
     const response: GenerateResponse = {
