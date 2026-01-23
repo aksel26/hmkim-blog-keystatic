@@ -31,12 +31,10 @@ export interface ScheduleStats {
 }
 
 export const CRON_PRESETS = [
-  { label: "매일 오전 9시", value: "0 9 * * *" },
-  { label: "매일 오후 6시", value: "0 18 * * *" },
+  { label: "매주 일요일 오전 9시", value: "0 9 * * 0" },
   { label: "매주 월요일 오전 9시", value: "0 9 * * 1" },
-  { label: "매주 금요일 오후 3시", value: "0 15 * * 5" },
-  { label: "매월 1일 오전 10시", value: "0 10 1 * *" },
-  { label: "매월 15일 오전 10시", value: "0 10 15 * *" },
+  { label: "매주 수요일 오전 9시", value: "0 9 * * 3" },
+  { label: "매주 금요일 오전 9시", value: "0 9 * * 5" },
 ] as const;
 
 export const TEMPLATE_OPTIONS = [

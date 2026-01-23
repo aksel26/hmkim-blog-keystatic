@@ -45,7 +45,7 @@ const DEFAULT_FORM: ScheduleFormData = {
   targetReader: "",
   keywords: "",
   autoApprove: false,
-  cronExpression: "0 9 * * 1",
+  cronExpression: "0 9 * * 0",
   timezone: "Asia/Seoul",
   enabled: true,
 };
@@ -260,7 +260,7 @@ export default function ScheduleForm({
         </h3>
         <div className="space-y-6">
           <div>
-            <label className={labelClass}>프리셋</label>
+            <label className={labelClass}>실행 요일</label>
             <div className="flex flex-wrap gap-2 mt-2">
               {CRON_PRESETS.map((preset) => (
                 <button
@@ -277,21 +277,8 @@ export default function ScheduleForm({
                 </button>
               ))}
             </div>
-          </div>
-          <div>
-            <label className={labelClass}>
-              크론 표현식 <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={form.cronExpression}
-              onChange={(e) => setForm({ ...form, cronExpression: e.target.value })}
-              className={`${inputClass} font-mono text-sm`}
-              placeholder="0 9 * * 1"
-            />
             <p className="text-xs text-gray-600 mt-2">
-              형식: 분 시 일 월 요일
+              매주 1회 실행됩니다
             </p>
           </div>
 
@@ -305,8 +292,6 @@ export default function ScheduleForm({
               >
                 <option value="Asia/Seoul">Asia/Seoul (KST)</option>
                 <option value="UTC">UTC</option>
-                <option value="America/New_York">America/New_York (EST)</option>
-                <option value="Europe/London">Europe/London (GMT)</option>
               </select>
             </div>
             <div className="pt-5">
