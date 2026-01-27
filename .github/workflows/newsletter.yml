@@ -66,9 +66,10 @@ jobs:
             exit 0
           fi
 
-          # YAML frontmatter에서 title과 summary 추출 (간단한 방법)
+          # YAML frontmatter에서 title, summary, thumbnailImage 추출
           TITLE=$(echo "$CONTENT" | grep -m1 "^title:" | sed 's/title: *//' | tr -d '"' | tr -d "'")
           SUMMARY=$(echo "$CONTENT" | grep -m1 "^summary:" | sed 's/summary: *//' | tr -d '"' | tr -d "'")
+          THUMBNAIL_PATH=$(echo "$CONTENT" | grep -m1 "^thumbnailImage:" | sed 's/thumbnailImage: *//' | tr -d '"' | tr -d "'")
 
           # 카테고리와 슬러그 추출
           if [[ "$FIRST_FILE" == *"/tech/"* ]]; then
@@ -80,21 +81,31 @@ jobs:
           SLUG=$(basename "$FIRST_FILE" .mdoc)
           POST_URL="${BLOG_URL}/${CATEGORY}/${SLUG}"
 
+          # 썸네일 URL 생성 (경로가 있는 경우)
+          if [ -n "$THUMBNAIL_PATH" ]; then
+            THUMBNAIL_URL="${BLOG_URL}${THUMBNAIL_PATH}"
+          else
+            THUMBNAIL_URL=""
+          fi
+
           echo "Title: $TITLE"
           echo "Summary: $SUMMARY"
           echo "URL: $POST_URL"
+          echo "Thumbnail: $THUMBNAIL_URL"
 
           # 뉴스레터 발송 API 호출
           if [ -n "$TITLE" ] && [ -n "$SUMMARY" ]; then
+            # JSON 페이로드 생성
+            JSON_PAYLOAD="{\"postTitle\": \"${TITLE}\", \"postSummary\": \"${SUMMARY}\", \"postUrl\": \"${POST_URL}\", \"postCategory\": \"${CATEGORY}\""
+            if [ -n "$THUMBNAIL_URL" ]; then
+              JSON_PAYLOAD="${JSON_PAYLOAD}, \"postThumbnail\": \"${THUMBNAIL_URL}\""
+            fi
+            JSON_PAYLOAD="${JSON_PAYLOAD}}"
+
             curl -X POST "${AGENT_WEB_URL}/api/newsletter/send" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer ${NEWSLETTER_API_KEY}" \
-              -d "{
-                \"postTitle\": \"${TITLE}\",
-                \"postSummary\": \"${SUMMARY}\",
-                \"postUrl\": \"${POST_URL}\",
-                \"postCategory\": \"${CATEGORY}\"
-              }"
+              -d "$JSON_PAYLOAD"
           else
             echo "Could not extract title or summary from file"
           fi
