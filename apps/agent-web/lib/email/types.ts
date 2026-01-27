@@ -3,6 +3,7 @@ export interface SendNewsletterRequest {
   postSummary: string;
   postUrl: string;
   postCategory?: string;
+  postThumbnail?: string;
 }
 
 export interface SendNewsletterResult {
@@ -17,6 +18,7 @@ export interface EmailVariables {
   post_title: string;
   post_summary: string;
   post_url: string;
+  post_thumbnail?: string;
   subscriber_name: string;
   unsubscribe_url: string;
 }
