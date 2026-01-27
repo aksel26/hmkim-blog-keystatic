@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 import type { Schedule, ScheduleStats } from "@/lib/scheduler/types";
+import { Plus, Loader2 } from "lucide-react";
 
 export default function SchedulesPage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -56,7 +60,7 @@ export default function SchedulesPage() {
   }
 
   async function deleteSchedule(id: string) {
-    if (!confirm("정말 이 스케줄을 삭제하시겠습니까?")) return;
+    if (!confirm("Are you sure you want to delete this schedule?")) return;
     try {
       await fetch(`/api/schedules/${id}`, { method: "DELETE" });
       fetchSchedules();
@@ -77,147 +81,145 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <div className="flex items-end justify-between mb-12 border-b border-gray-800 pb-6">
+    <div className="space-y-6">
+      <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-light tracking-tight mb-2">스케줄 관리</h1>
-          <p className="text-gray-500 text-sm">자동화된 콘텐츠 생성 작업을 관리합니다</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Schedules</h1>
+          <p className="text-muted-foreground">
+            Manage automated content generation
+          </p>
         </div>
-        <Link
-          href="/schedules/new"
-          className="px-4 py-2 bg-white text-black text-sm font-medium rounded hover:bg-gray-200 transition"
-        >
-          새 스케줄 만들기
+        <Link href="/schedules/new">
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Schedule
+          </Button>
         </Link>
       </div>
 
       {/* Stats */}
       {stats && (
-        <div className="flex gap-8 mb-12 text-sm">
-          <div className="text-gray-500">
-            전체 <span className="text-white font-medium ml-2">{stats.total}</span>
-          </div>
-          <div className="text-gray-500">
-            활성 <span className="text-green-400 font-medium ml-2">{stats.enabled}</span>
-          </div>
-          <div className="text-gray-500">
-            비활성 <span className="text-gray-400 font-medium ml-2">{stats.disabled}</span>
-          </div>
-          <div className="text-gray-500">
-            실행 <span className="text-blue-400 font-medium ml-2">{stats.totalRuns}</span>
-          </div>
-          <div className="text-gray-500">
-            오류 <span className="text-red-400 font-medium ml-2">{stats.totalErrors}</span>
-          </div>
+        <div className="flex gap-6 text-sm">
+          <span className="text-muted-foreground">
+            Total <span className="text-foreground font-medium ml-1">{stats.total}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Enabled <span className="text-success font-medium ml-1">{stats.enabled}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Disabled <span className="text-muted-foreground font-medium ml-1">{stats.disabled}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Runs <span className="text-foreground font-medium ml-1">{stats.totalRuns}</span>
+          </span>
+          <span className="text-muted-foreground">
+            Errors <span className="text-destructive font-medium ml-1">{stats.totalErrors}</span>
+          </span>
         </div>
       )}
 
-      {/* Filter */}
-      <div className="flex gap-6 mb-8 border-b border-gray-800 pb-1">
+      {/* Filter Tabs */}
+      <div className="flex gap-4 border-b border-border">
         {(["all", "enabled", "disabled"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`pb-3 text-sm transition-colors relative ${
-              filter === f ? "text-white font-medium" : "text-gray-500 hover:text-gray-300"
+            className={`pb-2 text-sm transition-colors relative ${
+              filter === f ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {f === "all" ? "전체" : f === "enabled" ? "활성" : "비활성"}
+            {f === "all" ? "All" : f === "enabled" ? "Enabled" : "Disabled"}
             {filter === f && (
-              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-white" />
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
             )}
           </button>
         ))}
       </div>
 
-      {/* Schedule List */}
-      {loading ? (
-        <div className="text-center py-20 text-gray-500 font-light">목록을 불러오는 중...</div>
-      ) : schedules.length === 0 ? (
-        <div className="text-center py-20 text-gray-500 font-light">
-          등록된 스케줄이 없습니다. 새로운 스케줄을 만들어보세요.
-        </div>
-      ) : (
-        <div className="space-y-0">
-          {/* Header Row */}
-          <div className="grid grid-cols-12 gap-4 px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-gray-800/50">
-            <div className="col-span-4">이름</div>
-            <div className="col-span-2">주기</div>
-            <div className="col-span-2">다음 실행</div>
-            <div className="col-span-2 text-center">상태</div>
-            <div className="col-span-2 text-right">작업</div>
-          </div>
-
-          {schedules.map((schedule) => (
-            <div
-              key={schedule.id}
-              className="group grid grid-cols-12 gap-4 px-4 py-4 items-center border-b border-gray-800 hover:bg-gray-900/30 transition-colors"
-            >
-              <div className="col-span-4">
-                <div className="font-medium text-gray-200">{schedule.name}</div>
-                {schedule.description && (
-                  <div className="text-gray-500 text-xs truncate mt-1">
-                    {schedule.description}
-                  </div>
-                )}
-                {schedule.topic_list && schedule.topic_list.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {schedule.topic_list.slice(0, 2).map((topic, i) => (
-                      <span
-                        key={i}
-                        className="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-400 rounded"
-                      >
-                        {topic.length > 20 ? topic.slice(0, 20) + "..." : topic}
-                      </span>
-                    ))}
-                    {schedule.topic_list.length > 2 && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-gray-800 text-gray-400 rounded">
-                        +{schedule.topic_list.length - 2}
-                      </span>
+      <Card>
+        <CardHeader>
+          <CardTitle>{schedules.length} Schedules</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : schedules.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p className="mb-2">No schedules yet.</p>
+              <Link href="/schedules/new" className="text-foreground hover:underline">
+                Create your first schedule
+              </Link>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {schedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className="group py-4 flex items-center justify-between"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-medium">{schedule.name}</span>
+                      <Badge variant={schedule.enabled ? "success" : "secondary"}>
+                        {schedule.enabled ? "Enabled" : "Disabled"}
+                      </Badge>
+                    </div>
+                    {schedule.description && (
+                      <p className="text-sm text-muted-foreground truncate mb-1">
+                        {schedule.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <code className="font-mono bg-muted px-1 py-0.5 rounded">
+                        {schedule.cron_expression}
+                      </code>
+                      <span>Next: {formatDate(schedule.next_run_at)}</span>
+                    </div>
+                    {schedule.topic_list && schedule.topic_list.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {schedule.topic_list.slice(0, 2).map((topic, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">
+                            {topic.length > 20 ? topic.slice(0, 20) + "..." : topic}
+                          </Badge>
+                        ))}
+                        {schedule.topic_list.length > 2 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{schedule.topic_list.length - 2}
+                          </Badge>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-              </div>
-              <div className="col-span-2">
-                <code className="text-xs text-gray-400 font-mono bg-gray-900 px-1 py-0.5 rounded border border-gray-800/50">
-                  {schedule.cron_expression}
-                </code>
-              </div>
-              <div className="col-span-2">
-                <div className="text-sm text-gray-400">
-                  {formatDate(schedule.next_run_at)}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleEnabled(schedule.id, !schedule.enabled)}
+                    >
+                      {schedule.enabled ? "Disable" : "Enable"}
+                    </Button>
+                    <Link href={`/schedules/${schedule.id}/edit`}>
+                      <Button variant="ghost" size="sm">
+                        Edit
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteSchedule(schedule.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Delete
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-2 flex justify-center">
-                <button
-                  onClick={() => toggleEnabled(schedule.id, !schedule.enabled)}
-                  className={`text-xs px-2 py-1 rounded-full transition-colors ${
-                    schedule.enabled
-                      ? "bg-green-900/20 text-green-400 hover:bg-green-900/40"
-                      : "bg-gray-800 text-gray-500 hover:bg-gray-700"
-                  }`}
-                >
-                  {schedule.enabled ? "활성" : "비활성"}
-                </button>
-              </div>
-              <div className="col-span-2 flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link
-                  href={`/schedules/${schedule.id}/edit`}
-                  className="text-xs text-gray-400 hover:text-white transition-colors"
-                >
-                  편집
-                </Link>
-                <button
-                  onClick={() => deleteSchedule(schedule.id)}
-                  className="text-xs text-gray-500 hover:text-red-400 transition-colors"
-                >
-                  삭제
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
