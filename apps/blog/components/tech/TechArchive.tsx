@@ -164,7 +164,6 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                       )}
                     </div>
                   )}
-
                 </div>
               </Link>
             </motion.article>

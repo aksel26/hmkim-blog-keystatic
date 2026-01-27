@@ -50,7 +50,7 @@ const DEFAULT_FORM: ScheduleFormData = {
   targetReader: "",
   keywords: "",
   autoApprove: false,
-  cronExpression: "0 9 * * 1",
+  cronExpression: "0 9 * * 0",
   timezone: "Asia/Seoul",
   enabled: true,
 };
@@ -258,8 +258,8 @@ export default function ScheduleForm({
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Presets</label>
-            <div className="flex flex-wrap gap-2">
+            <label className={labelClass}>실행 요일</label>
+            <div className="flex flex-wrap gap-2 mt-2">
               {CRON_PRESETS.map((preset) => (
                 <button
                   key={preset.value}
@@ -275,22 +275,8 @@ export default function ScheduleForm({
                 </button>
               ))}
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1.5">
-              Cron Expression <span className="text-destructive">*</span>
-            </label>
-            <Input
-              type="text"
-              required
-              value={form.cronExpression}
-              onChange={(e) => setForm({ ...form, cronExpression: e.target.value })}
-              placeholder="0 9 * * 1"
-              className="font-mono"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Format: minute hour day month weekday
+            <p className="text-xs text-gray-600 mt-2">
+              매주 1회 실행됩니다
             </p>
           </div>
 
@@ -301,7 +287,24 @@ export default function ScheduleForm({
                 options={timezoneOptions}
                 value={form.timezone}
                 onChange={(e) => setForm({ ...form, timezone: e.target.value })}
-              />
+                className={inputClass}
+              >
+                <option value="Asia/Seoul">Asia/Seoul (KST)</option>
+                <option value="UTC">UTC</option>
+              </select>
+            </div>
+            <div className="pt-5">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={form.enabled}
+                  onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-600 accent-black dark:accent-white"
+                />
+                <span className="text-sm text-gray-200 group-hover:text-white font-medium">
+                  스케줄 활성화
+                </span>
+              </label>
             </div>
             <label className="flex items-center gap-2 cursor-pointer h-9">
               <input
