@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'apps/blog/content/**/*.mdoc'
+      - "apps/blog/content/**/*.mdoc"
   pull_request:
     types: [closed]
     branches: [main]
     paths:
-      - 'apps/blog/content/**/*.mdoc'
+      - "apps/blog/content/**/*.mdoc"
 
 jobs:
   send-newsletter:
@@ -34,18 +34,24 @@ jobs:
         if: steps.changed-files.outputs.added_files != ''
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
+
+      - name: Install yq
+        if: steps.changed-files.outputs.added_files != ''
+        uses: mikefarah/yq@v4
 
       - name: Extract post info and send newsletter
         if: steps.changed-files.outputs.added_files != ''
         env:
           NEWSLETTER_API_KEY: ${{ secrets.NEWSLETTER_API_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           AGENT_WEB_URL: ${{ vars.AGENT_WEB_URL }}
           BLOG_URL: ${{ vars.BLOG_URL }}
+          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
         run: |
           # 첫 번째 추가된 파일 처리
-          FILE="${{ steps.changed-files.outputs.added_files }}"
-          FIRST_FILE=$(echo "$FILE" | cut -d' ' -f1)
+          FIRST_FILE=$(echo "$ADDED_FILES" | cut -d' ' -f1)
 
           if [ -z "$FIRST_FILE" ]; then
             echo "No new mdoc files found"
@@ -54,11 +60,11 @@ jobs:
 
           echo "Processing file: $FIRST_FILE"
 
-          # 파일에서 frontmatter 추출
-          CONTENT=$(cat "$FIRST_FILE")
+          # YAML frontmatter 추출 (--- 사이의 내용)
+          FRONTMATTER=$(sed -n '1,/^---$/p' "$FIRST_FILE" | tail -n +2 | sed '$d')
 
-          # 포스트 상태 체크 - published가 아니면 스킵
-          STATUS=$(echo "$CONTENT" | grep -m1 "^status:" | sed 's/status: *//' | tr -d '"' | tr -d "'")
+          # yq를 사용하여 YAML 정확히 파싱
+          STATUS=$(echo "$FRONTMATTER" | yq '.status // ""')
           echo "Post status: $STATUS"
 
           if [ "$STATUS" != "published" ]; then
@@ -66,10 +72,10 @@ jobs:
             exit 0
           fi
 
-          # YAML frontmatter에서 title, summary, thumbnailImage 추출
-          TITLE=$(echo "$CONTENT" | grep -m1 "^title:" | sed 's/title: *//' | tr -d '"' | tr -d "'")
-          SUMMARY=$(echo "$CONTENT" | grep -m1 "^summary:" | sed 's/summary: *//' | tr -d '"' | tr -d "'")
-          THUMBNAIL_PATH=$(echo "$CONTENT" | grep -m1 "^thumbnailImage:" | sed 's/thumbnailImage: *//' | tr -d '"' | tr -d "'")
+          # yq로 title, summary, thumbnailImage 추출 (block scalar 지원)
+          TITLE=$(echo "$FRONTMATTER" | yq '.title // ""')
+          SUMMARY=$(echo "$FRONTMATTER" | yq '.summary // ""' | tr '\n' ' ' | sed 's/  */ /g' | sed 's/^ *//;s/ *$//')
+          THUMBNAIL_PATH=$(echo "$FRONTMATTER" | yq '.thumbnailImage // ""')
 
           # 카테고리와 슬러그 추출
           if [[ "$FIRST_FILE" == *"/tech/"* ]]; then
@@ -95,6 +101,41 @@ jobs:
 
           # 뉴스레터 발송 API 호출
           if [ -n "$TITLE" ] && [ -n "$SUMMARY" ]; then
+            # Vercel API로 배포 완료 대기
+            echo "Waiting for Vercel deployment to complete..."
+            MAX_WAIT=600  # 최대 10분 대기
+            WAIT_INTERVAL=15  # 15초 간격으로 확인
+            ELAPSED=0
+            DEPLOY_SUCCESS=false
+
+            while [ $ELAPSED -lt $MAX_WAIT ]; do
+              # Vercel API로 최신 배포 상태 확인
+              DEPLOY_RESPONSE=$(curl -s -H "Authorization: Bearer ${VERCEL_TOKEN}" \
+                "https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT_ID}&limit=1&state=READY,BUILDING,QUEUED")
+
+              DEPLOY_STATE=$(echo "$DEPLOY_RESPONSE" | jq -r '.deployments[0].state // "UNKNOWN"')
+              DEPLOY_URL=$(echo "$DEPLOY_RESPONSE" | jq -r '.deployments[0].url // ""')
+
+              echo "Deployment state: $DEPLOY_STATE (elapsed: ${ELAPSED}s)"
+
+              if [ "$DEPLOY_STATE" = "READY" ]; then
+                echo "Deployment complete! URL: $DEPLOY_URL"
+                DEPLOY_SUCCESS=true
+                break
+              elif [ "$DEPLOY_STATE" = "ERROR" ] || [ "$DEPLOY_STATE" = "CANCELED" ]; then
+                echo "Deployment failed with state: $DEPLOY_STATE"
+                break
+              fi
+
+              sleep $WAIT_INTERVAL
+              ELAPSED=$((ELAPSED + WAIT_INTERVAL))
+            done
+
+            if [ "$DEPLOY_SUCCESS" = false ]; then
+              echo "Warning: Deployment not ready after ${ELAPSED}s. Skipping newsletter."
+              exit 0
+            fi
+
             # JSON 페이로드 생성
             JSON_PAYLOAD="{\"postTitle\": \"${TITLE}\", \"postSummary\": \"${SUMMARY}\", \"postUrl\": \"${POST_URL}\", \"postCategory\": \"${CATEGORY}\""
             if [ -n "$THUMBNAIL_URL" ]; then
