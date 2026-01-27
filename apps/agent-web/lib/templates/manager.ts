@@ -56,6 +56,21 @@ export class TemplateManager {
     return data as EmailTemplate;
   }
 
+  async getTemplateByName(name: string): Promise<EmailTemplate | null> {
+    const { data, error } = await this.supabase
+      .from("email_templates")
+      .select("*")
+      .eq("name", name)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw new Error(`Failed to get template by name: ${error.message}`);
+    }
+
+    return data as EmailTemplate;
+  }
+
   async createTemplate(request: CreateTemplateRequest): Promise<EmailTemplate> {
     // If this is being set as default, unset other defaults first
     if (request.is_default) {
