@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
         postTitle: body.postTitle,
         postSummary: body.postSummary,
         postUrl: body.postUrl,
+        postThumbnail: body.postThumbnail,
       });
 
       if (!result.success) {
@@ -68,6 +69,7 @@ export async function POST(request: NextRequest) {
       postSummary: body.postSummary,
       postUrl: body.postUrl,
       postCategory: body.postCategory,
+      postThumbnail: body.postThumbnail,
     });
 
     return NextResponse.json(result);
