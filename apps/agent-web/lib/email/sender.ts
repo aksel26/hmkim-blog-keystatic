@@ -45,10 +45,10 @@ export async function sendNewsletter(
     return { success: true, sent: 0, failed: 0 };
   }
 
-  // 기본 템플릿 가져오기
-  const template = await templateManager.getDefaultTemplate();
+  // "새 글 알림" 템플릿 가져오기
+  const template = await templateManager.getTemplateByName("새 글 알림");
   if (!template) {
-    throw new Error("No default email template found");
+    throw new Error("'새 글 알림' email template not found");
   }
 
   let sent = 0;
@@ -102,9 +102,9 @@ export async function sendTestEmail(
   const transporter = getTransporter();
   const fromEmail = process.env.GMAIL_USER;
 
-  const template = await templateManager.getDefaultTemplate();
+  const template = await templateManager.getTemplateByName("새 글 알림");
   if (!template) {
-    return { success: false, error: "No default email template found" };
+    return { success: false, error: "'새 글 알림' email template not found" };
   }
 
   const variables: EmailVariables = {
