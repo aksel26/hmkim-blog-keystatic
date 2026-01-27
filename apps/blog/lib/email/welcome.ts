@@ -73,18 +73,22 @@ export async function sendWelcomeEmail(
   email: string,
   name?: string | null
 ): Promise<{ success: boolean; error?: string }> {
+  console.log("[Welcome Email] Starting for:", email);
+
   const transporter = getTransporter();
 
   if (!transporter) {
-    console.log("Email transporter not configured, skipping welcome email");
-    return { success: true };
+    console.error("[Welcome Email] FAILED: Email transporter not configured");
+    return { success: false, error: "Email transporter not configured" };
   }
 
   const template = await getWelcomeTemplate();
   if (!template) {
-    console.warn("Welcome template not found, skipping welcome email");
-    return { success: true };
+    console.error("[Welcome Email] FAILED: Welcome template not found in database");
+    return { success: false, error: "Welcome template not found" };
   }
+
+  console.log("[Welcome Email] Template found:", template.name);
 
   const subscriberName = name?.trim() || "구독자";
   const fromEmail = process.env.GMAIL_USER;
@@ -99,6 +103,8 @@ export async function sendWelcomeEmail(
   const html = replaceVariables(template.body, variables);
 
   try {
+    console.log("[Welcome Email] Sending to:", email, "from:", fromEmail);
+
     await transporter.sendMail({
       from: `"${BLOG_NAME}" <${fromEmail}>`,
       to: email,
@@ -106,11 +112,11 @@ export async function sendWelcomeEmail(
       html,
     });
 
-    console.log("Welcome email sent to:", email);
+    console.log("[Welcome Email] SUCCESS: Email sent to:", email);
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    console.error("Failed to send welcome email:", message);
+    console.error("[Welcome Email] FAILED:", message);
     return { success: false, error: message };
   }
 }

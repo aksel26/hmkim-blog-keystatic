@@ -77,8 +77,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 환영 이메일 발송 (비동기, 실패해도 구독은 성공)
-      sendWelcomeEmail(normalizedEmail, name).catch(console.error);
+      // 환영 이메일 발송 (await하여 Vercel 함수 종료 전 완료 보장)
+      const emailResult = await sendWelcomeEmail(normalizedEmail, name);
+      if (!emailResult.success) {
+        console.error("Welcome email failed:", emailResult.error);
+      }
 
       return NextResponse.json({ success: true });
     }
@@ -99,8 +102,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 환영 이메일 발송 (비동기, 실패해도 구독은 성공)
-    sendWelcomeEmail(normalizedEmail, name).catch(console.error);
+    // 환영 이메일 발송 (await하여 Vercel 함수 종료 전 완료 보장)
+    const emailResult = await sendWelcomeEmail(normalizedEmail, name);
+    if (!emailResult.success) {
+      console.error("Welcome email failed:", emailResult.error);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
