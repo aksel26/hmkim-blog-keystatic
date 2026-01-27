@@ -5,7 +5,7 @@ import { templateManager } from "@/lib/templates/manager";
 import type { SendNewsletterRequest, SendNewsletterResult, EmailVariables } from "./types";
 
 const BLOG_NAME = "HM Blog";
-const BLOG_URL = process.env.NEXT_PUBLIC_BLOG_URL || "https://hmkim.blog";
+const BLOG_URL = process.env.NEXT_PUBLIC_BLOG_URL || "https://hmkim-blog.vercel.app";
 
 function getTransporter(): Transporter {
   const user = process.env.GMAIL_USER;
