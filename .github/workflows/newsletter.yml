@@ -1,6 +1,10 @@
 name: Send Newsletter on New Post
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/blog/content/**/*.mdoc'
   pull_request:
     types: [closed]
     branches: [main]
@@ -9,7 +13,8 @@ on:
 
 jobs:
   send-newsletter:
-    if: github.event.pull_request.merged == true
+    # push 이벤트이거나, PR이 merge된 경우에만 실행
+    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -51,6 +56,15 @@ jobs:
 
           # 파일에서 frontmatter 추출
           CONTENT=$(cat "$FIRST_FILE")
+
+          # 포스트 상태 체크 - published가 아니면 스킵
+          STATUS=$(echo "$CONTENT" | grep -m1 "^status:" | sed 's/status: *//' | tr -d '"' | tr -d "'")
+          echo "Post status: $STATUS"
+
+          if [ "$STATUS" != "published" ]; then
+            echo "Post is not published (status: $STATUS), skipping newsletter"
+            exit 0
+          fi
 
           # YAML frontmatter에서 title과 summary 추출 (간단한 방법)
           TITLE=$(echo "$CONTENT" | grep -m1 "^title:" | sed 's/title: *//' | tr -d '"' | tr -d "'")
