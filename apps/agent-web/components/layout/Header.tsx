@@ -8,7 +8,7 @@ export function Header() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <header className="h-16 border-b border-border bg-card px-6 flex items-center justify-between">
+    <header className="h-14 border-b border-border bg-background px-6 flex items-center justify-between">
       {/* Mobile menu button */}
       <Button variant="ghost" size="icon" className="md:hidden">
         <Menu className="h-5 w-5" />

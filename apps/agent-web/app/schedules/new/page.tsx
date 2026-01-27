@@ -53,31 +53,33 @@ export default function NewSchedulePage() {
 
       if (!res.ok) {
         const resData = await res.json();
-        throw new Error(resData.error || "스케줄 생성에 실패했습니다.");
+        throw new Error(resData.error || "Failed to create schedule.");
       }
 
       router.push("/schedules");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : "An error occurred.");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <div className="mb-12 text-center">
-        <h1 className="text-3xl font-light tracking-tight mb-2">새 스케줄 만들기</h1>
-        <p className="text-gray-500 text-sm">새로운 자동화 콘텐츠 스케줄을 생성합니다</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">New Schedule</h1>
+        <p className="text-muted-foreground">
+          Create a new automated content schedule
+        </p>
       </div>
 
       {error && (
-        <div className="max-w-2xl mx-auto mb-8 p-4 border border-red-900/50 bg-red-900/10 text-red-500 rounded text-sm text-center">
+        <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md text-sm">
           {error}
         </div>
       )}
 
-      <ScheduleForm onSubmit={handleSubmit} loading={loading} submitLabel="스케줄 생성" />
+      <ScheduleForm onSubmit={handleSubmit} loading={loading} submitLabel="Create Schedule" />
     </div>
   );
 }

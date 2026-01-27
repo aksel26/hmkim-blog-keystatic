@@ -12,17 +12,17 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
       <div
         ref={ref}
         className={cn(
-          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors",
+          "inline-flex items-center rounded px-2 py-0.5 text-xs font-medium transition-colors",
           variant === "default" &&
-            "bg-primary text-primary-foreground",
+            "bg-foreground text-background",
           variant === "secondary" &&
-            "bg-secondary text-secondary-foreground",
+            "bg-muted text-foreground",
           variant === "success" &&
-            "bg-success text-success-foreground",
+            "bg-success/10 text-success",
           variant === "warning" &&
-            "bg-warning text-warning-foreground",
+            "bg-warning/10 text-warning",
           variant === "destructive" &&
-            "bg-destructive text-destructive-foreground",
+            "bg-destructive/10 text-destructive",
           variant === "outline" &&
             "border border-border text-foreground",
           className

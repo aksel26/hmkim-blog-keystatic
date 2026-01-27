@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { type Schedule } from "@/lib/scheduler/types";
 import ScheduleForm from "@/components/schedules/ScheduleForm";
+import { Loader2 } from "lucide-react";
 
 export default function EditSchedulePage({
   params,
@@ -24,7 +25,7 @@ export default function EditSchedulePage({
   async function fetchSchedule() {
     try {
       const res = await fetch(`/api/schedules/${id}`);
-      if (!res.ok) throw new Error("스케줄을 찾을 수 없습니다.");
+      if (!res.ok) throw new Error("Schedule not found.");
       const schedule: Schedule = await res.json();
 
       setInitialData({
@@ -44,7 +45,7 @@ export default function EditSchedulePage({
         enabled: schedule.enabled,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "스케줄을 불러오는데 실패했습니다.");
+      setError(err instanceof Error ? err.message : "Failed to load schedule.");
     } finally {
       setLoading(false);
     }
@@ -94,12 +95,12 @@ export default function EditSchedulePage({
 
       if (!res.ok) {
         const resData = await res.json();
-        throw new Error(resData.error || "스케줄 수정에 실패했습니다.");
+        throw new Error(resData.error || "Failed to update schedule.");
       }
 
       router.push("/schedules");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
+      setError(err instanceof Error ? err.message : "An error occurred.");
     } finally {
       setSaving(false);
     }
@@ -107,21 +108,23 @@ export default function EditSchedulePage({
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <div className="text-center py-12 text-gray-500 text-sm font-light">Loading schedule...</div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <div className="mb-12 text-center">
-        <h1 className="text-3xl font-light tracking-tight mb-2">스케줄 수정</h1>
-        <p className="text-gray-500 text-sm">자동화 콘텐츠 스케줄을 수정합니다</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Edit Schedule</h1>
+        <p className="text-muted-foreground">
+          Modify automated content schedule
+        </p>
       </div>
 
       {error && (
-        <div className="max-w-2xl mx-auto mb-8 p-4 border border-red-900/50 bg-red-900/10 text-red-500 rounded text-sm text-center">
+        <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md text-sm">
           {error}
         </div>
       )}
@@ -131,7 +134,7 @@ export default function EditSchedulePage({
           initialData={initialData}
           onSubmit={handleSubmit}
           loading={saving}
-          submitLabel="변경사항 저장"
+          submitLabel="Save Changes"
         />
       )}
     </div>

@@ -1,18 +1,27 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { subscriberManager } from "@/lib/subscribers/manager";
 import { templateManager } from "@/lib/templates/manager";
 import type { SendNewsletterRequest, SendNewsletterResult, EmailVariables } from "./types";
 
 const BLOG_NAME = "HM Blog";
-const BLOG_URL = process.env.NEXT_PUBLIC_BLOG_URL || "https://hmkim.blog";
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "newsletter@hmkim.blog";
+const BLOG_URL = process.env.NEXT_PUBLIC_BLOG_URL || "https://hmkim-blog.vercel.app";
 
-function getResend() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY is not set");
+function getTransporter(): Transporter {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+
+  if (!user || !pass) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD is not set");
   }
-  return new Resend(apiKey);
+
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user,
+      pass,
+    },
+  });
 }
 
 function replaceVariables(template: string, variables: EmailVariables): string {
@@ -26,7 +35,8 @@ function replaceVariables(template: string, variables: EmailVariables): string {
 export async function sendNewsletter(
   request: SendNewsletterRequest
 ): Promise<SendNewsletterResult> {
-  const resend = getResend();
+  const transporter = getTransporter();
+  const fromEmail = process.env.GMAIL_USER;
 
   // 활성 구독자 조회
   const subscribers = await subscriberManager.getActiveSubscribers();
@@ -60,27 +70,21 @@ export async function sendNewsletter(
     const html = replaceVariables(template.body, variables);
 
     try {
-      const { error } = await resend.emails.send({
-        from: FROM_EMAIL,
+      await transporter.sendMail({
+        from: `"${BLOG_NAME}" <${fromEmail}>`,
         to: subscriber.email,
         subject,
         html,
       });
-
-      if (error) {
-        failed++;
-        errors.push(`${subscriber.email}: ${error.message}`);
-      } else {
-        sent++;
-      }
+      sent++;
     } catch (err) {
       failed++;
       const message = err instanceof Error ? err.message : "Unknown error";
       errors.push(`${subscriber.email}: ${message}`);
     }
 
-    // Rate limiting - Resend free tier: 100 emails/day, 1 email/second
-    await new Promise((resolve) => setTimeout(resolve, 1100));
+    // Rate limiting - Gmail: 500 emails/day, ~20 emails/second
+    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   return {
@@ -95,7 +99,8 @@ export async function sendTestEmail(
   to: string,
   request: SendNewsletterRequest
 ): Promise<{ success: boolean; error?: string }> {
-  const resend = getResend();
+  const transporter = getTransporter();
+  const fromEmail = process.env.GMAIL_USER;
 
   const template = await templateManager.getDefaultTemplate();
   if (!template) {
@@ -115,16 +120,12 @@ export async function sendTestEmail(
   const html = replaceVariables(template.body, variables);
 
   try {
-    const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    await transporter.sendMail({
+      from: `"${BLOG_NAME}" <${fromEmail}>`,
       to,
       subject,
       html,
     });
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
 
     return { success: true };
   } catch (err) {
