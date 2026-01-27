@@ -26,6 +26,15 @@ function getTransporter(): Transporter {
 
 function replaceVariables(template: string, variables: EmailVariables): string {
   let result = template;
+
+  // Handle conditional blocks: {{#if variable}}...{{/if}}
+  const conditionalRegex = /\{\{#if\s+(\w+)\}\}([\s\S]*?)\{\{\/if\}\}/g;
+  result = result.replace(conditionalRegex, (_, key, content) => {
+    const value = variables[key as keyof EmailVariables];
+    return value ? content : "";
+  });
+
+  // Replace simple variables
   for (const [key, value] of Object.entries(variables)) {
     result = result.replace(new RegExp(`{{${key}}}`, "g"), value || "");
   }
@@ -62,6 +71,7 @@ export async function sendNewsletter(
       post_title: request.postTitle,
       post_summary: request.postSummary,
       post_url: request.postUrl,
+      post_thumbnail: request.postThumbnail,
       subscriber_name: subscriber.name || "구독자",
       unsubscribe_url: `${BLOG_URL}/api/unsubscribe?email=${encodeURIComponent(subscriber.email)}`,
     };
@@ -112,6 +122,7 @@ export async function sendTestEmail(
     post_title: request.postTitle,
     post_summary: request.postSummary,
     post_url: request.postUrl,
+    post_thumbnail: request.postThumbnail,
     subscriber_name: "테스트 사용자",
     unsubscribe_url: `${BLOG_URL}/api/unsubscribe?email=${encodeURIComponent(to)}`,
   };
