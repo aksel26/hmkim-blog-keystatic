@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendWelcomeEmail } from "@/lib/email/welcome";
 
 interface SubscribeRequest {
   name: string;
@@ -76,6 +77,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // 환영 이메일 발송 (비동기, 실패해도 구독은 성공)
+      sendWelcomeEmail(normalizedEmail, name).catch(console.error);
+
       return NextResponse.json({ success: true });
     }
 
@@ -94,6 +98,9 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // 환영 이메일 발송 (비동기, 실패해도 구독은 성공)
+    sendWelcomeEmail(normalizedEmail, name).catch(console.error);
 
     return NextResponse.json({ success: true });
   } catch (error) {
