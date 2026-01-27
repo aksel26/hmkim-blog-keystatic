@@ -79,7 +79,7 @@ export default function SubscribeForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="홍길동"
-              className="w-full rounded-lg border border-gray-200 bg-background py-3 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/20 transition-all"
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-background py-3 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/20 transition-all"
             />
           </div>
         </div>
@@ -98,7 +98,7 @@ export default function SubscribeForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="example@email.com"
               required
-              className="w-full rounded-lg border border-gray-200 bg-background py-3 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/20 transition-all"
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-background py-3 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:border-electric-blue focus:outline-none focus:ring-2 focus:ring-electric-blue/20 transition-all"
             />
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function SubscribeForm() {
             id="privacy"
             checked={privacyAgreed}
             onChange={(e) => setPrivacyAgreed(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-electric-blue focus:ring-electric-blue cursor-pointer"
+            className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 bg-background text-electric-blue focus:ring-electric-blue cursor-pointer"
           />
           <label htmlFor="privacy" className="text-sm text-foreground/80 cursor-pointer">
             개인정보 수집 및 이용에 동의합니다{" "}
@@ -139,7 +139,7 @@ export default function SubscribeForm() {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3"
+          className="w-full py-3 dark:text-gray-800 text-gray-100 dark:bg-gray-100 dar hover:scale-105"
         >
           {isLoading ? (
             <>

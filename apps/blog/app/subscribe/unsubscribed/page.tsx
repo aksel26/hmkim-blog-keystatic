@@ -13,8 +13,8 @@ export default function UnsubscribedPage() {
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md text-center">
         {/* Icon */}
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-          <MailX className="h-8 w-8 text-gray-500" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+          <MailX className="h-8 w-8 text-gray-500 dark:text-gray-400" />
         </div>
 
         {/* Title */}

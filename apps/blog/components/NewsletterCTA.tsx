@@ -138,7 +138,7 @@ export function NewsletterCTA({
 
       <Link
         href="/subscribe"
-        className="inline-flex items-center gap-2 rounded-full bg-electric-blue px-8 py-3 font-medium text-white transition-all hover:bg-blue-600 hover:shadow-lg hover:shadow-electric-blue/25 active:scale-95"
+        className="inline-flex items-center gap-2 rounded-full bg-electric-blue px-8 py-3 font-medium dark:text-black hover:dark:text-white text-white transition-all hover:bg-blue-600 hover:shadow-lg dark:hover:shadow-electric-blue/10 hover:shadow-electric-blue/25 active:scale-95"
       >
         뉴스레터 구독하기
       </Link>

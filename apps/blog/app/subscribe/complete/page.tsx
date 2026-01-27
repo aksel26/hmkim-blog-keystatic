@@ -9,34 +9,15 @@ import Button from "@/components/ui/Button";
 
 export default function SubscribeCompletePage() {
   useEffect(() => {
-    // 페이지 로드 시 confetti 효과
-    const duration = 3000;
-    const end = Date.now() + duration;
-
+    // 페이지 로드 시 가운데서 한 번 터지는 confetti 효과
     const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"];
 
-    const frame = () => {
-      confetti({
-        particleCount: 3,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: colors,
-      });
-      confetti({
-        particleCount: 3,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: colors,
-      });
-
-      if (Date.now() < end) {
-        requestAnimationFrame(frame);
-      }
-    };
-
-    frame();
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { x: 0.5, y: 0.6 },
+      colors: colors,
+    });
   }, []);
 
   return (
@@ -52,7 +33,7 @@ export default function SubscribeCompletePage() {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
-          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100"
+          className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
         >
           <PartyPopper className="h-10 w-10 text-green-600" />
         </motion.div>
