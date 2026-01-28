@@ -110,30 +110,76 @@ export async function fetchPostFromGitHub(
   }
 }
 
+export interface ThumbnailResult {
+  data: ArrayBuffer;
+  mimeType: string;
+}
+
 /**
- * Fetch thumbnail image data
+ * Get MIME type from file extension
+ */
+function getMimeType(path: string): string {
+  const ext = path.split('.').pop()?.toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+  };
+  return mimeTypes[ext || ''] || 'image/png';
+}
+
+/**
+ * Check if image format is supported by @vercel/og
+ */
+function isSupportedFormat(path: string): boolean {
+  const ext = path.split('.').pop()?.toLowerCase();
+  // @vercel/og only supports png, jpeg, gif - NOT webp
+  return ['png', 'jpg', 'jpeg', 'gif'].includes(ext || '');
+}
+
+/**
+ * Fetch thumbnail image data with MIME type
+ * Returns null for unsupported formats (webp, etc.)
  */
 export async function fetchThumbnailData(
   thumbnailPath: string | null
-): Promise<ArrayBuffer | null> {
+): Promise<ThumbnailResult | null> {
   if (!thumbnailPath) return null;
 
+  // Skip unsupported formats like webp
+  if (!isSupportedFormat(thumbnailPath)) {
+    console.log(`[OG] Skipping unsupported format: ${thumbnailPath}`);
+    return null;
+  }
+
   try {
-    // If it's already a full URL, use it directly
+    // Build image URL - use site URL for relative paths
     const imageUrl = thumbnailPath.startsWith("http")
       ? thumbnailPath
       : `${SITE_BASE_URL}${thumbnailPath}`;
 
-    const response = await fetch(imageUrl);
+    console.log(`[OG] Fetching thumbnail: ${imageUrl}`);
+
+    const response = await fetch(imageUrl, {
+      cache: 'no-store',
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
 
     if (!response.ok) {
-      console.error(`Failed to fetch thumbnail: ${imageUrl}`);
+      console.error(`[OG] Failed to fetch thumbnail: ${imageUrl}, status: ${response.status}`);
       return null;
     }
 
-    return await response.arrayBuffer();
+    const data = await response.arrayBuffer();
+    const mimeType = response.headers.get('content-type') || getMimeType(thumbnailPath);
+    console.log(`[OG] Thumbnail fetched: ${data.byteLength} bytes, type: ${mimeType}`);
+
+    return { data, mimeType };
   } catch (error) {
-    console.error("Error fetching thumbnail:", error);
+    console.error("[OG] Error fetching thumbnail:", error);
     return null;
   }
 }
