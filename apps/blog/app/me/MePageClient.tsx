@@ -43,7 +43,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
             y: 0,
             opacity: 1,
             transition: {
-                type: 'spring',
+                type: 'spring' as const,
                 damping: 25,
                 stiffness: 120,
             },
@@ -56,7 +56,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
             scale: 1,
             opacity: 1,
             transition: {
-                type: 'spring',
+                type: 'spring' as const,
                 damping: 20,
                 stiffness: 100,
             },
