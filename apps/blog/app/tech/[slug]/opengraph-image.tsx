@@ -20,10 +20,10 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const summary = post?.summary || "";
 
   // Fetch thumbnail image
-  const thumbnailData = await fetchThumbnailData(post?.thumbnailImage || null);
+  const thumbnail = await fetchThumbnailData(post?.thumbnailImage || null);
 
   // With thumbnail: image top, text bottom
-  if (thumbnailData) {
+  if (thumbnail) {
     return new ImageResponse(
       (
         <div
@@ -46,7 +46,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
             }}
           >
             <img
-              src={`data:image/jpeg;base64,${Buffer.from(thumbnailData).toString("base64")}`}
+              src={`data:${thumbnail.mimeType};base64,${Buffer.from(thumbnail.data).toString("base64")}`}
               alt=""
               style={{
                 width: "100%",
