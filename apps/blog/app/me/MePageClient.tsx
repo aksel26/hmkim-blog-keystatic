@@ -25,44 +25,45 @@ const socialLinks = [
     { icon: Mail, href: 'mailto:kevinxkim2023@gmail.com', label: '이메일' },
 ];
 
+// Hoisted animation variants (rendering-hoist-jsx)
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.1,
+        },
+    },
+};
+
+const fadeUpVariants = {
+    hidden: { y: 40, opacity: 0 },
+    visible: {
+        y: 0,
+        opacity: 1,
+        transition: {
+            type: 'spring' as const,
+            damping: 25,
+            stiffness: 120,
+        },
+    },
+};
+
+const scaleInVariants = {
+    hidden: { scale: 0.8, opacity: 0 },
+    visible: {
+        scale: 1,
+        opacity: 1,
+        transition: {
+            type: 'spring' as const,
+            damping: 20,
+            stiffness: 100,
+        },
+    },
+};
+
 export default function MePageClient({ techPostsCount, lifePostsCount }: MePageClientProps) {
-    const container = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.08,
-                delayChildren: 0.1,
-            },
-        },
-    };
-
-    const fadeUp = {
-        hidden: { y: 40, opacity: 0 },
-        visible: {
-            y: 0,
-            opacity: 1,
-            transition: {
-                type: 'spring' as const,
-                damping: 25,
-                stiffness: 120,
-            },
-        },
-    };
-
-    const scaleIn = {
-        hidden: { scale: 0.8, opacity: 0 },
-        visible: {
-            scale: 1,
-            opacity: 1,
-            transition: {
-                type: 'spring' as const,
-                damping: 20,
-                stiffness: 100,
-            },
-        },
-    };
-
     return (
         <div className="min-h-screen">
             {/* Hero Section */}
@@ -70,12 +71,12 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                 className="container mx-auto max-w-6xl px-6 pt-20 pb-16 md:pt-32 md:pb-24"
                 initial="hidden"
                 animate="visible"
-                variants={container}
+                variants={containerVariants}
             >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
                     {/* Left Column - Main Info */}
                     <div className="lg:col-span-7 space-y-8">
-                        <motion.div variants={fadeUp} className="space-y-2">
+                        <motion.div variants={fadeUpVariants} className="space-y-2">
                             <span className="text-sm font-mono uppercase tracking-[0.2em] text-foreground/50 ">
                                 FrontEnd Developer
                             </span>
@@ -86,7 +87,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                         </motion.div>
 
                         <motion.p
-                            variants={fadeUp}
+                            variants={fadeUpVariants}
                             className="text-lg md:text-xl text-foreground/70 leading-relaxed max-w-xl"
                         >
                             직관적이고 빠른 웹 애플리케이션을 만듭니다.<br/>
@@ -95,7 +96,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                         </motion.p>
 
                         {/* Social Links */}
-                        <motion.div variants={fadeUp} className="flex items-center gap-4">
+                        <motion.div variants={fadeUpVariants} className="flex items-center gap-4">
                             {socialLinks.map((social) => (
                                 <Link
                                     key={social.label}
@@ -113,7 +114,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
 
                     {/* Right Column - Stats Card */}
                     <motion.div
-                        variants={scaleIn}
+                        variants={scaleInVariants}
                         className="lg:col-span-5 relative"
                     >
                         <div className="relative p-8 rounded-2xl border border-foreground/10 bg-gradient-to-br from-foreground/[0.02] to-transparent backdrop-blur-sm">
@@ -162,9 +163,9 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-100px' }}
-                variants={container}
+                variants={containerVariants}
             >
-                <motion.div variants={fadeUp} className="mb-12">
+                <motion.div variants={fadeUpVariants} className="mb-12">
                     <span className="text-sm font-mono uppercase tracking-[0.2em] text-foreground/50">
                         사용하는 기술
                     </span>
@@ -177,7 +178,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                     {techStack.map((tech, index) => (
                         <motion.div
                             key={tech.name}
-                            variants={fadeUp}
+                            variants={fadeUpVariants}
                             className={`group relative p-5 rounded-xl border transition-all duration-300 cursor-default
                                 ${tech.highlight
                                     ? 'border-tech-blue/30 bg-tech-blue/5 hover:border-tech-blue hover:bg-tech-blue/10'
@@ -206,10 +207,10 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-100px' }}
-                variants={container}
+                variants={containerVariants}
             >
                 <motion.div
-                    variants={scaleIn}
+                    variants={scaleInVariants}
                     className="relative overflow-hidden rounded-2xl bg-foreground p-8 md:p-12"
                 >
                     {/* Background Pattern */}
