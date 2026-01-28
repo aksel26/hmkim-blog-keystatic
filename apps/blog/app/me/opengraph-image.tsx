@@ -1,8 +1,8 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "fs/promises";
+import { join } from "path";
 
-export const runtime = "edge";
-
-export const alt = "About Hyunmin Kim";
+export const alt = "김현민 - FrontEnd Developer";
 export const size = {
   width: 1200,
   height: 630,
@@ -10,6 +10,9 @@ export const size = {
 export const contentType = "image/png";
 
 export default async function Image() {
+  const iconData = await readFile(join(process.cwd(), "app/icon.png"));
+  const iconBase64 = `data:image/png;base64,${iconData.toString("base64")}`;
+
   return new ImageResponse(
     (
       <div
@@ -20,91 +23,90 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)",
+          background: "#ffffff",
           fontFamily: "system-ui, sans-serif",
+          position: "relative",
         }}
       >
-        {/* Decorative gradient circle */}
+        {/* Subtle top border accent */}
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 600,
-            height: 600,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-            opacity: 0.1,
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 4,
+            background: "linear-gradient(90deg, #0984e3 0%, #ff6900 100%)",
           }}
         />
 
-        {/* Profile circle */}
-        <div
+        {/* Logo */}
+        <img
+          src={iconBase64}
+          alt="Logo"
+          width={100}
+          height={100}
           style={{
-            width: 140,
-            height: 140,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 60,
-            marginBottom: 30,
+            borderRadius: 20,
+            marginBottom: 32,
           }}
-        >
-          <span>👋</span>
-        </div>
+        />
 
         {/* Name */}
         <h1
           style={{
-            fontSize: 56,
-            fontWeight: 700,
-            color: "white",
+            fontSize: 64,
+            fontWeight: 800,
+            color: "#171717",
             margin: 0,
             letterSpacing: "-0.02em",
+            display: "flex",
+            alignItems: "baseline",
           }}
         >
-          Hyunmin Kim
+          김현민
+          <span style={{ color: "#ff6900" }}>.</span>
         </h1>
 
         {/* Role */}
         <p
           style={{
-            fontSize: 28,
-            color: "#3b82f6",
+            fontSize: 24,
+            color: "#0984e3",
             marginTop: 16,
-            fontWeight: 500,
+            fontWeight: 600,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
           }}
         >
-          Software Engineer
+          FrontEnd Developer
         </p>
 
         {/* Description */}
         <p
           style={{
             fontSize: 22,
-            color: "rgba(255, 255, 255, 0.5)",
+            color: "#6b7280",
             marginTop: 24,
-            maxWidth: 600,
+            maxWidth: 500,
             textAlign: "center",
             lineHeight: 1.5,
           }}
         >
-          Building intuitive and performant web applications
+          직관적이고 빠른 웹 애플리케이션을 만듭니다
         </p>
 
-        {/* Blog name */}
+        {/* Bottom email */}
         <p
           style={{
             position: "absolute",
-            bottom: 50,
-            fontSize: 20,
-            color: "rgba(255, 255, 255, 0.3)",
+            bottom: 48,
+            fontSize: 16,
+            color: "#9ca3af",
+            letterSpacing: "0.02em",
           }}
         >
-          HM Blog
+          kevinxkim2023@gmail.com
         </p>
       </div>
     ),
