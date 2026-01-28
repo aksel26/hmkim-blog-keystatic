@@ -3,6 +3,9 @@
  * Fetches post data directly from GitHub for dynamic OG image generation
  */
 
+import { readFile } from "fs/promises";
+import { join } from "path";
+
 const GITHUB_RAW_BASE = "https://raw.githubusercontent.com/aksel26/hmkim-blog-keystatic/main/apps/blog";
 const SITE_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) ||
@@ -141,6 +144,7 @@ function isSupportedFormat(path: string): boolean {
 /**
  * Fetch thumbnail image data with MIME type
  * Returns null for unsupported formats (webp, etc.)
+ * Tries local file first (for Vercel build), then falls back to URL fetch
  */
 export async function fetchThumbnailData(
   thumbnailPath: string | null
@@ -153,8 +157,26 @@ export async function fetchThumbnailData(
     return null;
   }
 
+  const mimeType = getMimeType(thumbnailPath);
+
+  // Try reading from local public folder first (works during Vercel build)
+  if (thumbnailPath.startsWith("/")) {
+    try {
+      const localPath = join(process.cwd(), "public", thumbnailPath);
+      console.log(`[OG] Trying local file: ${localPath}`);
+      const buffer = await readFile(localPath);
+      console.log(`[OG] Local file read: ${buffer.length} bytes, type: ${mimeType}`);
+      return {
+        data: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength),
+        mimeType,
+      };
+    } catch {
+      console.log(`[OG] Local file not found, trying URL fetch`);
+    }
+  }
+
+  // Fallback: fetch from URL
   try {
-    // Build image URL - use site URL for relative paths
     const imageUrl = thumbnailPath.startsWith("http")
       ? thumbnailPath
       : `${SITE_BASE_URL}${thumbnailPath}`;
@@ -174,7 +196,6 @@ export async function fetchThumbnailData(
     }
 
     const data = await response.arrayBuffer();
-    const mimeType = response.headers.get('content-type') || getMimeType(thumbnailPath);
     console.log(`[OG] Thumbnail fetched: ${data.byteLength} bytes, type: ${mimeType}`);
 
     return { data, mimeType };
