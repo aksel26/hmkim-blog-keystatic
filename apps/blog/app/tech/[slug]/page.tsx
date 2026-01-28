@@ -9,6 +9,8 @@ import ScrollButtons from '@/components/ScrollButtons';
 import { MobileTableOfContents, DesktopTableOfContents } from '@/components/TableOfContents';
 import { extractTocFromMarkdoc } from '@/lib/toc';
 import { NewsletterCTA } from '@/components/NewsletterCTA';
+import { ViewCounter } from '@/components/views/ViewCounter';
+import { CommentSection } from '@/components/comments';
 
 export async function generateStaticParams() {
     const posts = await getAllTechPosts(false);
@@ -31,13 +33,24 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
     return (
         <div className="min-h-screen bg-background pb-20">
             {/* Sticky Sidebar */}
-            <StickySidebar />
+            <StickySidebar
+                shareData={{
+                    title: post.title,
+                    text: post.summary,
+                }}
+            />
 
             {/* Table of Contents (Desktop - fixed position) */}
             <DesktopTableOfContents items={tocItems} />
 
-            {/* Scroll Buttons */}
-            <ScrollButtons />
+            {/* Scroll Buttons with Share */}
+            <ScrollButtons
+                showShare={true}
+                shareData={{
+                    title: post.title,
+                    text: post.summary,
+                }}
+            />
 
             {/* Back Navigation */}
             <div className="container mx-auto px-6 py-8 max-w-6xl">
@@ -77,7 +90,21 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                         </span>
                     )}
                 </div>
-              
+
+                {/* 작성일 & 조회수 */}
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
+                    <time className="flex items-center gap-2">
+                        {formatDate(post.createdAt || '')}
+                    </time>
+                    {post.updatedAt && post.updatedAt !== post.createdAt && (
+                        <time className="flex items-center gap-2">
+                            <span>✏️</span>
+                            수정: {formatDate(post.updatedAt)}
+                        </time>
+                    )}
+                    <ViewCounter category="tech" slug={params.slug} />
+                </div>
+
             </div>
 
             {/* Thumbnail */}
@@ -117,17 +144,12 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                     <MarkdocRenderer node={node} />
                 </div>
             </article>
-  <div className="flex flex-wrap items-center justify-center gap-6 text-sm font-medium text-foreground/60 dark:text-foreground/50">
-                    <time className="flex items-center gap-2">
-                        {formatDate(post.createdAt || '')}
-                    </time>
-                    {post.updatedAt && post.updatedAt !== post.createdAt && (
-                        <time className="flex items-center gap-2">
-                            <span>✏️</span>
-                            수정: {formatDate(post.updatedAt)}
-                        </time>
-                    )}
-                </div>
+
+            {/* Comment Section */}
+            <div className="container mx-auto max-w-3xl px-6 mt-8">
+                <CommentSection category="tech" slug={params.slug} />
+            </div>
+
             {/* Newsletter CTA */}
             <div className="container mx-auto max-w-3xl px-6 mt-16">
                 <NewsletterCTA />
