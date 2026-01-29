@@ -142,7 +142,7 @@ tags:
 Obsidian MCP 도구 사용:
 ```
 create 또는 patch
-경로: 개발기록/{YYYY}/{MM}/{제목}.md
+경로: DailyLog/{제목}.md
 ```
 
 ## 사용 예시
