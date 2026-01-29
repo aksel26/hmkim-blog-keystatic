@@ -1,6 +1,7 @@
 import { getAllPosts } from '@/lib/keystatic/reader';
 import HomeContent from '@/components/home/HomeContent';
 import { Post } from '@/components/home/MasonryGrid';
+import { WebSiteSchema } from '@/components/schema';
 
 export default async function Home() {
   const posts = await getAllPosts();
@@ -16,5 +17,10 @@ export default async function Home() {
     thumbnailVideo: post.thumbnailVideo || undefined,
   }));
 
-  return <HomeContent initialPosts={allPosts} />;
+  return (
+    <>
+      <WebSiteSchema />
+      <HomeContent initialPosts={allPosts} />
+    </>
+  );
 }
