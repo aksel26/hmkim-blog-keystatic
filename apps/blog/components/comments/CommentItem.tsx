@@ -159,55 +159,57 @@ export function CommentItem({
   };
 
   return (
-    <div className={`${isReply ? "ml-8 pl-4 border-l-2 border-gray-200 dark:border-gray-700" : ""}`}>
+    <div className={`${isReply ? "ml-4 sm:ml-8 pl-3 sm:pl-4 border-l-2 border-gray-200 dark:border-gray-700" : ""} overflow-hidden`}>
       <div className="py-4">
         {/* Header */}
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" />
           </div>
-          <span className="font-medium text-sm">{comment.author_name}</span>
-          <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
+          <span className="font-medium text-sm truncate max-w-[120px] sm:max-w-none">{comment.author_name}</span>
+          <span className="text-xs text-gray-400 flex-shrink-0">{formatDate(comment.created_at)}</span>
           {comment.updated_at !== comment.created_at && (
-            <span className="text-xs text-gray-400">(수정됨)</span>
+            <span className="text-xs text-gray-400 flex-shrink-0">(수정됨)</span>
           )}
         </div>
 
         {/* Content */}
         {showEditForm ? (
-          <div className="mt-2 space-y-2">
+          <div className="mt-2 space-y-3">
             <textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
               rows={3}
             />
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="password"
                 placeholder="비밀번호"
                 value={editPassword}
                 onChange={(e) => setEditPassword(e.target.value)}
-                className="px-3 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full sm:w-auto min-w-0 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <button
-                onClick={handleEdit}
-                disabled={isProcessing}
-                className="px-3 py-1 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 rounded-lg"
-              >
-                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : "수정"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowEditForm(false);
-                  setEditContent(comment.content);
-                  setEditPassword("");
-                  setError(null);
-                }}
-                className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              >
-                취소
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleEdit}
+                  disabled={isProcessing}
+                  className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 active:bg-blue-700 disabled:bg-blue-300 rounded-lg touch-manipulation"
+                >
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "수정"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditForm(false);
+                    setEditContent(comment.content);
+                    setEditPassword("");
+                    setError(null);
+                  }}
+                  className="flex-1 sm:flex-none px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-manipulation"
+                >
+                  취소
+                </button>
+              </div>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -219,33 +221,35 @@ export function CommentItem({
 
         {/* Delete Confirm */}
         {showDeleteConfirm && (
-          <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-2">
+          <div className="mt-2 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg space-y-3">
             <p className="text-sm text-red-600 dark:text-red-400">정말 삭제하시겠습니까?</p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="password"
                 placeholder="비밀번호"
                 value={deletePassword}
                 onChange={(e) => setDeletePassword(e.target.value)}
-                className="px-3 py-1 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full sm:w-auto min-w-0 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-red-500"
               />
-              <button
-                onClick={handleDelete}
-                disabled={isProcessing}
-                className="px-3 py-1 text-sm font-medium text-white bg-red-500 hover:bg-red-600 disabled:bg-red-300 rounded-lg"
-              >
-                {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : "삭제"}
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setDeletePassword("");
-                  setError(null);
-                }}
-                className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-              >
-                취소
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDelete}
+                  disabled={isProcessing}
+                  className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:bg-red-300 rounded-lg touch-manipulation"
+                >
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : "삭제"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeletePassword("");
+                    setError(null);
+                  }}
+                  className="flex-1 sm:flex-none px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 touch-manipulation"
+                >
+                  취소
+                </button>
+              </div>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -253,28 +257,28 @@ export function CommentItem({
 
         {/* Actions */}
         {!showEditForm && !showDeleteConfirm && !comment.is_deleted && (
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-3 sm:gap-4 mt-3">
             {!isReply && (
               <button
                 onClick={() => setShowReplyForm(!showReplyForm)}
-                className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-500 hover:text-blue-500 active:text-blue-600 transition-colors touch-manipulation rounded-md"
               >
-                <MessageCircle className="w-3 h-3" />
+                <MessageCircle className="w-3.5 h-3.5" />
                 답글
               </button>
             )}
             <button
               onClick={() => setShowEditForm(true)}
-              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-500 hover:text-blue-500 active:text-blue-600 transition-colors touch-manipulation rounded-md"
             >
-              <Edit2 className="w-3 h-3" />
+              <Edit2 className="w-3.5 h-3.5" />
               수정
             </button>
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-red-500 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs text-gray-500 hover:text-red-500 active:text-red-600 transition-colors touch-manipulation rounded-md"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3.5 h-3.5" />
               삭제
             </button>
           </div>
@@ -282,14 +286,14 @@ export function CommentItem({
 
         {/* Reply Form */}
         {showReplyForm && (
-          <div className="mt-4 pl-4 border-l-2 border-blue-200 dark:border-blue-700">
+          <div className="mt-4 pl-3 sm:pl-4 border-l-2 border-blue-200 dark:border-blue-700">
             <CommentForm
               category={category}
               slug={slug}
               parentId={comment.id}
               onSuccess={handleReplySuccess}
               onCancel={() => setShowReplyForm(false)}
-              placeholder={`@${comment.author_name}에게 답글 작성...`}
+              placeholder="답글을 작성해주세요..."
             />
           </div>
         )}

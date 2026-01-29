@@ -82,21 +82,21 @@ export function CommentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
           placeholder="닉네임"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
           maxLength={50}
-          className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+          className="w-full sm:flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
         />
         <input
           type="password"
-          placeholder="비밀번호 (수정/삭제용)"
+          placeholder="비밀번호"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+          className="w-full sm:flex-1 min-w-0 px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
         />
       </div>
 
@@ -107,9 +107,9 @@ export function CommentForm({
           onChange={(e) => setContent(e.target.value)}
           maxLength={2000}
           rows={3}
-          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 resize-none"
+          className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 resize-none"
         />
-        <span className="absolute bottom-2 right-2 text-xs text-gray-400">
+        <span className="absolute bottom-2 right-3 text-xs text-gray-400">
           {content.length}/2000
         </span>
       </div>
@@ -118,20 +118,11 @@ export function CommentForm({
         <p className="text-sm text-red-500">{error}</p>
       )}
 
-      <div className="flex justify-end gap-2">
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
-          >
-            취소
-          </button>
-        )}
+      <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 rounded-lg transition-colors"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 active:bg-blue-700 disabled:bg-blue-300 rounded-lg transition-colors touch-manipulation"
         >
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 animate-spin" />
@@ -140,6 +131,15 @@ export function CommentForm({
           )}
           {parentId ? "답글 작성" : "댓글 작성"}
         </button>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full sm:w-auto px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors touch-manipulation"
+          >
+            취소
+          </button>
+        )}
       </div>
     </form>
   );
