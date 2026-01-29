@@ -1,5 +1,6 @@
 import { getAllTechPosts, getAllLifePosts } from '@/lib/keystatic/reader';
 import MePageClient from './MePageClient';
+import { PersonSchema } from '@/components/schema';
 
 export const metadata = {
     title: 'Me — 김현민',
@@ -10,5 +11,10 @@ export default async function MePage() {
     const techPosts = await getAllTechPosts();
     const lifePosts = await getAllLifePosts();
 
-    return <MePageClient techPostsCount={techPosts.length} lifePostsCount={lifePosts.length} />;
+    return (
+        <>
+            <PersonSchema />
+            <MePageClient techPostsCount={techPosts.length} lifePostsCount={lifePosts.length} />
+        </>
+    );
 }
