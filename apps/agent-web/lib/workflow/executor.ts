@@ -136,6 +136,8 @@ export async function executeWorkflow(
       while (Date.now() - startTime < maxWaitTime) {
         const job = await jobManager.getJob(jobId);
 
+        console.log(`[Workflow] Polling human review for job ${jobId}: human_approval=${job?.human_approval}, status=${job?.status}`);
+
         if (!job) {
           throw new Error("Job not found during human review");
         }

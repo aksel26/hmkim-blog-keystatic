@@ -56,8 +56,29 @@ export async function POST(
 
     switch (body.action) {
       case "approve":
-        await jobManager.submitHumanReview(jobId, true);
-        nextStep = "creating";
+        // Human review 승인 시 바로 pending_deploy로 전환
+        // (polling 프로세스가 죽어도 진행 가능하도록)
+        await jobManager.updateJob(jobId, {
+          human_approval: true,
+          human_feedback: null,
+          status: "pending_deploy",
+          current_step: "pending_deploy",
+          progress: 90,
+        });
+
+        await jobManager.logProgress(jobId, {
+          step: "human_review",
+          status: "completed",
+          message: "Human review: approve",
+        });
+
+        await jobManager.logProgress(jobId, {
+          step: "pending_deploy",
+          status: "started",
+          message: "검증 완료! 배포를 승인해주세요.",
+        });
+
+        nextStep = "pending_deploy";
         break;
 
       case "feedback":
@@ -69,6 +90,14 @@ export async function POST(
           );
         }
         await jobManager.submitHumanReview(jobId, false, body.feedback.trim());
+
+        await jobManager.logProgress(jobId, {
+          step: "human_review",
+          status: "completed",
+          message: `Human review: ${body.action}`,
+          data: { feedback: body.feedback },
+        });
+
         nextStep = "writing";
         break;
 
@@ -78,14 +107,6 @@ export async function POST(
           { status: 400 }
         );
     }
-
-    // Log the review action
-    await jobManager.logProgress(jobId, {
-      step: "human_review",
-      status: "completed",
-      message: `Human review: ${body.action}`,
-      data: { feedback: body.feedback },
-    });
 
     const response: HumanReviewResponse = {
       success: true,
