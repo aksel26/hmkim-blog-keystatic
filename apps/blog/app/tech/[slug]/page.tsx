@@ -14,7 +14,7 @@ import { CommentSection } from '@/components/comments';
 import { BlogPostingSchema, BreadcrumbSchema } from '@/components/schema';
 import type { Metadata } from 'next';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.me';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
 export async function generateMetadata(
     props: { params: Promise<{ slug: string }> }

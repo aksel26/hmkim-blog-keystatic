@@ -10,7 +10,7 @@ const freesentation = localFont({
 });
 
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.me';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -23,6 +23,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+  },
+  verification: {
+    google: 'WLtng7drBjngQJuK1_XMImmpRYlaQJAg6yAS5YyDypU',
+    other: {
+      'naver-site-verification': 'f59e7167253f0498510db1f6e96d4f79a12491a1',
+    },
   },
 };
 
