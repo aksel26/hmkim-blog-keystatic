@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getAllTechPosts, getAllLifePosts } from '@/lib/keystatic/reader';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.me';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
   const [techPosts, lifePosts] = await Promise.all([
     getAllTechPosts(),

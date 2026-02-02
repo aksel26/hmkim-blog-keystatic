@@ -10,7 +10,7 @@ interface BlogPostingSchemaProps {
   category: 'tech' | 'life';
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.me';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
 export function BlogPostingSchema({
   title,
