@@ -104,14 +104,14 @@ jobs:
             # Vercel API로 배포 완료 대기
             echo "Waiting for Vercel deployment to complete..."
             MAX_WAIT=600  # 최대 10분 대기
-            WAIT_INTERVAL=15  # 15초 간격으로 확인
+            WAIT_INTERVAL=30  # 30초 간격으로 확인
             ELAPSED=0
             DEPLOY_SUCCESS=false
 
             while [ $ELAPSED -lt $MAX_WAIT ]; do
               # Vercel API로 최신 배포 상태 확인
               DEPLOY_RESPONSE=$(curl -s -H "Authorization: Bearer ${VERCEL_TOKEN}" \
-                "https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT_ID}&limit=1&state=READY,BUILDING,QUEUED")
+                "https://api.vercel.com/v6/deployments?projectId=${VERCEL_PROJECT_ID}&limit=1")
 
               DEPLOY_STATE=$(echo "$DEPLOY_RESPONSE" | jq -r '.deployments[0].state // "UNKNOWN"')
               DEPLOY_URL=$(echo "$DEPLOY_RESPONSE" | jq -r '.deployments[0].url // ""')
@@ -125,6 +125,13 @@ jobs:
               elif [ "$DEPLOY_STATE" = "ERROR" ] || [ "$DEPLOY_STATE" = "CANCELED" ]; then
                 echo "Deployment failed with state: $DEPLOY_STATE"
                 break
+              elif [ "$DEPLOY_STATE" = "QUEUED" ] || [ "$DEPLOY_STATE" = "INITIALIZING" ] || \
+                   [ "$DEPLOY_STATE" = "ANALYZING" ] || [ "$DEPLOY_STATE" = "BUILDING" ] || \
+                   [ "$DEPLOY_STATE" = "DEPLOYING" ]; then
+                echo "Deployment in progress: $DEPLOY_STATE"
+                # continue waiting
+              else
+                echo "Unknown deployment state: $DEPLOY_STATE"
               fi
 
               sleep $WAIT_INTERVAL
