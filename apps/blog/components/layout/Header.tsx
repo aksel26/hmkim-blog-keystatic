@@ -16,6 +16,7 @@ interface HeaderProps {
 export default function Header({ onSearchOpen }: HeaderProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isProduction = process.env.NODE_ENV === 'production';
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -104,13 +105,15 @@ export default function Header({ onSearchOpen }: HeaderProps) {
           {/* Theme Toggle */}
           <ThemeToggle />
 
-          {/* Admin Link */}
-          <Link
-            href="/keystatic"
-            className="rounded-md bg-electric-blue px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
-          >
-            Admin
-          </Link>
+          {/* Admin Link - only shown in development */}
+          {!isProduction && (
+            <Link
+              href="/keystatic"
+              className="rounded-md bg-electric-blue px-4 py-2 text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
+            >
+              Admin
+            </Link>
+          )}
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -178,15 +181,18 @@ export default function Header({ onSearchOpen }: HeaderProps) {
                   <ThemeToggle />
                 </div>
 
-                <div className="pt-2">
-                  <Link
-                    href="/keystatic"
-                    className="block w-full rounded-md bg-electric-blue px-4 py-3 text-center text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Admin Dashboard
-                  </Link>
-                </div>
+                {/* Admin Link - only shown in development */}
+                {!isProduction && (
+                  <div className="pt-2">
+                    <Link
+                      href="/keystatic"
+                      className="block w-full rounded-md bg-electric-blue px-4 py-3 text-center text-sm font-medium text-white transition-all hover:bg-blue-dark active:scale-95"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
