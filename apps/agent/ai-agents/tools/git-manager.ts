@@ -92,9 +92,10 @@ export async function gitCommitAndPush(
     });
 
     // Frontmatter 생성
-    const { title, summary, keywords, status, tags, createdAt, updatedAt } = state.metadata;
+    const { title, summary, keywords, status, tags, createdAt, updatedAt, thumbnailImage } = state.metadata;
     const keywordsYaml = keywords.map(k => `  - ${k}`).join('\n');
     const tagsYaml = tags.map(t => `  - ${t}`).join('\n');
+    const thumbnailLine = thumbnailImage ? `thumbnailImage: ${thumbnailImage}\n` : '';
 
     const frontmatter = `---
 title: ${title}
@@ -106,7 +107,7 @@ tags:
 ${tagsYaml}
 createdAt: ${createdAt}
 updatedAt: ${updatedAt}
----
+${thumbnailLine}---
 
 `;
 
@@ -160,7 +161,34 @@ updatedAt: ${updatedAt}
       message: '파일 커밋 중...',
     });
 
-    // 3. 파일 생성/업데이트
+    // 3-1. 썸네일 이미지 업로드 (있는 경우)
+    if (state.thumbnailImage?.buffer && state.thumbnailImage.path) {
+      const thumbnailPath = `apps/blog/public${state.thumbnailImage.path}`;
+      try {
+        await octokit.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path: thumbnailPath,
+          message: `feat(content): Add thumbnail for ${title}`,
+          content: state.thumbnailImage.buffer,
+          branch: branchName,
+        });
+        onProgress?.({
+          step: 'deploy',
+          status: 'progress',
+          message: '썸네일 이미지 업로드 완료',
+        });
+      } catch (imgError) {
+        console.error('[Deploy] 썸네일 이미지 업로드 실패:', imgError);
+        onProgress?.({
+          step: 'deploy',
+          status: 'progress',
+          message: '썸네일 이미지 업로드 실패 (계속 진행)',
+        });
+      }
+    }
+
+    // 3-2. 파일 생성/업데이트
     await octokit.repos.createOrUpdateFileContents({
       owner,
       repo,

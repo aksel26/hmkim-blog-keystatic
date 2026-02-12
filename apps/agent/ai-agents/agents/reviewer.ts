@@ -74,11 +74,15 @@ export async function reviewer(
 - 반말은 절대 사용하지 마세요.
 `;
 
+    // 톤/타겟 독자 정보
+    const toneInfo = state.tone ? `\n말투: ${state.tone}` : '';
+    const targetReaderInfo = state.targetReader ? `\n타겟 독자: ${state.targetReader}` : '';
+
     // 종합 리뷰 프롬프트
     const reviewPrompt = `
 당신은 블로그 전문 리뷰어입니다. 다음 블로그 포스트를 검토해주세요.
 ${categoryGuideline}
-주제: ${state.topic}
+주제: ${state.topic}${toneInfo}${targetReaderInfo}
 
 콘텐츠:
 ${contentToReview}

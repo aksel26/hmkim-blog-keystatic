@@ -84,12 +84,6 @@ export async function validator(
       }
     }
 
-    onProgress?.({
-      step: 'validate',
-      status: 'progress',
-      message: `검증 완료. ${errors.length > 0 ? `${errors.length}개 오류 발견` : '모든 검증 통과'}`,
-    });
-
     const validationResult: ValidationResult = {
       passed: errors.length === 0,
       errors,
@@ -99,14 +93,14 @@ export async function validator(
       onProgress?.({
         step: 'validate',
         status: 'completed',
-        message: '모든 검증을 통과했습니다!',
+        message: '✅ 모든 검증을 통과했습니다!',
         data: validationResult,
       });
     } else {
       onProgress?.({
         step: 'validate',
         status: 'error',
-        message: `검증 실패: ${errors.join(', ')}`,
+        message: `❌ 검증 실패 (${errors.length}개 오류): ${errors.join(', ')}`,
         data: validationResult,
       });
     }

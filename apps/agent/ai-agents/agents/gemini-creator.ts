@@ -49,6 +49,20 @@ export async function geminiCreator(
     // 카테고리에 따른 콘텐츠 개선 프롬프트
     const isLifeCategory = state.category === 'life';
 
+    // 톤 매핑
+    const toneMap: Record<string, string> = {
+      formal: '격식체 (~합니다/~입니다)',
+      casual: '편한체',
+      friendly: '친근체 (~해요/~이에요)',
+      professional: '전문가체 (~합니다/~입니다)',
+    };
+    const toneInstruction = state.tone
+      ? `\n**말투**: ${toneMap[state.tone] || state.tone} 스타일을 유지하세요.`
+      : '';
+    const targetReaderInstruction = state.targetReader
+      ? `\n**타겟 독자**: ${state.targetReader}에 맞는 수준과 어휘를 유지하세요.`
+      : '';
+
     const techContentPrompt = `
 다음은 "${state.topic}" 주제에 대한 기술 블로그 포스트 초안입니다.
 
@@ -62,6 +76,8 @@ ${state.draftContent}
 3. 코드 예제가 정확하고 실용적인지 확인
 4. 전체적인 흐름과 논리 개선
 5. SEO를 고려한 키워드 자연스럽게 포함
+${toneInstruction}
+${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
 ${feedbackInstruction}
@@ -79,11 +95,12 @@ ${state.draftContent}
 1. 문법과 맞춤법 검토
 2. 문장을 더 명확하고 읽기 쉽게 개선
 3. 개인적이고 진정성 있는 톤 유지
-4. **반드시 차분하고 전문적인 존댓말 유지 (~합니다, ~입니다, ~됩니다 체), 반말 절대 금지**
-5. 전체적인 흐름과 논리 개선
-6. 자연스럽고 공감가는 표현으로 개선
-7. 개발 또는 코드에 관한 내용 제거
-8. SEO를 고려한 키워드 자연스럽게 포함
+4. 전체적인 흐름과 논리 개선
+5. 자연스럽고 공감가는 표현으로 개선
+6. 개발 또는 코드에 관한 내용 제거
+7. SEO를 고려한 키워드 자연스럽게 포함
+${toneInstruction}
+${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
 ${feedbackInstruction}
@@ -194,7 +211,7 @@ JSON만 반환해주세요.
       summary: parsedMetadata.summary || parsedMetadata.description,
       keywords: parsedMetadata.keywords || [defaultKeyword],
       status: 'published',
-      tags: parsedMetadata.tags,
+      tags: (parsedMetadata.tags || []).slice(0, 5),
       createdAt: currentDate,
       updatedAt: currentDate,
       slug: parsedMetadata.slug,
