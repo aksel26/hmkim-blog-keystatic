@@ -7,11 +7,12 @@
  * 2. Write (30%) - 초안 작성
  * 3. Review (45%) - AI SEO & 기술 검토
  * 4. Create (60%) - 콘텐츠 개선 및 메타데이터 생성
- * 5. Validate (75%) - 콘텐츠 검증
- * 6. Human Review (85%) - 사용자 검토 (승인/수정 요청)
+ * 5. Thumbnail (65%) - 썸네일 이미지 생성
+ * 6. Validate (75%) - 콘텐츠 검증
+ * 7. Human Review (85%) - 사용자 검토 (승인/수정 요청)
  *    - 승인 → Deploy로 진행
  *    - 수정 요청 → Write(2단계)부터 재실행
- * 7. Deploy (95%) - Git 브랜치 생성 + PR 생성
+ * 8. Deploy (95%) - Git 브랜치 생성 + PR 생성
  */
 
 import { Annotation } from '@langchain/langgraph';
@@ -22,12 +23,16 @@ import { geminiCreator } from '../agents/gemini-creator';
 import { reviewer } from '../agents/reviewer';
 import { validator } from '../agents/validator';
 import { gitCommitAndPush, PRResult } from '../tools/git-manager';
+import { generateThumbnail } from '../tools/thumbnail-generator';
 
 /**
  * State Annotation 정의
  */
 const StateAnnotation = Annotation.Root({
   topic: Annotation<string>,
+  tone: Annotation<string>,
+  targetReader: Annotation<string>,
+  template: Annotation<string>,
   currentStep: Annotation<string>,
   progress: Annotation<number>,
   researchData: Annotation<any>,
@@ -42,6 +47,7 @@ const StateAnnotation = Annotation.Root({
   reviewResult: Annotation<any>,
   commitHash: Annotation<string>,
   prResult: Annotation<PRResult>,
+  thumbnailImage: Annotation<any>,
 });
 
 /**
@@ -52,12 +58,16 @@ export async function runBlogWorkflow(
   onProgress?: OnProgressCallback,
   onHumanReview?: (state: BlogPostState) => Promise<{ approved: boolean; feedback?: string }>,
   category: Category = 'tech',
-  skipDeploy: boolean = false
+  skipDeploy: boolean = false,
+  options?: { tone?: string; targetReader?: string; template?: string }
 ): Promise<BlogPostState & { prResult?: PRResult }> {
   // 초기 상태
   let state: BlogPostState & { prResult?: PRResult; reviewResult?: any } = {
     topic,
     category,
+    tone: options?.tone,
+    targetReader: options?.targetReader,
+    template: options?.template,
     currentStep: 'init',
     progress: 0,
   };
@@ -106,22 +116,44 @@ export async function runBlogWorkflow(
     const createResult = await geminiCreator(state, onProgress);
     state = { ...state, ...createResult };
 
-    // 5. Validate (75%)
+    // 5. Thumbnail (65%) - 썸네일 생성 (실패 시 계속 진행)
+    if (state.metadata) {
+      await onProgress?.({
+        step: 'thumbnail',
+        status: 'progress',
+        message: '🖼️ 5단계: 썸네일 이미지 생성',
+        progress: 65,
+      });
+      const thumbnailResult = await generateThumbnail(
+        state.metadata,
+        state.category || 'tech',
+        onProgress,
+      );
+      if (thumbnailResult) {
+        state.thumbnailImage = thumbnailResult;
+        state.metadata = {
+          ...state.metadata,
+          thumbnailImage: thumbnailResult.path,
+        };
+      }
+    }
+
+    // 6. Validate (75%)
     await onProgress?.({
       step: 'validate',
       status: 'progress',
-      message: '✅ 5단계: 콘텐츠 검증',
+      message: '✅ 6단계: 콘텐츠 검증',
       progress: 75,
     });
     const validateResult = await validator(state, onProgress);
     state = { ...state, ...validateResult };
 
-    // 6. Human Review (85%)
+    // 7. Human Review (85%)
     if (onHumanReview) {
       await onProgress?.({
         step: 'human_review',
         status: 'progress',
-        message: '👤 6단계: 사용자 검토 대기 중...',
+        message: '👤 7단계: 사용자 검토 대기 중...',
         progress: 85,
       });
 
@@ -146,12 +178,12 @@ export async function runBlogWorkflow(
     }
   }
 
-  // 7. Deploy (95%) - 검증 통과하고 skipDeploy가 false인 경우만
+  // 8. Deploy (95%) - 검증 통과하고 skipDeploy가 false인 경우만
   if (state.validationResult?.passed && !skipDeploy) {
     await onProgress?.({
       step: 'deploy',
       status: 'progress',
-      message: '🚀 7단계: Git 브랜치 생성 및 PR 생성',
+      message: '🚀 8단계: Git 브랜치 생성 및 PR 생성',
       progress: 95,
     });
     const deployResult = await gitCommitAndPush(state, onProgress);

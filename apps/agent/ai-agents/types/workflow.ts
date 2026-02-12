@@ -28,6 +28,7 @@ export interface PostMetadata {
   createdAt: string; // YYYY-MM-DD
   updatedAt: string; // YYYY-MM-DD
   slug: string;
+  thumbnailImage?: string; // e.g. "/images/thumbnails/{slug}/thumbnailImage.png"
 }
 
 /**
@@ -50,6 +51,9 @@ export interface BlogPostState {
   // 기본 정보
   topic: string;
   category?: Category;
+  tone?: string;
+  targetReader?: string;
+  template?: string;
   currentStep: string;
   progress: number; // 0-100
 
@@ -73,6 +77,13 @@ export interface BlogPostState {
 
   // 검증
   validationResult?: ValidationResult;
+
+  // 썸네일 이미지
+  thumbnailImage?: {
+    buffer: string; // base64 encoded
+    mimeType: string;
+    path: string; // e.g. "/images/thumbnails/{slug}/thumbnailImage.png"
+  };
 
   // Git 정보
   commitHash?: string;
