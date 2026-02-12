@@ -23,38 +23,47 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Get added mdoc files
+      - name: Get changed mdoc files
         id: changed-files
         uses: tj-actions/changed-files@v44
         with:
           files: |
             apps/blog/content/**/*.mdoc
 
+      - name: Combine added and modified files
+        id: target-files
+        run: |
+          COMBINED="${{ steps.changed-files.outputs.added_files }} ${{ steps.changed-files.outputs.modified_files }}"
+          COMBINED=$(echo "$COMBINED" | xargs)
+          echo "files=$COMBINED" >> "$GITHUB_OUTPUT"
+          echo "added=${{ steps.changed-files.outputs.added_files }}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
-        if: steps.changed-files.outputs.added_files != ''
+        if: steps.target-files.outputs.files != ''
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Install yq
-        if: steps.changed-files.outputs.added_files != ''
+        if: steps.target-files.outputs.files != ''
         uses: mikefarah/yq@v4
 
       - name: Extract post info and send newsletter
-        if: steps.changed-files.outputs.added_files != ''
+        if: steps.target-files.outputs.files != ''
         env:
           NEWSLETTER_API_KEY: ${{ secrets.NEWSLETTER_API_KEY }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
           AGENT_WEB_URL: ${{ vars.AGENT_WEB_URL }}
           BLOG_URL: ${{ vars.BLOG_URL }}
-          ADDED_FILES: ${{ steps.changed-files.outputs.added_files }}
+          CHANGED_FILES: ${{ steps.target-files.outputs.files }}
+          ADDED_FILES: ${{ steps.target-files.outputs.added }}
         run: |
-          # 첫 번째 추가된 파일 처리
-          FIRST_FILE=$(echo "$ADDED_FILES" | cut -d' ' -f1)
+          # 첫 번째 변경된 파일 처리
+          FIRST_FILE=$(echo "$CHANGED_FILES" | cut -d' ' -f1)
 
           if [ -z "$FIRST_FILE" ]; then
-            echo "No new mdoc files found"
+            echo "No changed mdoc files found"
             exit 0
           fi
 
@@ -70,6 +79,26 @@ jobs:
           if [ "$STATUS" != "published" ]; then
             echo "Post is not published (status: $STATUS), skipping newsletter"
             exit 0
+          fi
+
+          # 중복 발송 방지: 수정된 파일은 status가 실제로 published로 변경된 경우에만 발송
+          IS_NEW_FILE=false
+          for f in $ADDED_FILES; do
+            if [ "$f" = "$FIRST_FILE" ]; then
+              IS_NEW_FILE=true
+              break
+            fi
+          done
+
+          if [ "$IS_NEW_FILE" = false ]; then
+            # 이전 커밋의 status와 비교
+            PREV_STATUS=$(git show HEAD~1:"$FIRST_FILE" 2>/dev/null | sed -n '1,/^---$/p' | tail -n +2 | sed '$d' | yq '.status // ""')
+            echo "Previous status: $PREV_STATUS"
+
+            if [ "$PREV_STATUS" = "published" ]; then
+              echo "Post was already published. Skipping newsletter to prevent duplicate send."
+              exit 0
+            fi
           fi
 
           # yq로 title, summary, thumbnailImage 추출 (block scalar 지원)
