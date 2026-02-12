@@ -17,6 +17,7 @@ tags:
   - Valtio
 createdAt: 2026-02-12
 updatedAt: 2026-02-12
+thumbnailImage: /images/thumbnails/react-state/thumbnailImage.jpg
 ---
 ## React 상태 관리, 왜 어려운가
 
@@ -113,7 +114,7 @@ Context는 다음과 같은 경우에 적합합니다.
 
 예를 들어 시장 대시보드에서 여러 컴포넌트가 사용자의 주식 관심 목록을 표시하고 수정하는 경우를 생각해봅시다.
 
-```
+```tsx
 import {
   createContext,
   useContext,
@@ -192,7 +193,7 @@ Redux는 매우 구체적인 철학을 중심으로 설계되었습니다.
 
 이것은 단순한 상태가 아니라 추적 가능해야 하는 일련의 이벤트입니다.
 
-```
+```tsx
 // tradeSlice.ts
 import { createSlice, configureStore, PayloadAction } from "@reduxjs/toolkit";
 
@@ -288,7 +289,7 @@ Zustand는 다음과 같은 경우에 적합합니다.
 
 대시보드의 사용자 UI 설정(테마와 선호 통화)을 위한 스토어를 만들어봅시다.
 
-```
+```tsx
 // useUserPrefs.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
@@ -319,7 +320,7 @@ export const useUserPrefs = create<UserPrefsState>()(
 
 컴포넌트는 통화만 구독할 수 있습니다.
 
-```
+```tsx
 const currency = useUserPrefs(s => s.currency);
 
 ```
@@ -344,7 +345,7 @@ Jotai는 상태를 **atoms**로 모델링합니다. 작고 개별적으로 구�
 
 통화 변환 패널을 atoms로 만들어봅시다.
 
-```
+```tsx
 // atoms.ts
 import { atom } from "jotai";
 
@@ -373,7 +374,7 @@ export const convertedAmountAtom = atom((get) => {
 
 React 컴포넌트에서는 다음과 같이 사용합니다.
 
-```
+```tsx
 // ConversionPanel.tsx
 import { useAtom } from "jotai";
 import {
@@ -443,7 +444,7 @@ MobX는 더 반응적이고 객체 지향적인 접근 방식을 취합니다.
 
 포트폴리오 메트릭 예제를 살펴봅시다.
 
-```
+```tsx
 // portfolioStore.ts
 import { makeAutoObservable } from "mobx";
 
@@ -482,7 +483,7 @@ export const portfolioStore = new PortfolioStore();
 
 컴포넌트에서는 다음과 같이 사용합니다.
 
-```
+```tsx
 // PortfolioWidget.tsx
 import { observer } from "mobx-react-lite";
 import { portfolioStore } from "./portfolioStore";
@@ -530,7 +531,7 @@ Valtio도 프록시를 사용하지만 매우 인체공학적인 API에 중점�
 
 윈도우 레이아웃 예제를 살펴봅시다.
 
-```
+```tsx
 // layout.ts
 import { proxy } from "valtio";
 
@@ -560,7 +561,7 @@ export const layoutState = proxy({
 
 컴포넌트에서는 다음과 같이 사용합니다.
 
-```
+```tsx
 // Window.tsx
 import { useSnapshot } from "valtio";
 import { layoutState } from "./layout";
