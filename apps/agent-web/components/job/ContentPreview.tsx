@@ -3,14 +3,21 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
 import ReactMarkdown from "react-markdown";
-import { CheckCircle, AlertCircle, XCircle, FileText } from "lucide-react";
+import { Input } from "@/components/ui/Input";
+import { CheckCircle, AlertCircle, XCircle, FileText, Eye, Edit, Save, Loader2, RefreshCw } from "lucide-react";
 import type { PostMetadata } from "@/lib/types";
 
 interface ContentPreviewProps {
+  jobId: string;
   draftContent?: string | null;
   finalContent: string | null;
   metadata: PostMetadata | null;
+  thumbnailData?: string | null;
+  editable?: boolean;
+  onContentSave?: (content: string) => Promise<void>;
+  onThumbnailRegenerated?: (thumbnailData: string) => void;
 }
 
 type Tab = "content" | "metadata" | "seo";
@@ -43,12 +50,50 @@ function unwrapMarkdownCodeBlock(content: string): string {
 }
 
 export function ContentPreview({
+  jobId,
   finalContent,
   metadata,
+  thumbnailData,
+  editable = false,
+  onContentSave,
+  onThumbnailRegenerated,
 }: ContentPreviewProps) {
   const [activeTab, setActiveTab] = useState<Tab>(
     finalContent ? "content" : "metadata"
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [thumbnailPrompt, setThumbnailPrompt] = useState("");
+  const [isRegeneratingThumbnail, setIsRegeneratingThumbnail] = useState(false);
+  const [currentThumbnailData, setCurrentThumbnailData] = useState(thumbnailData);
+
+  const handleRegenerateThumbnail = async () => {
+    setIsRegeneratingThumbnail(true);
+    try {
+      const body: Record<string, string> = {};
+      if (thumbnailPrompt.trim()) {
+        body.prompt = thumbnailPrompt.trim();
+      }
+      const res = await fetch(`/api/jobs/${jobId}/thumbnail`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to regenerate thumbnail");
+      }
+      const data = await res.json();
+      setCurrentThumbnailData(data.thumbnailData);
+      onThumbnailRegenerated?.(data.thumbnailData);
+      setThumbnailPrompt("");
+    } catch (error) {
+      console.error("Thumbnail regeneration failed:", error);
+    } finally {
+      setIsRegeneratingThumbnail(false);
+    }
+  };
 
   // 마크다운 코드 블록 래퍼 제거된 콘텐츠
   const cleanContent = useMemo(() => {
@@ -184,9 +229,64 @@ export function ContentPreview({
     { id: "seo", label: `SEO ${finalContent ? `${seoScore}%` : ""}`, disabled: !finalContent },
   ];
 
+  const handleStartEdit = () => {
+    setEditContent(cleanContent);
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditContent("");
+  };
+
+  const handleSave = async () => {
+    if (!onContentSave) return;
+    setIsSaving(true);
+    try {
+      await onContentSave(editContent);
+      setIsEditing(false);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "content":
+        if (isEditing) {
+          return (
+            <div className="space-y-3">
+              <Textarea
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="min-h-[400px] max-h-[600px] font-mono text-sm"
+                placeholder="마크다운 콘텐츠를 작성하세요..."
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                >
+                  취소
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  저장
+                </Button>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <ReactMarkdown>{cleanContent}</ReactMarkdown>
@@ -196,6 +296,62 @@ export function ContentPreview({
       case "metadata":
         return metadata ? (
           <div className="space-y-4">
+            {/* 썸네일 미리보기 */}
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">
+                Thumbnail
+              </label>
+              {currentThumbnailData ? (
+                <div className="mt-1 rounded-lg overflow-hidden border bg-muted">
+                  <img
+                    src={`data:image/png;base64,${currentThumbnailData}`}
+                    alt="Thumbnail preview"
+                    className="w-full h-auto object-cover"
+                    style={{ aspectRatio: '16/9' }}
+                  />
+                </div>
+              ) : (
+                <div
+                  className="mt-1 rounded-lg border bg-muted flex items-center justify-center text-muted-foreground text-sm"
+                  style={{ aspectRatio: '16/9' }}
+                >
+                  썸네일 없음
+                </div>
+              )}
+              {metadata.thumbnailImage && (
+                <p className="text-xs text-muted-foreground mt-1 font-mono">
+                  {metadata.thumbnailImage}
+                </p>
+              )}
+              {editable && (
+                <div className="mt-2 space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={thumbnailPrompt}
+                      onChange={(e) => setThumbnailPrompt(e.target.value)}
+                      placeholder="커스텀 프롬프트 (비우면 자동 생성)"
+                      className="text-sm"
+                      disabled={isRegeneratingThumbnail}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRegenerateThumbnail}
+                      disabled={isRegeneratingThumbnail}
+                      className="shrink-0"
+                    >
+                      {isRegeneratingThumbnail ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span className="ml-1.5">재생성</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-sm font-medium text-muted-foreground">
                 Title
@@ -331,19 +487,46 @@ export function ContentPreview({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">콘텐츠 미리보기</CardTitle>
-          <div className="flex gap-1 bg-muted p-1 rounded-lg">
-            {tabs.map((tab) => (
+          <div className="flex items-center gap-2">
+            {editable && activeTab === "content" && !isEditing && finalContent && (
               <Button
-                key={tab.id}
-                variant={activeTab === tab.id ? "default" : "ghost"}
+                variant="outline"
                 size="sm"
-                onClick={() => setActiveTab(tab.id)}
-                disabled={tab.disabled}
-                className={`text-xs h-7 px-3 ${activeTab === tab.id ? "" : "hover:bg-background/50"}`}
+                onClick={handleStartEdit}
+                className="text-xs h-7 px-3 gap-1.5"
               >
-                {tab.label}
+                <Edit className="h-3.5 w-3.5" />
+                편집
               </Button>
-            ))}
+            )}
+            {isEditing && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { handleCancelEdit(); }}
+                className="text-xs h-7 px-3 gap-1.5"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                미리보기
+              </Button>
+            )}
+            <div className="flex gap-1 bg-muted p-1 rounded-lg">
+              {tabs.map((tab) => (
+                <Button
+                  key={tab.id}
+                  variant={activeTab === tab.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    if (tab.id !== "content") setIsEditing(false);
+                  }}
+                  disabled={tab.disabled}
+                  className={`text-xs h-7 px-3 ${activeTab === tab.id ? "" : "hover:bg-background/50"}`}
+                >
+                  {tab.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       </CardHeader>

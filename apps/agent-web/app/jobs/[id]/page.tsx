@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -104,6 +105,19 @@ export default function JobDetailPage() {
   const handleReviewSubmitted = () => {
     refetch();
   };
+
+  const handleContentSave = useCallback(async (content: string) => {
+    const res = await fetch(`/api/jobs/${jobId}/content`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ finalContent: content }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to save content");
+    }
+    await refetch();
+  }, [jobId, refetch]);
 
   if (isLoading) {
     return (
@@ -286,8 +300,13 @@ export default function JobDetailPage() {
         {/* Content Preview - 우측 (3/5) */}
         <div className="lg:col-span-3">
           <ContentPreview
+            jobId={jobId}
             finalContent={job.finalContent}
             metadata={job.metadata}
+            thumbnailData={job.thumbnailData}
+            editable={displayStatus === "human_review" || displayStatus === "pending_deploy"}
+            onContentSave={handleContentSave}
+            onThumbnailRegenerated={() => refetch()}
           />
         </div>
       </div>

@@ -54,6 +54,7 @@ export function getStatusBadgeVariant(
     case "writing":
     case "review":
     case "creating":
+    case "thumbnail":
     case "validating":
     case "deploying":
       return "default";
@@ -71,6 +72,7 @@ export function getStatusDisplayText(status: JobStatus): string {
     writing: "작성 중",
     review: "AI 검토 중",
     creating: "콘텐츠 개선 중",
+    thumbnail: "썸네일 생성 중",
     validating: "검증 중",
     human_review: "사용자 검토 대기",
     on_hold: "보류 중",

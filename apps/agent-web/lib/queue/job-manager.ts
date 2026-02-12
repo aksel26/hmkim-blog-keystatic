@@ -18,6 +18,7 @@ interface DbJob {
   validation_result: unknown | null;
   human_approval: boolean | null;
   human_feedback: string | null;
+  thumbnail_data: string | null;
   filepath: string | null;
   pr_result: unknown | null;
   commit_hash: string | null;
