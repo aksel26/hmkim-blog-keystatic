@@ -2,58 +2,79 @@
 
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { toneOptions } from "@/lib/schemas/form-schemas";
+import { tonePresets } from "@/lib/schemas/form-schemas";
 import type { BlogFormData } from "@/lib/schemas/form-schemas";
 
 export function CommonFields() {
   const {
     register,
+    watch,
+    setValue,
     formState: { errors },
   } = useFormContext<BlogFormData>();
+
+  const currentTone = watch("tone");
+  const isPreset = tonePresets.some((p) => p.value === currentTone);
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
       <h3 className="font-semibold text-sm text-muted-foreground">공통 설정</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">말투 (Tone)</label>
-          <Select
-            {...register("tone")}
-            options={toneOptions.map((opt) => ({
-              value: opt.value,
-              label: opt.label,
-            }))}
-            placeholder="말투를 선택하세요"
-          />
-          {errors.tone && (
-            <p className="text-xs text-destructive">{errors.tone.message}</p>
-          )}
+      {/* 말투 선택 */}
+      <div className="space-y-2">
+        <label className="text-sm font-medium">말투 (Tone)</label>
+        <div className="flex flex-wrap gap-2">
+          {tonePresets.map((preset) => (
+            <button
+              key={preset.value}
+              type="button"
+              onClick={() => setValue("tone", preset.value, { shouldValidate: true })}
+              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                currentTone === preset.value
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background border-border hover:bg-muted"
+              }`}
+            >
+              {preset.label}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              if (isPreset) setValue("tone", "", { shouldValidate: true });
+            }}
+            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+              !isPreset && currentTone !== undefined
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-background border-border hover:bg-muted"
+            }`}
+          >
+            직접 입력
+          </button>
         </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-medium">타겟 독자</label>
+        {!isPreset && (
           <Input
-            {...register("targetReader")}
-            placeholder="예: 주식 초보자, 요리 입문자"
+            {...register("tone")}
+            placeholder="원하는 말투를 직접 입력하세요 (예: ~요체, 반말체)"
+            className="mt-2"
           />
-          {errors.targetReader && (
-            <p className="text-xs text-destructive">
-              {errors.targetReader.message}
-            </p>
-          )}
-        </div>
+        )}
+        {errors.tone && (
+          <p className="text-xs text-destructive">{errors.tone.message}</p>
+        )}
       </div>
 
+      {/* 타겟 독자 */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">핵심 키워드</label>
+        <label className="text-sm font-medium">타겟 독자</label>
         <Input
-          {...register("keywords")}
-          placeholder="쉼표로 구분하여 입력 (예: React, TypeScript, 성능최적화)"
+          {...register("targetReader")}
+          placeholder="예: 주식 초보자, 요리 입문자"
         />
-        {errors.keywords && (
-          <p className="text-xs text-destructive">{errors.keywords.message}</p>
+        {errors.targetReader && (
+          <p className="text-xs text-destructive">
+            {errors.targetReader.message}
+          </p>
         )}
       </div>
     </div>
