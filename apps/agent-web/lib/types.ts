@@ -8,6 +8,7 @@ export type JobStatus =
   | "writing"
   | "review"
   | "creating"
+  | "thumbnail"
   | "validating"
   | "human_review"
   | "on_hold"
@@ -22,9 +23,9 @@ export type JobStatus =
 export type Category = "tech" | "life";
 
 /**
- * Tone types for writing style
+ * Tone types for writing style (preset or custom string)
  */
-export type Tone = "formal" | "casual" | "friendly" | "professional";
+export type Tone = string;
 
 /**
  * Category-specific field interfaces
@@ -39,7 +40,6 @@ export interface TechLifeFields {
 export interface CommonFields {
   tone: Tone;
   targetReader: string;
-  keywords: string;
 }
 
 /**
@@ -79,6 +79,7 @@ export interface PostMetadata {
   createdAt: string;
   updatedAt: string;
   slug: string;
+  thumbnailImage?: string; // e.g. "/images/thumbnails/{slug}/thumbnailImage.png"
 }
 
 /**
@@ -136,6 +137,9 @@ export interface Job {
   // Human review
   humanApproval: boolean | null;
   humanFeedback: string | null;
+
+  // Thumbnail
+  thumbnailData: string | null; // base64 encoded image
 
   // Output
   filepath: string | null;
@@ -220,7 +224,6 @@ export interface GenerateRequest {
   autoApprove?: boolean;
   tone?: Tone;
   targetReader?: string;
-  keywords?: string[];
 }
 
 export interface GenerateResponse {
