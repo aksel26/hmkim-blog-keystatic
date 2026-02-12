@@ -7,9 +7,10 @@
  * 2. Write (30%)
  * 3. Review (45%)
  * 4. Create (60%)
- * 5. Validate (75%)
- * 6. Human Review (85%)
- * 7. Deploy (95%)
+ * 5. Thumbnail (65%)
+ * 6. Validate (75%)
+ * 7. Human Review (85%)
+ * 8. Deploy (95%)
  */
 
 import { runBlogWorkflow } from "@agent/ai-agents/workflows/blog-workflow";
@@ -24,7 +25,8 @@ import type { JobStatus } from "@/lib/types";
 export async function executeWorkflow(
   jobId: string,
   topic: string,
-  category: string = "tech"
+  category: string = "tech",
+  options?: { tone?: string; targetReader?: string; template?: string }
 ): Promise<void> {
   console.log(`[Workflow] Starting workflow for job ${jobId}, topic: ${topic}`);
 
@@ -50,6 +52,7 @@ export async function executeWorkflow(
         write: 30,
         review: 45,
         create: 60,
+        thumbnail: 65,
         validate: 75,
         human_review: 85,
         pending_deploy: 90,
@@ -64,6 +67,7 @@ export async function executeWorkflow(
         write: "writing",
         review: "review",
         create: "creating",
+        thumbnail: "thumbnail",
         validate: "validating",
         human_review: "human_review",
         pending_deploy: "pending_deploy",
@@ -114,6 +118,7 @@ export async function executeWorkflow(
         metadata: state.metadata as unknown,
         review_result: state.reviewResult ?? null,
         validation_result: state.validationResult as unknown,
+        thumbnail_data: state.thumbnailImage?.buffer ?? null,
         current_step: "human_review",
         progress: 85,
       });
@@ -167,17 +172,21 @@ export async function executeWorkflow(
       topic,
       onProgress,
       onHumanReview,
-      category
+      category,
+      options
     );
 
     // 검증 결과 확인
     if (result.validationResult?.passed) {
+      // DB에서 현재 값을 읽어 사용자가 human_review 중 직접 편집한 콘텐츠를 보존
+      const currentJob = await jobManager.getJob(jobId);
+
       // 검증 통과 - pending_deploy 상태로 변경하고 사용자 승인 대기
       await jobManager.updateJob(jobId, {
         status: "pending_deploy",
         progress: 90,
         current_step: "pending_deploy",
-        final_content: result.finalContent,
+        final_content: currentJob?.final_content || result.finalContent,
         metadata: result.metadata as unknown,
         validation_result: result.validationResult as unknown,
       });
@@ -252,14 +261,22 @@ export async function executeDeploy(jobId: string): Promise<void> {
     });
 
     // Deploy 실행을 위한 상태 구성
+    const metadata = job.metadata as BlogPostState["metadata"];
     const state: BlogPostState = {
       topic: job.topic,
       currentStep: "deploy",
       progress: 95,
       finalContent: job.final_content || undefined,
-      metadata: job.metadata as BlogPostState["metadata"],
+      metadata,
       validationResult: job.validation_result as BlogPostState["validationResult"],
       category: job.category as "tech" | "life",
+      thumbnailImage: job.thumbnail_data && metadata?.thumbnailImage
+        ? {
+            buffer: job.thumbnail_data,
+            mimeType: 'image/png',
+            path: metadata.thumbnailImage,
+          }
+        : undefined,
     };
 
     // 진행 상황 콜백
@@ -358,7 +375,8 @@ async function runBlogWorkflowWithoutDeploy(
   topic: string,
   onProgress: (event: StreamEvent) => void | Promise<void>,
   onHumanReview: (state: BlogPostState) => Promise<{ approved: boolean; feedback?: string }>,
-  category: string = "tech"
+  category: string = "tech",
+  options?: { tone?: string; targetReader?: string; template?: string }
 ): Promise<BlogPostState> {
   // skipDeploy: true를 전달하여 deploy 단계를 건너뜀
   // 사용자가 배포를 승인하면 executeDeploy에서 별도로 처리
@@ -367,7 +385,8 @@ async function runBlogWorkflowWithoutDeploy(
     onProgress,
     onHumanReview,
     category as "tech" | "life",
-    true // skipDeploy
+    true, // skipDeploy
+    options
   );
   return result;
 }

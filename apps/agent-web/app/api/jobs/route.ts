@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
         validationResult: job.validation_result as any,
         humanApproval: job.human_approval,
         humanFeedback: job.human_feedback,
+        thumbnailData: job.thumbnail_data,
         filepath: job.filepath,
         prResult: job.pr_result as any,
         commitHash: job.commit_hash,

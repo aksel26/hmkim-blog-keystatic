@@ -203,6 +203,11 @@ export function HumanReviewPanel({
             </div>
           )}
 
+          {/* 직접 편집 안내 */}
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+            오탈자 등 간단한 수정은 위 미리보기에서 <strong>편집</strong> 버튼을 눌러 직접 수정할 수 있습니다.
+          </div>
+
           {/* Feedback Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium">

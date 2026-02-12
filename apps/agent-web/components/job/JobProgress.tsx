@@ -14,6 +14,7 @@ import {
   PenTool,
   Eye,
   Sparkles,
+  Image,
   FileCheck,
   User,
   GitPullRequest,
@@ -21,13 +22,14 @@ import {
   XCircle,
 } from "lucide-react";
 
-// 워크플로우 단계 정의 (새로운 순서)
-// Research → Write → Review → Create → Validate → Human Review → Deploy
+// 워크플로우 단계 정의
+// Research → Write → Review → Create → Thumbnail → Validate → Human Review → Deploy
 const workflowSteps = [
   { id: "research", label: "리서치", icon: Search },
   { id: "write", label: "초안 작성", icon: PenTool },
   { id: "review", label: "AI 검토", icon: Eye },
   { id: "create", label: "콘텐츠 개선", icon: Sparkles },
+  { id: "thumbnail", label: "썸네일", icon: Image },
   { id: "validate", label: "검증", icon: FileCheck },
   { id: "human_review", label: "사용자 검토", icon: User },
   { id: "deploy", label: "PR 생성", icon: GitPullRequest },
@@ -41,6 +43,7 @@ const stepMapping: Record<string, string> = {
   review: "review",
   create: "create",
   creating: "create",
+  thumbnail: "thumbnail",
   validate: "validate",
   validating: "validate",
   human_review: "human_review",
