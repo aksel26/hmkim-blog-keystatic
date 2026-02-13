@@ -93,7 +93,7 @@ export function ContentPreview({
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to regenerate thumbnail");
+        throw new Error(err.error || "썸네일 재생성에 실패했습니다");
       }
       const data = await res.json();
       setCurrentThumbnailData(data.thumbnailData);
@@ -133,7 +133,7 @@ export function ContentPreview({
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to upload thumbnail");
+        throw new Error(err.error || "썸네일 업로드에 실패했습니다");
       }
       const data = await res.json();
       setCurrentThumbnailData(data.thumbnailData);
@@ -278,8 +278,8 @@ export function ContentPreview({
   const seoScore = Math.round((passCount / seoChecks.length) * 100);
 
   const tabs: Array<{ id: Tab; label: string; disabled: boolean }> = [
-    { id: "content", label: "Content", disabled: !finalContent },
-    { id: "metadata", label: "Metadata", disabled: !metadata },
+    { id: "content", label: "콘텐츠", disabled: !finalContent },
+    { id: "metadata", label: "메타데이터", disabled: !metadata },
     { id: "seo", label: `SEO ${finalContent ? `${seoScore}%` : ""}`, disabled: !finalContent },
   ];
 
@@ -353,13 +353,13 @@ export function ContentPreview({
             {/* 썸네일 미리보기 */}
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Thumbnail
+                썸네일
               </label>
               {currentThumbnailData ? (
                 <div className="mt-1 rounded-lg overflow-hidden border bg-muted">
                   <img
                     src={`data:image/png;base64,${currentThumbnailData}`}
-                    alt="Thumbnail preview"
+                    alt="썸네일 미리보기"
                     className="w-full h-auto object-cover"
                     style={{ aspectRatio: '16/9' }}
                   />
@@ -434,28 +434,28 @@ export function ContentPreview({
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Title
+                제목
               </label>
               <p className="text-lg font-semibold">{metadata.title}</p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Summary
+                요약
               </label>
               <p>{metadata.summary}</p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Slug
+                슬러그
               </label>
               <p className="font-mono text-sm">{metadata.slug}</p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Tags
+                태그
               </label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {metadata.tags.map((tag) => (
@@ -471,7 +471,7 @@ export function ContentPreview({
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                Keywords
+                키워드
               </label>
               <p className="text-sm">{metadata.keywords.join(", ")}</p>
             </div>
@@ -479,13 +479,13 @@ export function ContentPreview({
             <div className="flex gap-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Created
+                  생성일
                 </label>
                 <p className="text-sm">{metadata.createdAt}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-muted-foreground">
-                  Status
+                  상태
                 </label>
                 <p className="text-sm capitalize">{metadata.status}</p>
               </div>

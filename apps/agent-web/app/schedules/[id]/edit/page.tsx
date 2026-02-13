@@ -25,7 +25,7 @@ export default function EditSchedulePage({
   async function fetchSchedule() {
     try {
       const res = await fetch(`/api/schedules/${id}`);
-      if (!res.ok) throw new Error("Schedule not found.");
+      if (!res.ok) throw new Error("스케줄을 찾을 수 없습니다.");
       const schedule: Schedule = await res.json();
 
       setInitialData({
@@ -45,7 +45,7 @@ export default function EditSchedulePage({
         enabled: schedule.enabled,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load schedule.");
+      setError(err instanceof Error ? err.message : "스케줄을 불러오는데 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -95,12 +95,12 @@ export default function EditSchedulePage({
 
       if (!res.ok) {
         const resData = await res.json();
-        throw new Error(resData.error || "Failed to update schedule.");
+        throw new Error(resData.error || "스케줄 수정에 실패했습니다.");
       }
 
       router.push("/schedules");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred.");
+      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setSaving(false);
     }
@@ -117,9 +117,9 @@ export default function EditSchedulePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Edit Schedule</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">스케줄 수정</h1>
         <p className="text-muted-foreground">
-          Modify automated content schedule
+          자동 콘텐츠 생성 스케줄을 수정합니다
         </p>
       </div>
 
@@ -134,7 +134,7 @@ export default function EditSchedulePage({
           initialData={initialData}
           onSubmit={handleSubmit}
           loading={saving}
-          submitLabel="Save Changes"
+          submitLabel="변경사항 저장"
         />
       )}
     </div>

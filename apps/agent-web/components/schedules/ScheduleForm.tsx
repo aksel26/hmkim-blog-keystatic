@@ -56,8 +56,8 @@ const DEFAULT_FORM: ScheduleFormData = {
 };
 
 const categoryOptions = [
-  { value: "tech", label: "Tech" },
-  { value: "life", label: "Life" },
+  { value: "tech", label: "기술" },
+  { value: "life", label: "라이프" },
 ];
 
 const timezoneOptions = [
@@ -69,7 +69,7 @@ export default function ScheduleForm({
   initialData,
   onSubmit,
   loading = false,
-  submitLabel = "Save",
+  submitLabel = "저장",
 }: ScheduleFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<ScheduleFormData>(initialData || DEFAULT_FORM);
@@ -84,28 +84,28 @@ export default function ScheduleForm({
       {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>기본 정보</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1.5">
-              Name <span className="text-destructive">*</span>
+              이름 <span className="text-destructive">*</span>
             </label>
             <Input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="Schedule name"
+              placeholder="스케줄 이름"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1.5">Description</label>
+            <label className="block text-sm font-medium mb-1.5">설명</label>
             <Input
               type="text"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Brief description of the schedule"
+              placeholder="스케줄에 대한 간단한 설명"
             />
           </div>
         </CardContent>
@@ -114,16 +114,16 @@ export default function ScheduleForm({
       {/* Topic Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Topic Settings</CardTitle>
+          <CardTitle>주제 설정</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Topic Source</label>
+            <label className="block text-sm font-medium mb-2">주제 소스</label>
             <div className="flex gap-4">
               {([
-                { value: "manual", label: "Manual" },
-                { value: "rss", label: "RSS Feed" },
-                { value: "ai_suggest", label: "AI Suggest" },
+                { value: "manual", label: "직접 입력" },
+                { value: "rss", label: "RSS 피드" },
+                { value: "ai_suggest", label: "AI 추천" },
               ] as const).map((option) => (
                 <label
                   key={option.value}
@@ -153,14 +153,14 @@ export default function ScheduleForm({
 
           {form.topicSource === "manual" && (
             <div>
-              <label className="block text-sm font-medium mb-1.5">Topic List</label>
+              <label className="block text-sm font-medium mb-1.5">주제 목록</label>
               <Textarea
                 value={form.topicList}
                 onChange={(e) => setForm({ ...form, topicList: e.target.value })}
                 rows={4}
                 placeholder="React 19&#10;Next.js 15&#10;TypeScript 5.6"
               />
-              <p className="text-xs text-muted-foreground mt-1">One topic per line</p>
+              <p className="text-xs text-muted-foreground mt-1">한 줄에 하나의 주제를 입력하세요</p>
             </div>
           )}
 
@@ -178,12 +178,12 @@ export default function ScheduleForm({
 
           {form.topicSource === "ai_suggest" && (
             <div>
-              <label className="block text-sm font-medium mb-1.5">AI Prompt</label>
+              <label className="block text-sm font-medium mb-1.5">AI 프롬프트</label>
               <Textarea
                 value={form.aiPrompt}
                 onChange={(e) => setForm({ ...form, aiPrompt: e.target.value })}
                 rows={3}
-                placeholder="Suggest frontend development trends..."
+                placeholder="프론트엔드 개발 트렌드 추천..."
               />
             </div>
           )}
@@ -193,12 +193,12 @@ export default function ScheduleForm({
       {/* Task Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Task Settings</CardTitle>
+          <CardTitle>작업 설정</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1.5">Category</label>
+              <label className="block text-sm font-medium mb-1.5">카테고리</label>
               <Select
                 options={categoryOptions}
                 value={form.category}
@@ -206,7 +206,7 @@ export default function ScheduleForm({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1.5">Template</label>
+              <label className="block text-sm font-medium mb-1.5">템플릿</label>
               <Select
                 options={[...TEMPLATE_OPTIONS]}
                 value={form.template}
@@ -216,17 +216,17 @@ export default function ScheduleForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Target Reader</label>
+            <label className="block text-sm font-medium mb-1.5">대상 독자</label>
             <Input
               type="text"
               value={form.targetReader}
               onChange={(e) => setForm({ ...form, targetReader: e.target.value })}
-              placeholder="e.g., Frontend developers"
+              placeholder="예: 프론트엔드 개발자"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1.5">Keywords (comma separated)</label>
+            <label className="block text-sm font-medium mb-1.5">키워드 (쉼표로 구분)</label>
             <Input
               type="text"
               value={form.keywords}
@@ -243,7 +243,7 @@ export default function ScheduleForm({
               className="w-4 h-4 rounded accent-foreground"
             />
             <span className="text-sm text-muted-foreground">
-              Auto-approve (skip review step)
+              자동 승인 (검토 단계 건너뛰기)
             </span>
           </label>
         </CardContent>
@@ -252,11 +252,11 @@ export default function ScheduleForm({
       {/* Schedule Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Schedule Settings</CardTitle>
+          <CardTitle>스케줄 설정</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Run Day</label>
+            <label className="block text-sm font-medium mb-2">실행 요일</label>
             <div className="flex flex-wrap gap-2">
               {CRON_PRESETS.map((preset) => (
                 <button
@@ -274,13 +274,13 @@ export default function ScheduleForm({
               ))}
             </div>
             <p className="text-xs text-muted-foreground mt-2">
-              Runs once per week
+              주 1회 실행
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4 items-end">
             <div>
-              <label className="block text-sm font-medium mb-1.5">Timezone</label>
+              <label className="block text-sm font-medium mb-1.5">시간대</label>
               <Select
                 options={timezoneOptions}
                 value={form.timezone}
@@ -295,7 +295,7 @@ export default function ScheduleForm({
                 className="w-4 h-4 rounded accent-foreground"
               />
               <span className="text-sm font-medium">
-                Enable schedule
+                스케줄 활성화
               </span>
             </label>
           </div>
@@ -309,10 +309,10 @@ export default function ScheduleForm({
           variant="ghost"
           onClick={() => router.back()}
         >
-          Cancel
+          취소
         </Button>
         <Button type="submit" disabled={loading}>
-          {loading ? "Processing..." : submitLabel}
+          {loading ? "처리 중..." : submitLabel}
         </Button>
       </div>
     </form>

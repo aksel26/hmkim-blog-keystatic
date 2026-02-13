@@ -15,13 +15,13 @@ import {
 import { cn } from "@/lib/utils";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Generate", href: "/generate", icon: PenTool },
-  { name: "Jobs", href: "/jobs", icon: ListTodo },
-  { name: "Schedules", href: "/schedules", icon: Calendar },
-  { name: "Analytics", href: "/analytics", icon: BarChart3 },
-  { name: "Subscribers", href: "/subscribers", icon: Users },
-  { name: "Templates", href: "/templates", icon: FileText },
+  { name: "대시보드", href: "/", icon: LayoutDashboard },
+  { name: "포스트 생성", href: "/generate", icon: PenTool },
+  { name: "작업 목록", href: "/jobs", icon: ListTodo },
+  { name: "스케줄", href: "/schedules", icon: Calendar },
+  { name: "분석", href: "/analytics", icon: BarChart3 },
+  { name: "구독자", href: "/subscribers", icon: Users },
+  { name: "템플릿", href: "/templates", icon: FileText },
 ];
 
 export function Sidebar() {
@@ -63,7 +63,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="p-4 border-t border-border">
         <div className="text-xs text-muted-foreground">
-          <p>AI Blog Generator</p>
+          <p>AI 블로그 생성기</p>
           <p>v0.1.0</p>
         </div>
       </div>

@@ -36,12 +36,12 @@ export function DeployApprovalPanel({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to process action");
+        throw new Error(data.error || "처리에 실패했습니다");
       }
 
       onDeployCompleted?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
       setIsSubmitting(false);
       setAction(null);
     }

@@ -11,9 +11,9 @@ import type { SubscribersListResponse, SubscriberStats } from "@/lib/subscribers
 import { ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
 
 const statusOptions = [
-  { value: "", label: "All" },
-  { value: "active", label: "Active" },
-  { value: "unsubscribed", label: "Unsubscribed" },
+  { value: "", label: "전체" },
+  { value: "active", label: "활성" },
+  { value: "unsubscribed", label: "구독 취소" },
 ];
 
 async function fetchSubscribers(params: {
@@ -91,7 +91,7 @@ export default function SubscribersPage() {
   });
 
   const handleDelete = (id: string, email: string) => {
-    if (confirm(`Delete subscriber ${email}?`)) {
+    if (confirm(`구독자 ${email}을(를) 삭제하시겠습니까?`)) {
       deleteMutation.mutate(id);
     }
   };
@@ -104,9 +104,9 @@ export default function SubscribersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Subscribers</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">구독자</h1>
         <p className="text-muted-foreground">
-          Manage newsletter subscribers
+          뉴스레터 구독자를 관리합니다
         </p>
       </div>
 
@@ -114,13 +114,13 @@ export default function SubscribersPage() {
       {stats && (
         <div className="flex gap-6 text-sm">
           <span className="text-muted-foreground">
-            Total <span className="text-foreground font-medium ml-1">{stats.total}</span>
+            전체 <span className="text-foreground font-medium ml-1">{stats.total}</span>
           </span>
           <span className="text-muted-foreground">
-            Active <span className="text-success font-medium ml-1">{stats.active}</span>
+            활성 <span className="text-success font-medium ml-1">{stats.active}</span>
           </span>
           <span className="text-muted-foreground">
-            Unsubscribed <span className="text-muted-foreground font-medium ml-1">{stats.unsubscribed}</span>
+            구독 취소 <span className="text-muted-foreground font-medium ml-1">{stats.unsubscribed}</span>
           </span>
         </div>
       )}
@@ -130,7 +130,7 @@ export default function SubscribersPage() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by email or name..."
+            placeholder="이메일 또는 이름으로 검색..."
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -164,7 +164,7 @@ export default function SubscribersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{data?.pagination.total ?? 0} Subscribers</CardTitle>
+          <CardTitle>{data?.pagination.total ?? 0}명 구독자</CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -173,7 +173,7 @@ export default function SubscribersPage() {
             </div>
           ) : error ? (
             <div className="text-center py-12 text-destructive">
-              Failed to load subscribers. Please try again.
+              구독자를 불러오는데 실패했습니다. 다시 시도해주세요.
             </div>
           ) : data?.subscribers && data.subscribers.length > 0 ? (
             <div className="divide-y divide-border">
@@ -186,12 +186,12 @@ export default function SubscribersPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium truncate">{subscriber.email}</span>
                       <Badge variant={subscriber.status === "active" ? "success" : "secondary"}>
-                        {subscriber.status === "active" ? "Active" : "Unsubscribed"}
+                        {subscriber.status === "active" ? "활성" : "구독 취소"}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>{subscriber.name || "-"}</span>
-                      <span>Subscribed {formatRelativeTime(subscriber.subscribed_at)}</span>
+                      <span>구독일 {formatRelativeTime(subscriber.subscribed_at)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -201,7 +201,7 @@ export default function SubscribersPage() {
                       onClick={() => handleToggleStatus(subscriber.id, subscriber.status)}
                       disabled={toggleStatusMutation.isPending}
                     >
-                      {subscriber.status === "active" ? "Unsubscribe" : "Reactivate"}
+                      {subscriber.status === "active" ? "구독 취소" : "재활성화"}
                     </Button>
                     <Button
                       variant="ghost"
@@ -210,7 +210,7 @@ export default function SubscribersPage() {
                       disabled={deleteMutation.isPending}
                       className="text-destructive hover:text-destructive"
                     >
-                      Delete
+                      삭제
                     </Button>
                   </div>
                 </div>
@@ -220,7 +220,7 @@ export default function SubscribersPage() {
               {data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4">
                   <p className="text-sm text-muted-foreground">
-                    Page {data.pagination.page} of {data.pagination.totalPages}
+                    {data.pagination.page} / {data.pagination.totalPages} 페이지
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -230,7 +230,7 @@ export default function SubscribersPage() {
                       disabled={page === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      이전
                     </Button>
                     <Button
                       variant="outline"
@@ -240,7 +240,7 @@ export default function SubscribersPage() {
                       }
                       disabled={page === data.pagination.totalPages}
                     >
-                      Next
+                      다음
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -249,7 +249,7 @@ export default function SubscribersPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-muted-foreground">
-              No subscribers found.
+              구독자가 없습니다.
             </div>
           )}
         </CardContent>

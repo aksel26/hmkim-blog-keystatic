@@ -26,12 +26,12 @@ export function RecentJobs() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Recent Jobs</CardTitle>
+        <CardTitle>최근 작업</CardTitle>
         <Link
           href="/jobs"
           className="text-sm text-primary hover:underline flex items-center gap-1"
         >
-          View all
+          전체 보기
           <ArrowRight className="h-4 w-4" />
         </Link>
       </CardHeader>
@@ -73,9 +73,9 @@ export function RecentJobs() {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            <p>No jobs yet.</p>
+            <p>작업이 없습니다.</p>
             <Link href="/generate" className="text-primary hover:underline">
-              Create your first post
+              첫 번째 포스트 생성하기
             </Link>
           </div>
         )}

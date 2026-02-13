@@ -31,28 +31,28 @@ export function StatsCards() {
 
   const cards = [
     {
-      title: "Total Jobs",
+      title: "전체 작업",
       value: stats?.totalJobs ?? "-",
       icon: FileText,
-      description: "All time",
+      description: "누적 전체",
     },
     {
-      title: "Completed",
+      title: "완료",
       value: stats?.completedJobs ?? "-",
       icon: CheckCircle,
-      description: "Successfully generated",
+      description: "성공적으로 생성됨",
     },
     {
-      title: "Pending Review",
+      title: "검토 대기",
       value: stats?.pendingReviews ?? "-",
       icon: Clock,
-      description: "Awaiting human review",
+      description: "사용자 검토 대기 중",
     },
     {
-      title: "Success Rate",
+      title: "성공률",
       value: stats?.successRate !== undefined ? `${stats.successRate}%` : "-",
       icon: AlertCircle,
-      description: "Completion rate",
+      description: "완료 비율",
     },
   ];
 

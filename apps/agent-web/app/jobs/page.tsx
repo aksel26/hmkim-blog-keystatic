@@ -15,13 +15,13 @@ import type { JobStatus, JobsListResponse } from "@/lib/types";
 import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 const statusOptions = [
-  { value: "", label: "All Statuses" },
-  { value: "queued", label: "Queued" },
-  { value: "research", label: "Researching" },
-  { value: "writing", label: "Writing" },
-  { value: "human_review", label: "Pending Review" },
-  { value: "completed", label: "Completed" },
-  { value: "failed", label: "Failed" },
+  { value: "", label: "전체 상태" },
+  { value: "queued", label: "대기중" },
+  { value: "research", label: "리서치 중" },
+  { value: "writing", label: "작성 중" },
+  { value: "human_review", label: "검토 대기" },
+  { value: "completed", label: "완료" },
+  { value: "failed", label: "실패" },
 ];
 
 async function fetchJobs(params: {
@@ -59,9 +59,9 @@ function JobsContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Jobs</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">작업 목록</h1>
         <p className="text-muted-foreground">
-          View and manage all blog generation jobs
+          블로그 생성 작업을 조회하고 관리합니다
         </p>
       </div>
 
@@ -72,7 +72,7 @@ function JobsContent() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by topic..."
+                placeholder="주제로 검색..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -98,7 +98,7 @@ function JobsContent() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {data?.pagination.total ?? 0} Jobs
+            {data?.pagination.total ?? 0}개 작업
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -113,7 +113,7 @@ function JobsContent() {
             </div>
           ) : error ? (
             <div className="text-center py-8 text-destructive">
-              Failed to load jobs. Please try again.
+              작업 목록을 불러오는데 실패했습니다. 다시 시도해주세요.
             </div>
           ) : data?.jobs && data.jobs.length > 0 ? (
             <div className="space-y-4">
@@ -152,7 +152,7 @@ function JobsContent() {
               {data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
-                    Page {data.pagination.page} of {data.pagination.totalPages}
+                    {data.pagination.page} / {data.pagination.totalPages} 페이지
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -162,7 +162,7 @@ function JobsContent() {
                       disabled={page === 1}
                     >
                       <ChevronLeft className="h-4 w-4" />
-                      Previous
+                      이전
                     </Button>
                     <Button
                       variant="outline"
@@ -174,7 +174,7 @@ function JobsContent() {
                       }
                       disabled={page === data.pagination.totalPages}
                     >
-                      Next
+                      다음
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -183,9 +183,9 @@ function JobsContent() {
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No jobs found.</p>
+              <p>작업이 없습니다.</p>
               <Link href="/generate" className="text-primary hover:underline">
-                Create your first post
+                첫 번째 포스트 생성하기
               </Link>
             </div>
           )}

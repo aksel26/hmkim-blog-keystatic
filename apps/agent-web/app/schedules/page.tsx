@@ -60,7 +60,7 @@ export default function SchedulesPage() {
   }
 
   async function deleteSchedule(id: string) {
-    if (!confirm("Are you sure you want to delete this schedule?")) return;
+    if (!confirm("이 스케줄을 삭제하시겠습니까?")) return;
     try {
       await fetch(`/api/schedules/${id}`, { method: "DELETE" });
       fetchSchedules();
@@ -84,15 +84,15 @@ export default function SchedulesPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Schedules</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">스케줄</h1>
           <p className="text-muted-foreground">
-            Manage automated content generation
+            자동 콘텐츠 생성 관리
           </p>
         </div>
         <Link href="/schedules/new">
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
-            New Schedule
+            새 스케줄
           </Button>
         </Link>
       </div>
@@ -101,19 +101,19 @@ export default function SchedulesPage() {
       {stats && (
         <div className="flex gap-6 text-sm">
           <span className="text-muted-foreground">
-            Total <span className="text-foreground font-medium ml-1">{stats.total}</span>
+            전체 <span className="text-foreground font-medium ml-1">{stats.total}</span>
           </span>
           <span className="text-muted-foreground">
-            Enabled <span className="text-success font-medium ml-1">{stats.enabled}</span>
+            활성 <span className="text-success font-medium ml-1">{stats.enabled}</span>
           </span>
           <span className="text-muted-foreground">
-            Disabled <span className="text-muted-foreground font-medium ml-1">{stats.disabled}</span>
+            비활성 <span className="text-muted-foreground font-medium ml-1">{stats.disabled}</span>
           </span>
           <span className="text-muted-foreground">
-            Runs <span className="text-foreground font-medium ml-1">{stats.totalRuns}</span>
+            실행 <span className="text-foreground font-medium ml-1">{stats.totalRuns}</span>
           </span>
           <span className="text-muted-foreground">
-            Errors <span className="text-destructive font-medium ml-1">{stats.totalErrors}</span>
+            오류 <span className="text-destructive font-medium ml-1">{stats.totalErrors}</span>
           </span>
         </div>
       )}
@@ -128,7 +128,7 @@ export default function SchedulesPage() {
               filter === f ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {f === "all" ? "All" : f === "enabled" ? "Enabled" : "Disabled"}
+            {f === "all" ? "전체" : f === "enabled" ? "활성" : "비활성"}
             {filter === f && (
               <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground" />
             )}
@@ -138,7 +138,7 @@ export default function SchedulesPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{schedules.length} Schedules</CardTitle>
+          <CardTitle>{schedules.length}개 스케줄</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -147,9 +147,9 @@ export default function SchedulesPage() {
             </div>
           ) : schedules.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="mb-2">No schedules yet.</p>
+              <p className="mb-2">스케줄이 없습니다.</p>
               <Link href="/schedules/new" className="text-foreground hover:underline">
-                Create your first schedule
+                첫 번째 스케줄 만들기
               </Link>
             </div>
           ) : (
@@ -163,7 +163,7 @@ export default function SchedulesPage() {
                     <div className="flex items-center gap-2 mb-1">
                       <span className="font-medium">{schedule.name}</span>
                       <Badge variant={schedule.enabled ? "success" : "secondary"}>
-                        {schedule.enabled ? "Enabled" : "Disabled"}
+                        {schedule.enabled ? "활성" : "비활성"}
                       </Badge>
                     </div>
                     {schedule.description && (
@@ -175,7 +175,7 @@ export default function SchedulesPage() {
                       <code className="font-mono bg-muted px-1 py-0.5 rounded">
                         {schedule.cron_expression}
                       </code>
-                      <span>Next: {formatDate(schedule.next_run_at)}</span>
+                      <span>다음 실행: {formatDate(schedule.next_run_at)}</span>
                     </div>
                     {schedule.topic_list && schedule.topic_list.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
@@ -198,11 +198,11 @@ export default function SchedulesPage() {
                       size="sm"
                       onClick={() => toggleEnabled(schedule.id, !schedule.enabled)}
                     >
-                      {schedule.enabled ? "Disable" : "Enable"}
+                      {schedule.enabled ? "비활성화" : "활성화"}
                     </Button>
                     <Link href={`/schedules/${schedule.id}/edit`}>
                       <Button variant="ghost" size="sm">
-                        Edit
+                        수정
                       </Button>
                     </Link>
                     <Button
@@ -211,7 +211,7 @@ export default function SchedulesPage() {
                       onClick={() => deleteSchedule(schedule.id)}
                       className="text-destructive hover:text-destructive"
                     >
-                      Delete
+                      삭제
                     </Button>
                   </div>
                 </div>
