@@ -16,30 +16,21 @@ export interface ThumbnailResult {
 }
 
 /**
- * 카테고리별 프롬프트 스타일 가이드
+ * 기본 썸네일 스타일 프롬프트
  */
-function getStyleGuide(category: Category): string {
-  switch (category) {
-    case 'tech':
-      return 'Style: clean, modern, minimal tech aesthetic with subtle gradients or geometric shapes. Use cool tones (blue, teal, purple).';
-    case 'life':
-      return 'Style: warm, inviting, lifestyle-oriented with soft colors and organic shapes. Use warm tones (orange, yellow, green).';
-    default:
-      return 'Style: clean, modern, professional blog thumbnail.';
-  }
-}
+export const DEFAULT_THUMBNAIL_STYLE =
+  'clay morphism style, isometric, pastel tone gradient background';
 
 /**
  * 포스트 메타데이터 기반으로 썸네일 생성 프롬프트 구성
  */
-function buildPrompt(metadata: PostMetadata, category: Category): string {
+function buildPrompt(metadata: PostMetadata, _category: Category): string {
   const keywords = metadata.keywords?.slice(0, 3).join(', ') || '';
-  const styleGuide = getStyleGuide(category);
 
-  return `Create a clean, modern blog thumbnail image for an article titled "${metadata.title}".
+  return `Create a blog thumbnail image for an article titled "${metadata.title}".
 The image should visually represent: ${metadata.summary}
 Key concepts: ${keywords}
-${styleGuide}
+Style: ${DEFAULT_THUMBNAIL_STYLE}
 Requirements:
 - Aspect ratio: 16:9
 - No text or typography in the image

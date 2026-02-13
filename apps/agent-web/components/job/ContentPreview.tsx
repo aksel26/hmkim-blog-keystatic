@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import ReactMarkdown from "react-markdown";
 import { Input } from "@/components/ui/Input";
-import { CheckCircle, AlertCircle, XCircle, FileText, Eye, Edit, Save, Loader2, RefreshCw } from "lucide-react";
+import { CheckCircle, AlertCircle, XCircle, FileText, Eye, Edit, Save, Loader2, RefreshCw, Upload } from "lucide-react";
 import type { PostMetadata } from "@/lib/types";
 
 interface ContentPreviewProps {
@@ -19,6 +19,9 @@ interface ContentPreviewProps {
   onContentSave?: (content: string) => Promise<void>;
   onThumbnailRegenerated?: (thumbnailData: string) => void;
 }
+
+const DEFAULT_THUMBNAIL_STYLE =
+  "clay morphism style, isometric, pastel tone gradient background";
 
 type Tab = "content" | "metadata" | "seo";
 
@@ -64,9 +67,17 @@ export function ContentPreview({
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [thumbnailPrompt, setThumbnailPrompt] = useState("");
+  const [thumbnailPrompt, setThumbnailPrompt] = useState(DEFAULT_THUMBNAIL_STYLE);
   const [isRegeneratingThumbnail, setIsRegeneratingThumbnail] = useState(false);
   const [currentThumbnailData, setCurrentThumbnailData] = useState(thumbnailData);
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // thumbnailData prop 변경 시 로컬 state 동기화
+  // (워크플로우 진행 중 React Query refetch로 prop이 업데이트될 때)
+  useEffect(() => {
+    setCurrentThumbnailData(thumbnailData);
+  }, [thumbnailData]);
 
   const handleRegenerateThumbnail = async () => {
     setIsRegeneratingThumbnail(true);
@@ -87,11 +98,54 @@ export function ContentPreview({
       const data = await res.json();
       setCurrentThumbnailData(data.thumbnailData);
       onThumbnailRegenerated?.(data.thumbnailData);
-      setThumbnailPrompt("");
+      if (data.prompt) {
+        setThumbnailPrompt(data.prompt);
+      }
     } catch (error) {
       console.error("Thumbnail regeneration failed:", error);
     } finally {
       setIsRegeneratingThumbnail(false);
+    }
+  };
+
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      alert("PNG, JPEG, WebP 형식만 지원합니다.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert("파일 크기는 5MB 이하여야 합니다.");
+      return;
+    }
+
+    setIsUploadingThumbnail(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`/api/jobs/${jobId}/thumbnail/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to upload thumbnail");
+      }
+      const data = await res.json();
+      setCurrentThumbnailData(data.thumbnailData);
+      onThumbnailRegenerated?.(data.thumbnailData);
+    } catch (error) {
+      console.error("Thumbnail upload failed:", error);
+      alert(error instanceof Error ? error.message : "업로드에 실패했습니다.");
+    } finally {
+      setIsUploadingThumbnail(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -329,7 +383,7 @@ export function ContentPreview({
                     <Input
                       value={thumbnailPrompt}
                       onChange={(e) => setThumbnailPrompt(e.target.value)}
-                      placeholder="커스텀 프롬프트 (비우면 자동 생성)"
+                      placeholder="스타일 프롬프트를 입력하세요"
                       className="text-sm"
                       disabled={isRegeneratingThumbnail}
                     />
@@ -347,6 +401,32 @@ export function ContentPreview({
                       )}
                       <span className="ml-1.5">재생성</span>
                     </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleThumbnailUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingThumbnail}
+                      className="shrink-0"
+                    >
+                      {isUploadingThumbnail ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      <span className="ml-1.5">이미지 업로드</span>
+                    </Button>
+                    <span className="text-xs text-muted-foreground">
+                      PNG, JPEG, WebP (최대 5MB)
+                    </span>
                   </div>
                 </div>
               )}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
-import { generateThumbnail } from "@agent/ai-agents/tools/thumbnail-generator";
+import { generateThumbnail, DEFAULT_THUMBNAIL_STYLE } from "@agent/ai-agents/tools/thumbnail-generator";
 import type { PostMetadata, Category } from "@agent/ai-agents/types/workflow";
 
 /**
@@ -76,6 +76,7 @@ export async function POST(
       thumbnailData: result.buffer,
       mimeType: result.mimeType,
       path: result.path,
+      prompt: customPrompt || DEFAULT_THUMBNAIL_STYLE,
     });
   } catch (error) {
     console.error("Failed to regenerate thumbnail:", error);

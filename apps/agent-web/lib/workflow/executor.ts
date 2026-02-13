@@ -273,7 +273,11 @@ export async function executeDeploy(jobId: string): Promise<void> {
       thumbnailImage: job.thumbnail_data && metadata?.thumbnailImage
         ? {
             buffer: job.thumbnail_data,
-            mimeType: 'image/png',
+            mimeType: metadata.thumbnailImage.endsWith('.jpg')
+              ? 'image/jpeg'
+              : metadata.thumbnailImage.endsWith('.webp')
+                ? 'image/webp'
+                : 'image/png',
             path: metadata.thumbnailImage,
           }
         : undefined,
