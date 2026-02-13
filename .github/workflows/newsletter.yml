@@ -5,16 +5,9 @@ on:
     branches: [main]
     paths:
       - "apps/blog/content/**/*.mdoc"
-  pull_request:
-    types: [closed]
-    branches: [main]
-    paths:
-      - "apps/blog/content/**/*.mdoc"
 
 jobs:
   send-newsletter:
-    # push 이벤트이거나, PR이 merge된 경우에만 실행
-    if: github.event_name == 'push' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
