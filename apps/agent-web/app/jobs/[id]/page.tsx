@@ -91,14 +91,14 @@ export default function JobDetailPage() {
   );
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this job?")) return;
+    if (!confirm("이 작업을 삭제하시겠습니까?")) return;
 
     try {
       const res = await fetch(`/api/jobs/${jobId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete job");
       router.push("/jobs");
     } catch (err) {
-      alert("Failed to delete job");
+      alert("작업 삭제에 실패했습니다");
     }
   };
 
@@ -114,7 +114,7 @@ export default function JobDetailPage() {
     });
     if (!res.ok) {
       const data = await res.json();
-      throw new Error(data.error || "Failed to save content");
+      throw new Error(data.error || "콘텐츠 저장에 실패했습니다");
     }
     await refetch();
   }, [jobId, refetch]);
@@ -134,17 +134,17 @@ export default function JobDetailPage() {
           <Link href="/jobs">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Jobs
+              목록으로
             </Button>
           </Link>
         </div>
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-destructive">
-              {error?.message || "Job not found"}
+              {error?.message || "작업을 찾을 수 없습니다"}
             </p>
             <Link href="/jobs" className="text-primary hover:underline mt-2 block">
-              Return to jobs list
+              작업 목록으로 돌아가기
             </Link>
           </CardContent>
         </Card>

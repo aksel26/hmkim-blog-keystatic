@@ -46,8 +46,8 @@ export type LifeFormData = z.infer<typeof lifeSchema>;
  * 카테고리 옵션 정의
  */
 export const categoryOptions = [
-  { value: "tech", label: "Tech", description: "기술 관련 포스트" },
-  { value: "life", label: "Life", description: "일상/라이프스타일" },
+  { value: "tech", label: "기술", description: "기술 관련 포스트" },
+  { value: "life", label: "라이프", description: "일상/라이프스타일" },
 ] as const;
 
 /**

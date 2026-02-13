@@ -78,7 +78,7 @@ export default function TemplateForm({
   initialData,
   onSubmit,
   loading = false,
-  submitLabel = "Save",
+  submitLabel = "저장",
 }: TemplateFormProps) {
   const router = useRouter();
   const [form, setForm] = useState<TemplateFormData>(initialData || DEFAULT_FORM);
@@ -88,7 +88,7 @@ export default function TemplateForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.subject || !form.body) {
-      alert("Please fill in all fields.");
+      alert("모든 필드를 입력해주세요.");
       return;
     }
     await onSubmit(form);
@@ -101,31 +101,31 @@ export default function TemplateForm({
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Template Details</CardTitle>
+              <CardTitle>템플릿 상세</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1.5">
-                  Template Name <span className="text-destructive">*</span>
+                  템플릿 이름 <span className="text-destructive">*</span>
                 </label>
                 <Input
                   type="text"
                   required
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g., New Post Notification"
+                  placeholder="예: 새 글 알림"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1.5">
-                  Email Subject <span className="text-destructive">*</span>
+                  이메일 제목 <span className="text-destructive">*</span>
                 </label>
                 <Input
                   type="text"
                   required
                   value={form.subject}
                   onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                  placeholder="e.g., New post on {{blog_name}}: {{post_title}}"
+                  placeholder="예: {{blog_name}}에 새 글이 발행되었습니다: {{post_title}}"
                 />
               </div>
             </CardContent>
@@ -133,7 +133,7 @@ export default function TemplateForm({
 
           <Card>
             <CardHeader>
-              <CardTitle>Email Body (HTML)</CardTitle>
+              <CardTitle>이메일 본문 (HTML)</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -141,7 +141,7 @@ export default function TemplateForm({
                 value={form.body}
                 onChange={(e) => setForm({ ...form, body: e.target.value })}
                 className="min-h-[400px] font-mono text-sm resize-y"
-                placeholder="Enter HTML content..."
+                placeholder="HTML 콘텐츠를 입력하세요..."
               />
             </CardContent>
           </Card>
@@ -153,7 +153,7 @@ export default function TemplateForm({
                 onClick={() => setShowPreview(!showPreview)}
                 className="flex items-center justify-between w-full"
               >
-                <CardTitle>Preview</CardTitle>
+                <CardTitle>미리보기</CardTitle>
                 {showPreview ? (
                   <ChevronUp className="h-4 w-4 text-muted-foreground" />
                 ) : (
@@ -182,7 +182,7 @@ export default function TemplateForm({
                   onClick={() => setShowVariables(!showVariables)}
                   className="flex items-center justify-between w-full"
                 >
-                  <CardTitle>Available Variables</CardTitle>
+                  <CardTitle>사용 가능한 변수</CardTitle>
                   {showVariables ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -207,7 +207,7 @@ export default function TemplateForm({
             <Card>
               <CardContent className="pt-5 space-y-3">
                 <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? "Processing..." : submitLabel}
+                  {loading ? "처리 중..." : submitLabel}
                 </Button>
                 <Button
                   type="button"
@@ -215,7 +215,7 @@ export default function TemplateForm({
                   onClick={() => router.back()}
                   className="w-full"
                 >
-                  Cancel
+                  취소
                 </Button>
               </CardContent>
             </Card>

@@ -71,7 +71,7 @@ export function HumanReviewPanel({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to submit review");
+        throw new Error(data.error || "검토 제출에 실패했습니다");
       }
 
       // 모달 닫기
@@ -81,7 +81,7 @@ export function HumanReviewPanel({
 
       onReviewSubmitted?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
     } finally {
       setIsSubmitting(false);
       setAction(null);

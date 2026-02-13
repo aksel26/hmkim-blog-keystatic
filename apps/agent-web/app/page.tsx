@@ -6,9 +6,9 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">대시보드</h1>
         <p className="text-muted-foreground">
-          AI Blog Post Generator Overview
+          AI 블로그 포스트 생성기 현황
         </p>
       </div>
 

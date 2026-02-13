@@ -61,7 +61,7 @@ export default function EditTemplatePage({
       router.push("/templates");
     },
     onError: (err: Error) => {
-      setError(err.message || "Failed to update template.");
+      setError(err.message || "템플릿 수정에 실패했습니다.");
     },
   });
 
@@ -81,9 +81,9 @@ export default function EditTemplatePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Edit Template</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">템플릿 수정</h1>
         <p className="text-muted-foreground">
-          Modify email template
+          이메일 템플릿을 수정합니다
         </p>
       </div>
 
@@ -98,7 +98,7 @@ export default function EditTemplatePage({
           initialData={initialData}
           onSubmit={handleSubmit}
           loading={mutation.isPending}
-          submitLabel="Save Changes"
+          submitLabel="변경사항 저장"
         />
       )}
     </div>

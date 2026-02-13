@@ -9,13 +9,13 @@ export function QuickActions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+        <CardTitle>빠른 작업</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <Link href="/generate" className="block">
           <Button className="w-full justify-start gap-2" size="lg">
             <PenTool className="h-5 w-5" />
-            Generate New Post
+            새 포스트 생성
           </Button>
         </Link>
 
@@ -26,7 +26,7 @@ export function QuickActions() {
             size="lg"
           >
             <ListTodo className="h-5 w-5" />
-            Review Pending Posts
+            대기 중인 포스트 검토
           </Button>
         </Link>
 
@@ -37,7 +37,7 @@ export function QuickActions() {
             size="lg"
           >
             <BarChart3 className="h-5 w-5" />
-            View Analytics
+            분석 보기
           </Button>
         </Link>
       </CardContent>

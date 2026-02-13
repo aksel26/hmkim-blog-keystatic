@@ -34,7 +34,7 @@ export default function NewTemplatePage() {
       await createTemplate(data);
       router.push("/templates");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create template.");
+      setError(err instanceof Error ? err.message : "템플릿 생성에 실패했습니다.");
     } finally {
       setLoading(false);
     }
@@ -43,9 +43,9 @@ export default function NewTemplatePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New Template</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">새 템플릿</h1>
         <p className="text-muted-foreground">
-          Create a new email template
+          새로운 이메일 템플릿을 만듭니다
         </p>
       </div>
 
@@ -55,7 +55,7 @@ export default function NewTemplatePage() {
         </div>
       )}
 
-      <TemplateForm onSubmit={handleSubmit} loading={loading} submitLabel="Create Template" />
+      <TemplateForm onSubmit={handleSubmit} loading={loading} submitLabel="템플릿 생성" />
     </div>
   );
 }

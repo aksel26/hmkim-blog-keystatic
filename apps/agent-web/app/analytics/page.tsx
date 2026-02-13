@@ -69,8 +69,8 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="text-muted-foreground">Loading analytics data...</p>
+          <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
+          <p className="text-muted-foreground">분석 데이터를 불러오는 중...</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
@@ -89,8 +89,8 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="text-destructive">Failed to load analytics data</p>
+          <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
+          <p className="text-destructive">분석 데이터를 불러오는데 실패했습니다</p>
         </div>
       </div>
     );
@@ -98,37 +98,37 @@ export default function AnalyticsPage() {
 
   const statCards = [
     {
-      title: "Total Jobs",
+      title: "전체 작업",
       value: data.overview.totalJobs,
       icon: FileText,
-      description: "All time",
+      description: "누적 전체",
     },
     {
-      title: "Completed",
+      title: "완료",
       value: data.overview.completedJobs,
       icon: CheckCircle,
-      description: "Successfully generated",
+      description: "성공적으로 생성됨",
     },
     {
-      title: "Failed",
+      title: "실패",
       value: data.overview.failedJobs,
       icon: XCircle,
-      description: "Generation failed",
+      description: "생성 실패",
     },
     {
-      title: "Success Rate",
+      title: "성공률",
       value: `${data.overview.successRate}%`,
       icon: TrendingUp,
-      description: "Completion rate",
+      description: "완료 비율",
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
         <p className="text-muted-foreground">
-          View performance metrics and trends
+          성과 지표와 트렌드를 확인합니다
         </p>
       </div>
 
@@ -153,8 +153,8 @@ export default function AnalyticsPage() {
         {/* Daily Generation Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Daily Generation</CardTitle>
-            <CardDescription>Jobs created per day (last 30 days)</CardDescription>
+            <CardTitle>일별 생성 현황</CardTitle>
+            <CardDescription>일별 작업 생성 수 (최근 30일)</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -180,21 +180,21 @@ export default function AnalyticsPage() {
                       dataKey="completed"
                       stroke="#22c55e"
                       strokeWidth={2}
-                      name="Completed"
+                      name="완료"
                     />
                     <Line
                       type="monotone"
                       dataKey="failed"
                       stroke="#ef4444"
                       strokeWidth={2}
-                      name="Failed"
+                      name="실패"
                     />
                     <Legend />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No data available
+                  데이터 없음
                 </div>
               )}
             </div>
@@ -204,8 +204,8 @@ export default function AnalyticsPage() {
         {/* Category Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Category Distribution</CardTitle>
-            <CardDescription>Jobs by category</CardDescription>
+            <CardTitle>카테고리 분포</CardTitle>
+            <CardDescription>카테고리별 작업 수</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -236,7 +236,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No data available
+                  데이터 없음
                 </div>
               )}
             </div>
@@ -249,8 +249,8 @@ export default function AnalyticsPage() {
         {/* Status Distribution */}
         <Card>
           <CardHeader>
-            <CardTitle>Status Distribution</CardTitle>
-            <CardDescription>Jobs by current status</CardDescription>
+            <CardTitle>상태 분포</CardTitle>
+            <CardDescription>현재 상태별 작업 수</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -277,7 +277,7 @@ export default function AnalyticsPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  No data available
+                  데이터 없음
                 </div>
               )}
             </div>
@@ -287,8 +287,8 @@ export default function AnalyticsPage() {
         {/* Recent Errors */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Errors</CardTitle>
-            <CardDescription>Latest failed jobs</CardDescription>
+            <CardTitle>최근 오류</CardTitle>
+            <CardDescription>최근 실패한 작업</CardDescription>
           </CardHeader>
           <CardContent>
             {data.recentErrors.length > 0 ? (
@@ -315,7 +315,7 @@ export default function AnalyticsPage() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-[200px] text-muted-foreground">
-                No errors found
+                오류 없음
               </div>
             )}
           </CardContent>

@@ -11,16 +11,16 @@ import { Loader2 } from "lucide-react";
 import type { Category, Template } from "@/lib/types";
 
 const categoryOptions = [
-  { value: "tech", label: "Tech" },
-  { value: "life", label: "Life" },
+  { value: "tech", label: "기술" },
+  { value: "life", label: "라이프" },
 ];
 
 const templateOptions = [
-  { value: "default", label: "Default (No template)" },
-  { value: "tutorial", label: "Tutorial" },
-  { value: "comparison", label: "Comparison" },
-  { value: "deep-dive", label: "Deep Dive" },
-  { value: "tips", label: "Tips & Tricks" },
+  { value: "default", label: "기본 (템플릿 없음)" },
+  { value: "tutorial", label: "튜토리얼" },
+  { value: "comparison", label: "비교 분석" },
+  { value: "deep-dive", label: "심층 분석" },
+  { value: "tips", label: "팁 & 트릭" },
 ];
 
 export function TopicForm() {
@@ -35,7 +35,7 @@ export function TopicForm() {
     e.preventDefault();
 
     if (!topic.trim()) {
-      setError("Please enter a topic");
+      setError("주제를 입력해주세요");
       return;
     }
 
@@ -57,13 +57,13 @@ export function TopicForm() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to create job");
+        throw new Error(data.error || "작업 생성에 실패했습니다");
       }
 
       const data = await response.json();
       router.push(`/jobs/${data.jobId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : "오류가 발생했습니다");
       setIsSubmitting(false);
     }
   };
@@ -71,9 +71,9 @@ export function TopicForm() {
   return (
     <Card className="max-w-2xl">
       <CardHeader>
-        <CardTitle>Generate Blog Post</CardTitle>
+        <CardTitle>블로그 포스트 생성</CardTitle>
         <CardDescription>
-          Enter a topic and let AI create a comprehensive blog post for you.
+          주제를 입력하면 AI가 블로그 포스트를 작성합니다.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -81,25 +81,25 @@ export function TopicForm() {
           {/* Topic Input */}
           <div className="space-y-2">
             <label htmlFor="topic" className="text-sm font-medium">
-              Topic *
+              주제 *
             </label>
             <Textarea
               id="topic"
-              placeholder="e.g., How to build a REST API with Node.js and Express"
+              placeholder="예: Node.js와 Express로 REST API 만들기"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               className="min-h-[100px]"
               disabled={isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
-              Be specific about what you want the blog post to cover.
+              블로그 포스트에서 다룰 내용을 구체적으로 작성해주세요.
             </p>
           </div>
 
           {/* Category Select */}
           <div className="space-y-2">
             <label htmlFor="category" className="text-sm font-medium">
-              Category
+              카테고리
             </label>
             <Select
               id="category"
@@ -113,7 +113,7 @@ export function TopicForm() {
           {/* Template Select */}
           <div className="space-y-2">
             <label htmlFor="template" className="text-sm font-medium">
-              Template
+              템플릿
             </label>
             <Select
               id="template"
@@ -123,7 +123,7 @@ export function TopicForm() {
               disabled={isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
-              Choose a template to guide the structure of your blog post.
+              블로그 포스트의 구조를 안내할 템플릿을 선택하세요.
             </p>
           </div>
 
@@ -144,10 +144,10 @@ export function TopicForm() {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Job...
+                작업 생성 중...
               </>
             ) : (
-              "Generate Post"
+              "포스트 생성"
             )}
           </Button>
         </form>
