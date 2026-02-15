@@ -25,7 +25,7 @@ export function KPIStatCard({
   return (
     <Card
       className={cn(
-        "hover:shadow-md transition-shadow duration-200",
+        "transition-colors duration-200",
         className
       )}
     >
