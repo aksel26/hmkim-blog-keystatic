@@ -1,38 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import {
-  CheckCircle,
-  Circle,
-  AlertCircle,
-  Loader2,
-  Search,
-  PenTool,
-  Eye,
-  Sparkles,
-  Image,
-  FileCheck,
-  User,
-  GitPullRequest,
-  ThumbsUp,
-  XCircle,
-} from "lucide-react";
 
 // 워크플로우 단계 정의
-// Research → Write → Review → Create → Thumbnail → Validate → Human Review → Deploy
 const workflowSteps = [
-  { id: "research", label: "리서치", icon: Search },
-  { id: "write", label: "초안 작성", icon: PenTool },
-  { id: "review", label: "AI 검토", icon: Eye },
-  { id: "create", label: "콘텐츠 개선", icon: Sparkles },
-  { id: "thumbnail", label: "썸네일", icon: Image },
-  { id: "validate", label: "검증", icon: FileCheck },
-  { id: "human_review", label: "사용자 검토", icon: User },
-  { id: "deploy", label: "PR 생성", icon: GitPullRequest },
+  { id: "research", label: "리서치" },
+  { id: "write", label: "초안 작성" },
+  { id: "review", label: "AI 검토" },
+  { id: "create", label: "콘텐츠 개선" },
+  { id: "thumbnail", label: "썸네일" },
+  { id: "validate", label: "검증" },
+  { id: "human_review", label: "사용자 검토" },
+  { id: "deploy", label: "PR 생성" },
 ];
 
 // step 이름 매핑
@@ -85,7 +67,6 @@ export function JobProgress({
 }: JobProgressProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 사용자 검토 승인
   const handleHumanReviewApprove = async () => {
     if (!jobId) return;
     setIsSubmitting(true);
@@ -103,7 +84,6 @@ export function JobProgress({
     }
   };
 
-  // 배포 승인
   const handleDeployApprove = async () => {
     if (!jobId) return;
     setIsSubmitting(true);
@@ -121,7 +101,6 @@ export function JobProgress({
     }
   };
 
-  // 배포 거부
   const handleDeployReject = async () => {
     if (!jobId) return;
     setIsSubmitting(true);
@@ -138,7 +117,7 @@ export function JobProgress({
       setIsSubmitting(false);
     }
   };
-  // 현재 진행 중인 단계 찾기
+
   const getCurrentStepIndex = () => {
     const normalizedCurrent = currentStep ? (stepMapping[currentStep] || currentStep) : null;
     if (!normalizedCurrent) return -1;
@@ -147,178 +126,157 @@ export function JobProgress({
 
   const currentIndex = getCurrentStepIndex();
 
-  // 단계별 로그 메시지들 가져오기
   const getStepLogs = (stepId: string): Array<{ message: string; status: string }> => {
     const stepLogs = logs.filter((log) => {
       const normalizedStep = stepMapping[log.step] || log.step;
       return normalizedStep === stepId;
     });
-
     return stepLogs.slice(-3).map((log) => ({
       message: log.message,
       status: log.status,
     }));
   };
 
-  const getStepIcon = (stepId: string, status: string) => {
-    const step = workflowSteps.find((s) => s.id === stepId);
-    const Icon = step?.icon || Circle;
-
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />;
-      case "error":
-        return <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />;
-      case "current":
-        return <Loader2 className="w-5 h-5 text-primary animate-spin flex-shrink-0" />;
-      default:
-        return <Icon className="w-5 h-5 text-muted-foreground flex-shrink-0" />;
-    }
-  };
-
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            진행 상황
-            {isLive && (
-              <span className="flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-              </span>
-            )}
-          </CardTitle>
-          <span className="text-2xl font-bold text-primary">{progress}%</span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4 flex-1">
-        {/* Progress Bar */}
-        <Progress value={progress} className="h-2" />
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="flex items-baseline justify-between mb-4">
+        <p className="text-sm font-medium">
+          진행 상황
+          {isLive && (
+            <span className="ml-2 text-xs text-muted-foreground font-normal">실시간</span>
+          )}
+        </p>
+        <span className="text-sm tabular-nums text-muted-foreground">{progress}%</span>
+      </div>
 
-        {/* Step Checklist */}
-        <div className="space-y-1.5">
-          {workflowSteps.map((step, index) => {
-            // 현재 인덱스 기준으로 상태 결정
-            let status: "pending" | "current" | "completed" | "error" = "pending";
+      {/* Progress Bar */}
+      <Progress value={progress} className="h-1.5 mb-5" />
 
-            if (progress === 100) {
+      {/* Step Timeline */}
+      <div className="flex-1">
+        {workflowSteps.map((step, index) => {
+          let status: "pending" | "current" | "completed" | "error" = "pending";
+
+          if (progress === 100) {
+            status = "completed";
+          } else if (currentIndex >= 0) {
+            if (index < currentIndex) {
               status = "completed";
-            } else if (currentIndex >= 0) {
-              if (index < currentIndex) {
-                status = "completed";
-              } else if (index === currentIndex) {
-                status = "current";
-              }
+            } else if (index === currentIndex) {
+              status = "current";
             }
+          }
 
-            // 로그에서 에러 확인
-            const errorCheckLogs = logs.filter((log) => {
-              const normalizedStep = stepMapping[log.step] || log.step;
-              return normalizedStep === step.id;
-            });
-            if (errorCheckLogs.some((log) => log.status === "error")) {
-              status = "error";
-            }
+          const errorCheckLogs = logs.filter((log) => {
+            const normalizedStep = stepMapping[log.step] || log.step;
+            return normalizedStep === step.id;
+          });
+          if (errorCheckLogs.some((log) => log.status === "error")) {
+            status = "error";
+          }
 
-            // 단계별 로그 메시지들
-            const stepLogItems = getStepLogs(step.id);
+          const stepLogItems = getStepLogs(step.id);
+          const isLast = index === workflowSteps.length - 1;
 
-            return (
-              <div
-                key={step.id}
-                className={cn(
-                  "flex items-start gap-3 p-2 rounded-lg transition-colors",
-                  status === "completed" && "bg-success/10",
-                  status === "current" && "bg-primary/10",
-                  status === "error" && "bg-destructive/10"
+          return (
+            <div key={step.id} className="flex gap-3">
+              {/* Timeline: dot + line */}
+              <div className="flex flex-col items-center w-4 shrink-0">
+                {/* Dot */}
+                {status === "current" ? (
+                  <span className="relative flex h-2 w-2 mt-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-foreground" />
+                  </span>
+                ) : status === "error" ? (
+                  <span className="mt-1.5 h-2 w-2 rounded-full bg-destructive shrink-0" />
+                ) : status === "completed" ? (
+                  <span className="mt-1.5 h-2 w-2 rounded-full bg-foreground shrink-0" />
+                ) : (
+                  <span className="mt-1.5 h-2 w-2 rounded-full border border-border shrink-0" />
                 )}
-              >
-                {getStepIcon(step.id, status)}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn(
-                        "font-medium text-sm",
-                        status === "completed" && "text-success",
-                        status === "current" && "text-primary",
-                        status === "error" && "text-destructive",
-                        status === "pending" && "text-muted-foreground"
-                      )}
+                {/* Connecting line */}
+                {!isLast && (
+                  <div
+                    className={cn(
+                      "w-px flex-1 min-h-4",
+                      (status === "completed" || status === "current")
+                        ? "bg-foreground/20"
+                        : "bg-border"
+                    )}
+                  />
+                )}
+              </div>
+
+              {/* Content */}
+              <div className={cn("flex-1 min-w-0 pb-4", isLast && "pb-0")}>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-sm",
+                      status === "completed" && "text-foreground",
+                      status === "current" && "text-foreground font-medium",
+                      status === "error" && "text-destructive font-medium",
+                      status === "pending" && "text-muted-foreground"
+                    )}
+                  >
+                    {step.label}
+                  </span>
+                  {status === "current" && (
+                    <span className="text-xs text-muted-foreground">진행 중</span>
+                  )}
+
+                  {/* Action buttons inline */}
+                  {step.id === "human_review" && jobStatus === "human_review" && (
+                    <Button
+                      size="sm"
+                      onClick={handleHumanReviewApprove}
+                      disabled={isSubmitting}
+                      className="shrink-0 ml-auto h-7 text-xs"
                     >
-                      {step.label}
-                    </span>
-                    {status === "current" && (
-                      <span className="text-xs text-primary">진행 중...</span>
-                    )}
-                    {status === "completed" && (
-                      <span className="text-xs text-success">완료</span>
-                    )}
-                  </div>
-                  {/* 단계별 로그 표시 */}
-                  {(status === "completed" || status === "current") && stepLogItems.length > 0 && (
-                    <div className="mt-1 space-y-0.5">
-                      {stepLogItems.map((log, idx) => (
-                        <p key={idx} className="text-xs text-muted-foreground truncate">
-                          • {log.message}
-                        </p>
-                      ))}
+                      {isSubmitting ? "처리 중..." : "승인"}
+                    </Button>
+                  )}
+
+                  {step.id === "deploy" && jobStatus === "pending_deploy" && (
+                    <div className="flex gap-1 shrink-0 ml-auto">
+                      <Button
+                        size="sm"
+                        onClick={handleDeployApprove}
+                        disabled={isSubmitting}
+                        className="h-7 text-xs"
+                      >
+                        {isSubmitting ? "처리 중..." : "PR 생성"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleDeployReject}
+                        disabled={isSubmitting}
+                        className="text-muted-foreground h-7 text-xs"
+                      >
+                        반려
+                      </Button>
                     </div>
                   )}
                 </div>
 
-                {/* 사용자 검토 버튼 */}
-                {step.id === "human_review" && jobStatus === "human_review" && (
-                  <Button
-                    size="sm"
-                    onClick={handleHumanReviewApprove}
-                    disabled={isSubmitting}
-                    className="shrink-0"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <>
-                        <ThumbsUp className="h-4 w-4 mr-1" />
-                        승인
-                      </>
-                    )}
-                  </Button>
-                )}
-
-                {/* 배포 승인 버튼 */}
-                {step.id === "deploy" && jobStatus === "pending_deploy" && (
-                  <div className="flex gap-1 shrink-0">
-                    <Button
-                      size="sm"
-                      onClick={handleDeployApprove}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <>
-                          <ThumbsUp className="h-4 w-4 mr-1" />
-                          PR 생성
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleDeployReject}
-                      disabled={isSubmitting}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
+                {/* Step logs */}
+                {(status === "completed" || status === "current") && stepLogItems.length > 0 && (
+                  <div className="mt-0.5 space-y-0.5">
+                    {stepLogItems.map((log, idx) => (
+                      <p key={idx} className="text-xs text-muted-foreground truncate">
+                        {log.message}
+                      </p>
+                    ))}
                   </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-
-      </CardContent>
-    </Card>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
