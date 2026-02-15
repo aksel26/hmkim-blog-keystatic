@@ -33,7 +33,7 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.75rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -44,9 +44,9 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   /* DESIGN.md: Shadow levels */
-  --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.04);
-  --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.07), 0 2px 4px -2px oklch(0 0 0 / 0.05);
-  --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.08), 0 4px 6px -4px oklch(0 0 0 / 0.04);
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
 
   /* DESIGN.md: Z-index layering */
   --z-sidebar: 30;
@@ -60,11 +60,10 @@
   --transition-base: 200ms;
   --transition-slow: 250ms;
 
-  /* DESIGN.md: Glassmorphism */
-  --glass-bg: oklch(1 0 0 / 0.8);
-  --glass-border: oklch(0 0 0 / 0.06);
-  --glass-blur: 12px;
-  --glass-shadow: 0 4px 24px oklch(0 0 0 / 0.06);
+  --glass-bg: var(--background);
+  --glass-border: var(--border);
+  --glass-blur: 0px;
+  --glass-shadow: none;
 }
 
 .dark {
@@ -105,10 +104,9 @@
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
 
-  /* Dark glassmorphism */
-  --glass-bg: oklch(0.205 0 0 / 0.8);
-  --glass-border: oklch(1 0 0 / 0.08);
-  --glass-shadow: 0 4px 24px oklch(0 0 0 / 0.2);
+  --glass-bg: var(--background);
+  --glass-border: var(--border);
+  --glass-shadow: none;
 }
 
 @theme inline {
