@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
-import { Popover } from "@/components/ui/Popover";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { ConfirmModal } from "@/components/ui/confirm-dialog";
 import { SEOChecklistContent } from "@/components/editor/SEOChecklistContent";
 import { Loader2, CheckCircle, MessageSquare, RotateCcw, Pause, Info } from "lucide-react";
 import type { ReviewResult, HumanReviewAction, ValidationResult } from "@/lib/types";
@@ -138,27 +138,26 @@ export function HumanReviewPanel({
             </div>
 
             {/* SEO 점수 Popover */}
-            <Popover
-              trigger={
+            <Popover>
+              <PopoverTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Info className="h-4 w-4" />
                   <span className={`font-semibold ${getScoreColor(seoScore)}`}>
                     SEO {seoScore}%
                   </span>
                 </Button>
-              }
-              align="end"
-              side="bottom"
-            >
-              <SEOChecklistContent
-                reviewResult={reviewResult ? {
-                  seoScore: reviewResult.seoScore,
-                  techScore: reviewResult.techAccuracy,
-                  suggestions: reviewResult.suggestions,
-                  issues: reviewResult.issues,
-                } : undefined}
-                metadata={metadata}
-              />
+              </PopoverTrigger>
+              <PopoverContent align="end" side="bottom" className="w-80">
+                <SEOChecklistContent
+                  reviewResult={reviewResult ? {
+                    seoScore: reviewResult.seoScore,
+                    techScore: reviewResult.techAccuracy,
+                    suggestions: reviewResult.suggestions,
+                    issues: reviewResult.issues,
+                  } : undefined}
+                  metadata={metadata}
+                />
+              </PopoverContent>
             </Popover>
           </div>
         </CardHeader>
