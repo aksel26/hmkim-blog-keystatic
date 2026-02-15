@@ -10,7 +10,7 @@ import {
   Bot,
   Users,
   FileText,
-  Calendar,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +18,7 @@ const navigation = [
   { name: "대시보드", href: "/", icon: LayoutDashboard },
   { name: "포스트 생성", href: "/generate", icon: PenTool },
   { name: "작업 목록", href: "/jobs", icon: ListTodo },
-  { name: "스케줄", href: "/schedules", icon: Calendar },
+  { name: "트렌드", href: "/schedules", icon: TrendingUp },
   { name: "분석", href: "/analytics", icon: BarChart3 },
   { name: "구독자", href: "/subscribers", icon: Users },
   { name: "템플릿", href: "/templates", icon: FileText },
