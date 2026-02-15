@@ -17,14 +17,14 @@ import {
   BarChart3,
   Users,
   FileText,
-  Calendar,
+  TrendingUp,
 } from "lucide-react"
 
 const pages = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Generate Post", href: "/generate", icon: PenTool },
   { name: "Jobs", href: "/jobs", icon: ListTodo },
-  { name: "Schedules", href: "/schedules", icon: Calendar },
+  { name: "트렌드", href: "/schedules", icon: TrendingUp },
   { name: "Analytics", href: "/analytics", icon: BarChart3 },
   { name: "Subscribers", href: "/subscribers", icon: Users },
   { name: "Templates", href: "/templates", icon: FileText },
