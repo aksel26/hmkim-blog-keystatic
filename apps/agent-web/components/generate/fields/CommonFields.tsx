@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { tonePresets } from "@/lib/schemas/form-schemas";
 import type { BlogFormData } from "@/lib/schemas/form-schemas";
 

@@ -4,12 +4,12 @@ import { Suspense, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
-import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/Badge";
-import { Progress } from "@/components/ui/Progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { formatRelativeTime, truncate } from "@/lib/utils";
 import type { JobStatus, JobsListResponse } from "@/lib/types";
 import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
@@ -81,7 +81,7 @@ function JobsContent() {
                 className="pl-9"
               />
             </div>
-            <Select
+            <NativeSelect
               options={statusOptions}
               value={status}
               onChange={(e) => {
