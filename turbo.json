@@ -18,7 +18,9 @@
     "BLOG_CONTENT_PATH",
     "RESEND_API_KEY",
     "CRON_SECRET",
-    "NEWSLETTER_API_KEY"
+    "NEWSLETTER_API_KEY",
+    "NAVER_CLIENT_ID",
+    "NAVER_CLIENT_SECRET"
   ],
   "tasks": {
     "build": {
