@@ -1,32 +1,28 @@
 "use client";
 
-import { useFormContext, FieldErrors } from "react-hook-form";
-import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { Controller, useFormContext, type FieldErrors } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { templateOptions } from "@/lib/schemas/form-schemas";
 import type { TechFormData } from "@/lib/schemas/form-schemas";
-
-const templateOptions = [
-  { value: "default", label: "기본" },
-  { value: "tutorial", label: "튜토리얼" },
-  { value: "comparison", label: "비교분석" },
-  { value: "deep-dive", label: "심층분석" },
-  { value: "tips", label: "팁 & 트릭" },
-];
 
 export function TechLifeFields() {
   const {
     register,
+    control,
     formState: { errors: formErrors },
   } = useFormContext();
 
   const errors = formErrors as FieldErrors<TechFormData>;
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-      <h3 className="font-semibold text-sm text-muted-foreground">
-        Tech/Life 포스트
-      </h3>
-
+    <div className="space-y-4">
       <div className="space-y-2">
         <label className="text-sm font-medium">주제 *</label>
         <Input
@@ -40,10 +36,23 @@ export function TechLifeFields() {
 
       <div className="space-y-2">
         <label className="text-sm font-medium">템플릿</label>
-        <Select
-          {...register("template")}
-          options={templateOptions}
-          placeholder="템플릿을 선택하세요"
+        <Controller
+          name="template"
+          control={control}
+          render={({ field }) => (
+            <Select value={field.value ?? "default"} onValueChange={field.onChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {templateOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         />
       </div>
     </div>

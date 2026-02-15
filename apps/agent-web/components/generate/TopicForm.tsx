@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { Select } from "@/components/ui/Select";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Loader2 } from "lucide-react";
 import type { Category, Template } from "@/lib/types";
 
@@ -101,7 +101,7 @@ export function TopicForm() {
             <label htmlFor="category" className="text-sm font-medium">
               카테고리
             </label>
-            <Select
+            <NativeSelect
               id="category"
               options={categoryOptions}
               value={category}
@@ -115,7 +115,7 @@ export function TopicForm() {
             <label htmlFor="template" className="text-sm font-medium">
               템플릿
             </label>
-            <Select
+            <NativeSelect
               id="template"
               options={templateOptions}
               value={template}
