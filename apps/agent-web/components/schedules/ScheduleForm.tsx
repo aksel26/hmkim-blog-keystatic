@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Textarea } from "@/components/ui/Textarea";
-import { Select } from "@/components/ui/Select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   CRON_PRESETS,
   TEMPLATE_OPTIONS,
@@ -199,7 +199,7 @@ export default function ScheduleForm({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1.5">카테고리</label>
-              <Select
+              <NativeSelect
                 options={categoryOptions}
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value as Category })}
@@ -207,8 +207,8 @@ export default function ScheduleForm({
             </div>
             <div>
               <label className="block text-sm font-medium mb-1.5">템플릿</label>
-              <Select
-                options={[...TEMPLATE_OPTIONS]}
+              <NativeSelect
+                options={TEMPLATE_OPTIONS.map(o => ({ value: o.value, label: o.label }))}
                 value={form.template}
                 onChange={(e) => setForm({ ...form, template: e.target.value })}
               />
@@ -281,7 +281,7 @@ export default function ScheduleForm({
           <div className="grid grid-cols-2 gap-4 items-end">
             <div>
               <label className="block text-sm font-medium mb-1.5">시간대</label>
-              <Select
+              <NativeSelect
                 options={timezoneOptions}
                 value={form.timezone}
                 onChange={(e) => setForm({ ...form, timezone: e.target.value })}

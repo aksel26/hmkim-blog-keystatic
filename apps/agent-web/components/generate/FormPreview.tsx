@@ -26,7 +26,7 @@ export function FormPreview() {
     { label: "템플릿", value: findLabel(templateOptions, values.template) },
     { label: "말투", value: findLabel(toneOptions, values.tone) },
     { label: "타겟 독자", value: values.targetReader || null },
-    { label: "키워드", value: values.keywords || null },
+    { label: "키워드", value: (values as Record<string, unknown>).keywords as string | null ?? null },
   ];
 
   const filledCount = rows.filter((r) => r.value).length;

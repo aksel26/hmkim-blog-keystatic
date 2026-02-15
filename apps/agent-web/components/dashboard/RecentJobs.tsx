@@ -2,9 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/Badge";
-import { Progress } from "@/components/ui/Progress";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { formatRelativeTime, truncate } from "@/lib/utils";
 import type { Job, JobStatus } from "@/lib/types";
 import { ArrowRight } from "lucide-react";

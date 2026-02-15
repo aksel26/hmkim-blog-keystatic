@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
-import { Input } from "@/components/ui/Input";
+import { Input } from "@/components/ui/input";
 import { CheckCircle, AlertCircle, XCircle, FileText, Eye, Edit, Save, Loader2, RefreshCw, Upload } from "lucide-react";
 import type { PostMetadata } from "@/lib/types";
 
