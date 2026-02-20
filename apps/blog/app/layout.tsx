@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: "HM Blog - Tech & Life",
   description: "This is where I tell stories. Most of them are about tech and life.",
+  alternates: {
+    types: {
+      'application/rss+xml': `${baseUrl}/feed.xml`,
+    },
+  },
   openGraph: {
     siteName: 'HM Blog',
     locale: 'ko_KR',
