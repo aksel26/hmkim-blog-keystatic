@@ -50,21 +50,22 @@ pnpm generate-post    # 인터랙티브 CLI로 포스트 생성
 ### apps/agent
 - **AI**: LangChain + Gemini/Claude
 - **워크플로우**: `ai-agents/workflows/` - 리서치 → 작성 → 검토 → 검증
-- **에이전트**: researcher, writer, reviewer, validator
+- **에이전트**: gemini-researcher, gemini-writer, gemini-creator, reviewer, validator
 
 ### apps/agent-web
 - **UI**: React Query + React Hook Form + Zod
-- **기능**: 포스트 생성 큐, 스케줄링, 이메일 템플릿 관리
+- **기능**: 포스트 생성/배포 관리, 트렌드 키워드, 뉴스레터, 구독자 관리, 분석
 
 ## 환경변수
 
 `.env.example` 참조. 주요 변수:
 - `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`: AI 모델 API 키
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase 연결
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase 서버 사이드 접근
 - `TAVILY_API_KEY`: 웹 검색 (Agent)
-- `RESEND_API_KEY`, `NEWSLETTER_API_KEY`, `CRON_SECRET`: 뉴스레터/스케줄링
-- `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`: Agent PR 생성용
+- `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BASE_BRANCH`: Agent PR 생성용
+- `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`: 네이버 API (트렌드)
+- `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_NAME`: 사이트 메타 정보
+- `KEYSTATIC_STORAGE_KIND`: Keystatic 스토리지 설정
+- `BLOG_CONTENT_PATH`: 블로그 콘텐츠 경로
 
 ## 코드 컨벤션
 
