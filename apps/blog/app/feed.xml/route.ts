@@ -1,5 +1,7 @@
 import { getAllPosts } from '@/lib/keystatic/reader';
 
+export const dynamic = 'force-dynamic';
+
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
 function escapeXml(str: string): string {
