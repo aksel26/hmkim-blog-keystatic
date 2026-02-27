@@ -1,0 +1,134 @@
+---
+title: Claude Code 작업 완료 알림 설정하기 — Hooks 활용법
+summary: Claude Code의 Hooks 기능으로 작업 완료 및 컨펌 요청 시 macOS 데스크탑 알림을 받는 방법을 소개합니다.
+keywords:
+  - ClaudeCode
+  - AI
+  - 개발환경
+  - 자동화
+  - 클로드코드
+status: published
+tags:
+  - 클로드 코드
+  - 자동화
+  - AI
+  - Claude Code
+createdAt: 2026-02-27
+updatedAt: 2026-02-27
+thumbnailImage: /images/thumbnails/claude-code-hooks/thumbnailImage.jpg
+---
+Claude Code로 장시간 작업을 맡겨두고 다른 일을 하다 보면, 언제 끝났는지 모르고 터미널만 바라보게 되는 상황이 생깁니다. 혹은 Claude가 특정 명령을 실행하기 전에 컨펌을 요청했는데 한참 뒤에야 발견하는 경우도 있죠.
+
+이 문제를 해결해주는 기능이 바로 **Hooks**입니다. Claude Code의 특정 라이프사이클 시점에 셸 명령어를 자동으로 실행할 수 있어서, 작업 완료나 컨펌 요청 시 macOS 데스크탑 알림을 받도록 설정할 수 있습니다.
+
+## Hooks란?
+
+Hooks는 Claude Code의 동작 흐름 중 특정 이벤트가 발생할 때 사용자 정의 셸 명령어를 실행하는 기능입니다. LLM이 "알아서 실행해줄 것"에 의존하지 않고, 조건에 맞으면 **항상 확정적으로 실행**된다는 점이 핵심입니다.
+
+주요 이벤트는 다음과 같습니다.
+
+{% table %}
+- 이벤트
+- 발동 시점
+---
+- `Stop`
+- Claude가 응답을 완료했을 때
+---
+- `Notification`
+- Claude가 사용자 입력을 기다릴 때
+---
+- `PermissionRequest`
+- 권한 확인 다이얼로그가 표시될 때
+---
+- `PreToolUse`
+- 툴 실행 직전
+---
+- `PostToolUse`
+- 툴 실행 완료 후
+{% /table %}
+
+알림 목적으로는 **`Stop`** (작업 완료)과 **`PermissionRequest`** (컨펌 요청), 이 두 가지가 가장 실용적입니다.
+
+## 설정 방법
+
+### 1단계: `/hooks` 메뉴 진입
+
+Claude Code CLI에서 아래 명령어를 입력합니다.
+
+```
+/hooks
+
+```
+
+인터랙티브 메뉴가 열리며 사용 가능한 훅 이벤트 목록이 표시됩니다.
+
+### 2단계: Stop 훅 설정 (작업 완료 알림)
+
+1. 목록에서 **`Stop`** 선택
+1. **`+ Add new hook…`** 선택
+1. 아래 명령어 입력 후 엔터
+
+```
+osascript -e 'display notification "작업 완료!" with title "Claude Code" sound name "Glass"'
+
+```
+
+### 3단계: PermissionRequest 훅 설정 (컨펌 요청 알림)
+
+1. 메뉴로 돌아가 **`PermissionRequest`** 선택
+1. **`+ Match all (no filter)`** 선택
+1. **`+ Add new hook…`** 선택
+1. 아래 명령어 입력 후 엔터
+
+```
+osascript -e 'display notification "컨펌 요청!" with title "Claude Code" sound name "Sosumi"'
+
+```
+
+> `Sosumi`는 macOS 기본 경고음으로, `Glass`(작업 완료)와 소리를 다르게 해두면 알림 종류를 구분하기 편합니다.
+
+### Notification 훅도 함께 설정하려면
+
+Claude가 입력을 기다리는 모든 상황(idle 포함)을 잡고 싶다면 `Notification` 이벤트도 동일한 방식으로 추가하면 됩니다. `Match all (no filter)` 선택 후 원하는 알림 명령어를 입력하세요.
+
+## 설정 결과 확인
+
+설정이 완료되면 `~/.claude/settings.json`에 자동으로 저장됩니다.
+
+```json
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"작업 완료!\" with title \"Claude Code\" sound name \"Glass\"'"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"컨펌 요청!\" with title \"Claude Code\" sound name \"Sosumi\"'"
+          }
+        ]
+      }
+    ]
+  }
+}
+
+```
+
+## 마치며
+
+설정 시간은 5분이 채 걸리지 않지만, 체감 효율은 꽤 달라집니다. Claude Code가 작업 중인 동안 다른 일에 집중할 수 있고, 알림이 오면 그때 확인하면 됩니다. "터미널을 계속 지켜봐야 하는" 습관에서 벗어나는 작은 변화입니다.
+
+Hooks는 알림 외에도 파일 포맷팅 자동화, 위험 명령어 차단, Git 자동 커밋 등 다양한 용도로 활용할 수 있습니다. 공식 문서에서 더 다양한 활용법을 확인해보세요.
+
+**참고:** [Claude Code 공식 Hooks 문서](https://docs.claude.com/)
