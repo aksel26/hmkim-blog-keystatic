@@ -1,0 +1,434 @@
+---
+title: '''순수'' 프론트엔드 개발자의 죽음'
+summary: >
+  현대 프론트엔드 개발자의 역할은 서버 컴포넌트, 엣지 함수, 인프라-as-config 등 아키텍처 변화로 인해 데이터베이스 쿼리,
+  CI/CD, 캐싱 전략까지 흡수하며 사실상 풀스택화되고 있습니다. 이 변화가 진정한 커리어 성장인지 착취적 범위 확장인지 구별하기 위한
+  프레임워크를 제시하고, 90일 업스킬 계획과 역할 재협상 전략을 다룹니다.
+keywords:
+  - Frontend
+  - 풀스택
+  - 커리어
+  - React
+  - Tech
+  - DevOps
+status: published
+tags:
+  - 프론트엔드 개발자 역할 변화
+  - React 서버 컴포넌트
+createdAt: 2026-02-27
+updatedAt: 2026-02-27
+thumbnailImage: >-
+  /images/thumbnails/death-of-pure-frontend-developer-fullstack-scope/thumbnailImage.png
+---
+*원문: [**The Frontend Developer Is Dead, Long Live the Frontend Developer**](https://www.sitepoint.com/death-pure-frontend-developer-full-stack-devops/?ref=dailydev)**–** SitePoint Team*
+
+---
+
+**프론트엔드 풀스택 범위 확장에 대처하는 법**
+
+서버 컴포넌트, 엣지 함수, 인프라-as-config처럼 백엔드랑 DevOps 책임을 프론트엔드 코드베이스로 끌어당기는 아키텍처 변화들을 파악해두세요. 새로 생기는 책임은 두 가지 기준으로 따져보세요: 업계 흐름(이게 표준이 되고 있나?)이랑 커리어 방향(내 목표랑 맞나?). 두 기준 다 높은 기술들—서버 컴포넌트, ORM 기초, 캐싱 전략, 엣지 함수 기초—은 바로 배우세요. 커리어랑은 안 맞지만 업계 흐름인 기술들(CI/CD, 옵저버빌리티)은 전략적으로 배우되 별도 학습 시간을 협상하세요. 업계 흐름도 낮고 커리어 방향도 안 맞는 책임들(쿠버네티스 클러스터 관리, 무관한 온콜 로테이션 같은 거)은 단호하게 거절하세요. 확장된 책임을 표준 풀스택이나 플랫폼 엔지니어링 역할 정의에 매핑한 문서 만들어서 직함이랑 연봉을 재협상하세요. 프론트엔드, 백엔드, 플랫폼 엔지니어링 작업 간 소유권 경계를 명확히 하는 RACI 문서도 만들어두세요.
+
+현대 프론트엔드 역할은 대부분의 개발자가 눈치채지 못한 속도로 조용히 풀스택 범위를 흡수해 왔어요. 이 변화가 일어나고 있냐 아니냐는 이제 문제가 아니에요. 번아웃 없이, 전문성도 잃지 않으면서 어떻게 대응하느냐가 문제죠.
+
+---
+
+## 목차
+
+1. 환상을 깨뜨린 채용 공고
+1. 여기까지 오게 된 과정: 프론트엔드를 집어삼킨 아키텍처 변화
+1. 새로운 기준선: 2025년 '프론트엔드'가 실제로 의미하는 것
+1. 범위 확장 문제: 확장이 착취가 될 때
+1. 의사결정 프레임워크: 업스킬할 것인가, 거절할 것인가
+1. 실용적인 업스킬 경로: 확장되는 프론트엔드 역할을 위한 90일 계획
+1. 불편한 대화: 역할을 재협상하는 방법
+1. 프론트엔드 개발자는 죽었다, 프론트엔드 개발자 만세
+
+---
+
+## 환상을 깨뜨린 채용 공고
+
+지난달 채용 사이트 하나에서 "프론트엔드 개발자" 공고 다섯 개를 모아 만든 합성 공고가 있어요:
+
+> **프론트엔드 개발자 (시니어)** 필수: React, TypeScript, 서버 컴포넌트, Prisma ORM, PostgreSQL 커넥션 풀링, Vercel 엣지 함수, CI/CD 파이프라인 구성(GitHub Actions), CDN 캐시 무효화 전략, 피처 플래그 관리, 프리뷰 배포 워크플로우, 옵저버빌리티 대시보드.
+
+2018년 프론트엔드 채용 공고랑 비교해보면: React, CSS-in-JS, Redux, REST API 소비, 반응형 디자인, 크로스 브라우저 테스트. 의욕 넘치는 회사면 webpack 설정 정도 추가됐을까요.
+
+현대 프론트엔드 역할은 대부분의 개발자가 눈치채지 못한 속도로 조용히 풀스택 범위를 흡수해 왔어요. "UI 만드는 사람"이랑 "서버 관리하는 사람" 사이의 명확한 경계가 그냥 사라져 버렸죠. 프론트엔드 개발자가 이제 데이터베이스 쿼리 날리고, 캐싱 레이어 설정하고, 엣지에서 실행되는 미들웨어 짜고, 배포 파이프라인까지 소유해요. 예측이 아니에요. 모던 스택으로 제품 출시하는 회사들의 채용 공고, 프레임워크 기본값, 팀 구조의 현재 상태가 그렇습니다.
+
+이 변화가 일어나고 있냐 아니냐는 이제 문제가 아니에요. 번아웃 없이, 전문성도 잃지 않으면서 어떻게 대응하느냐가 문제죠. 뭘 배우고, 뭘 위임하고, 뭘 거절할지 결정하는 프레임워크가 필요해요. 이 글이 바로 그걸 제공합니다.
+
+---
+
+## 여기까지 오게 된 과정: 프론트엔드를 집어삼킨 아키텍처 변화
+
+프론트엔드/백엔드 경계가 무너진 건 하나의 기술 결정 때문이 아니에요. 세 가지 아키텍처 변화가 동시에 맞물리면서, 각각 이전까지 백엔드 엔지니어나 DevOps 팀의 것이었던 책임을 프론트엔드 개발자의 코드베이스 한가운데로 끌어당겼어요.
+
+### 서버 컴포넌트 혁명
+
+React 서버 컴포넌트는 React 앱에서 작업의 기본 단위 자체를 바꿔버렸어요. RSC 이전에 React 컴포넌트는 클라이언트 사이드 구조물이었어요. 브라우저에서 렌더링되고, 훅으로 상태 관리하고, 다른 누군가가 유지하는 API 엔드포인트 호출해서 데이터 가져왔죠. 분리가 명확했어요: 프론트엔드 개발자는 컴포넌트 짜고, 백엔드 개발자는 그 컴포넌트가 쓰는 API 짜고.
+
+React 서버 컴포넌트가 그 분리를 무너뜨렸어요. 컴포넌트가 이제 서버에서 실행되고, 데이터베이스나 파일 시스템 같은 서버 전용 리소스에 접근하고, 직렬화된 결과를 클라이언트로 보내요. Next.js App Router에서 컴포넌트는 기본적으로 서버 컴포넌트예요. 클라이언트 사이드 렌더링을 원하면 "use client" 지시어로 명시적으로 선택해야 해요. 기본값이 서버에서 실행되는 컴포넌트인 거죠.
+
+그러니까 단 하나의 .tsx 파일이 이전에는 두 역할로 나뉘어 있던 걸 다 커버하게 됐어요:
+
+```tsx
+// app/products/page.tsx
+import { db } from '@/lib/database'
+import { products } from '@/lib/schema'
+import { desc } from 'drizzle-orm'
+
+export default async function ProductsPage() {
+  const allProducts = await db
+    .select()
+    .from(products)
+    .orderBy(desc(products.createdAt))
+    .limit(20)
+
+  return (
+    <main>
+      <h1>최신 상품</h1>
+      <ul>
+        {allProducts.map((product) => (
+          <li key={product.id}>
+            {product.name} — ${product.price}
+          </li>
+        ))}
+      </ul>
+    </main>
+  )
+}
+
+```
+
+JSX 렌더링하는 파일 안에서 Drizzle ORM으로 DB 쿼리를 날리고 있어요. API 라우트도 없고, 별도 백엔드 서비스도 없어요. 이 파일을 소유하는 프론트엔드 개발자가 이제 DB 쿼리, 커넥션 동작, 서버 사이드 에러 처리까지 다 소유하는 거예요. React와 Next.js가 이걸 기본값으로 채택해버리면서, 고급 패턴이 아니라 그냥 표준 경로가 됐어요.
+
+한 가지 중요한 제약: 서버 컴포넌트는 브라우저 API나 useState, useEffect 같은 훅을 쓸 수 없어요. 반대로 클라이언트 컴포넌트는 서버 전용 모듈을 직접 임포트할 수 없고요. 번들러가 이 경계를 강제하는데, 이걸 모르면 프레임워크랑 싸우는 것 같은 혼란스러운 빌드 에러를 맞닥뜨리게 돼요.
+
+### 엣지 함수와 API 중간 레이어의 죽음
+
+서버 컴포넌트가 DB 접근을 컴포넌트 레이어로 끌어올리는 동안, 엣지 함수는 인프라 로직을 프론트엔드 저장소로 끌어당겼어요. Vercel 엣지 함수, Cloudflare Workers 같은 플랫폼은 요청이 애플리케이션 서버에 도달하기 전에 CDN 엣지 노드에서 실행되는 미들웨어를 작성할 수 있게 해줘요.
+
+Next.js 미들웨어는 라우트가 매칭되고 렌더링되기 전에 실행돼요. Vercel에서 request.geo로 지리적 위치 데이터에 접근하고, 요청을 rewrite하거나 redirect하고, 헤더랑 쿠키를 조작할 수 있어요. 전통적인 의미에서 프론트엔드 코드가 아니에요. 인증 체크, 지리적 라우팅, 실험 할당, 속도 제한, 캐시 헤더 조작 같은 인프라 로직이에요.
+
+```tsx
+// middleware.ts
+import { NextRequest, NextResponse } from 'next/server'
+
+export function middleware(request: NextRequest) {
+  const country = request.geo?.country || 'US'
+
+  if (request.nextUrl.pathname.startsWith('/pricing')) {
+    const url = request.nextUrl.clone()
+    url.pathname = `/pricing/${country.toLowerCase()}`
+    const response = NextResponse.rewrite(url)
+    response.headers.set('x-user-country', country)
+    response.headers.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
+    response.headers.set('Vary', 'x-user-country')
+    return response
+  }
+
+  const response = NextResponse.next()
+  response.headers.set('x-user-country', country)
+  response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  return response
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+}
+
+```
+
+캐시 헤더 조작, 지리적 콘텐츠 라우팅, 캐싱 전략 설정이 프론트엔드 저장소 안 파일에 있고, UI 코드랑 함께 배포돼요. DevOps 엔지니어가 보면 저 책임들 전부 인프라 관심사라고 바로 알아볼 거예요. 근데 파일이 프론트엔드 저장소에 있으니까 프론트엔드 개발자가 소유하게 되는 거죠.
+
+중요한 제한 사항: 엣지 런타임은 Node.js API가 아닌 웹 표준 API를 제공해요. TCP 소켓이나 net, fs 같은 Node.js 내장 모듈에 의존하는 DB 드라이버 상당수가 엣지에서 안 돼요. HTTP 기반 DB 프록시나 엣지 호환 드라이버(Neon 서버리스 드라이버, Planetscale fetch 기반 드라이버 등)가 필요해요. 서버 로직을 엣지 함수로 옮기려다 이 함정에 빠지는 개발자들이 많아요.
+
+분명히 말하면, 여전히 별도의 API 레이어를 유지하는 앱도 많아요. 엣지 미들웨어는 보통 전체 도메인 로직이 아닌 인증, 라우팅, 캐싱 힌트, 실험을 처리해요. "API의 죽음"이라는 말은 좀 과장이에요. 하지만 엣지로 이동한 책임들은 실재하고, 프론트엔드 코드베이스를 소유한 사람한테 귀속돼요.
+
+### 프론트엔드 저장소 안의 인프라-as-Config
+
+세 번째 변화는 좀 조용하지만 똑같이 중요해요. vercel.json, next.config.ts, wrangler.toml 같은 설정 파일들이 프론트엔드 저장소를 인프라 정의서로 만들어버렸어요.
+
+next.config.ts는 이제 라우팅 헤더, 리다이렉트 규칙, 이미지 최적화 설정, 캐싱과 배포에 직접 영향을 미치는 출력 동작을 제어해요. vercel.json은 이전에 플랫폼이나 DevOps 팀이 관리했을 함수 설정, 헤더 정책, rewrite 규칙을 정의하고요. Cloudflare의 wrangler.toml은 Workers 배포 바인딩, 라우트, 환경 설정을 정의해요.
+
+이 파일들이 프론트엔드 저장소에 있어요. 프론트엔드 PR에서 리뷰되고, UI 작업하는 사람이 수정해요. 저장소를 소유한 사람이 그 안의 인프라 설정을 소유하게 되는 게 조직적 현실이에요.
+
+Terraform이나 Kubernetes 매니페스트를 대체한다는 게 아니에요. 배포 레이어에서 앱이랑 플랫폼 동작을 설정하는 거예요. 근데 대부분의 팀 구조에서 "프론트엔드 저장소에 있다"는 건 "프론트엔드 개발자가 처리한다"로 번역되어 버려요.
+
+---
+
+## 새로운 기준선: 2025년 '프론트엔드'가 실제로 의미하는 것
+
+이런 아키텍처 변화들을 고려하면, 모던 제품 회사 채용 담당자들이 시니어 프론트엔드 역할의 기본 요건으로 보는 스킬셋이 많이 확장됐어요. 모든 회사와 스택에 해당하는 건 아니지만, Next.js App Router나 비슷한 프레임워크 쓴다면 이런 기대는 꽤 일반적이에요.
+
+### 컴포넌트 레이어의 DB 쿼리
+
+Prisma나 Drizzle 같은 ORM은 더 이상 백엔드만의 기술이 아니에요. 서버 컴포넌트로 작업하는 프론트엔드 개발자는 쿼리 작성법뿐만 아니라, 서버리스 환경에서의 커넥션 풀링 동작(각 함수 호출이 새 커넥션을 열 수 있음), 서버 사이드 데이터 페칭 vs SWR/TanStack Query 클라이언트 사이드 페칭 중 언제 뭘 쓸지, 컴포넌트 컨텍스트에서 DB 에러를 어떻게 처리할지를 이해해야 해요.
+
+SaaS 프로젝트에서 상품 카탈로그 페이지를 클라이언트 사이드 API 페칭에서 Drizzle 직접 쿼리를 쓰는 서버 컴포넌트로 마이그레이션했을 때, API 왕복이랑 클라이언트 사이드 렌더링 워터폴을 제거하면서 초기 페이지 로딩이 1.8초에서 420ms로 떨어졌어요. 근데 트래픽 급증 시 각 서버리스 호출이 자체 DB 커넥션을 열면서 커넥션 풀 고갈이 바로 발생했어요. PgBouncer, Prisma Accelerate, Neon 서버리스 드라이버 같은 도구로 커넥션 풀링을 이해하는 건 이제 선택이 아니에요.
+
+### 브라우저를 넘어선 캐싱 전략
+
+예전에 프론트엔드 성능 최적화는 번들 분할, 지연 로딩, 브라우저 캐시 헤더 정도였어요. 이제 모던 프론트엔드 역할은 CDN 캐시 무효화, 데이터 캐시 재검증(App Router의 revalidatePath, revalidateTag 등), stale-while-revalidate 패턴, Vary 헤더가 개인화와 어떻게 상호작용해서 캐시 오염을 방지하는지까지 이해해야 해요.
+
+Next.js는 컴포넌트 레벨 코드에서 fetch 캐싱 옵션을 직접 노출해요. cache: 'no-store' 대 { next: { revalidate: 3600 } } 같은 결정이 CDN 동작, 오리진 서버 부하, 사용자가 보는 데이터 신선도를 직접 결정해요. 컴포넌트 레벨 코드로 표현된 인프라 레벨 성능 관리인 거예요.
+
+참고로 Next.js 캐싱 동작은 버전마다 달라졌어요. Next.js 15부터 fetch 요청은 기본적으로 캐시 안 해요. 명시적으로 선택해야 해요. 오래된 튜토리얼이나 Next.js 14 쓰고 있다면 기본값이 달라요. 쓰는 버전의 캐싱 문서를 꼭 확인하세요.
+
+### CI/CD와 프리뷰 배포
+
+Vercel 같은 플랫폼이 모든 PR에 프리뷰 배포를 자동으로 제공해요. 강력한 기능이죠. 근데 이게 프론트엔드 개발자가 배포 동작을 설정하고, 환경 변수를 관리하고, 피처 플래그 연동을 설정하고, 배포 실패를 디버깅해야 한다는 의미이기도 해요.
+
+많은 팀이 프론트엔드 개발자한테 린팅, 타입 체크, 테스트, 배포를 위한 GitHub Actions 워크플로우 설정도 맡겨요. 컴포넌트 짜는 사람이 그걸 출시하는 파이프라인도 짜는 거예요.
+
+보안 관련 기대도 커지고 있어요: 인증 미들웨어, 쿠키 설정 플래그, CSRF 방어, 시크릿 관리까지요. 프레임워크랑 플랫폼이 같은 코드베이스에서 이걸 접근 가능하게 만들어버렸기 때문에 이 책임들이 프론트엔드 영역으로 자연스럽게 흘러들어 온 거예요.
+
+---
+
+## 범위 확장 문제: 확장이 착취가 될 때
+
+프론트엔드 역할의 모든 확장이 자연스러운 진화는 아니에요. 일부는 회사가 흐릿한 경계를 이용해서 단일 연봉으로 두 역할치 산출물을 뽑아내는 거예요.
+
+### "어차피 저장소에 있잖아요" 함정
+
+메커니즘이 이래요: 인증 미들웨어 엣지 함수가 프론트엔드 저장소에 있어요. 캐싱 설정은 next.config.ts에 있고요. 배포 파이프라인은 프론트엔드 개발자가 매일 머지하는 바로 그 main 브랜치에서 실행돼요.
+
+프론트엔드 개발자가 이미 이 인프라 관심사들이 있는 저장소에 있으니까, 의도적인 역할 설계가 아닌 단순 근접성으로 기본 소유자가 돼버려요. 인증 미들웨어가 새벽 2시에 깨지면? 같은 디렉토리 파일 건드린 PR을 마지막으로 머지한 사람이 프론트엔드 개발자라서 호출돼요. 캐시 무효화 전략이 오래된 콘텐츠를 유발하면? 재검증 로직이 컴포넌트 코드에 있으니 프론트엔드 개발자 문제가 돼요.
+
+이건 역할 진화로 위장한 조직적 편의예요. 하나는 진정한 커리어 성장이고 다른 하나는 관리 안 된 부담 이전이기 때문에 이 구분이 중요해요.
+
+이 패턴이 잘못 가는 구체적인 예시들: 자기가 구축하지도 않았고 교육도 안 받은 인프라 프로덕션 인시던트 온콜 로테이션. 비용을 유발하는 아키텍처 결정을 바꿀 권한도 없이 클라우드 비용 예산 소유. CDN 레이어 성능 예산 책임인데 캐시 동작 디버깅하는 옵저버빌리티 도구 접근은 안 되는 상황.
+
+### 보상 격차
+
+불편한 진실이 있어요. Stack Overflow 개발자 설문에 따르면, 풀스택 개발자랑 DevOps/SRE 엔지니어는 지속적으로 프론트엔드 개발자보다 높은 중위 보상을 받아요. 지역이랑 시니어리티에 따라 격차가 다르지만 패턴은 유지돼요: 프론트엔드 개발자들이 흡수하고 있는 역할들이 "프론트엔드 개발자" 직함보다 돈을 더 받는 거예요.
+
+프론트엔드 개발자가 DB 쿼리 최적화, 엣지 함수 미들웨어, CI/CD 파이프라인 설정, 캐싱 전략 관리까지 맡으면 프론트엔드, 백엔드, 플랫폼 엔지니어링에 걸친 작업을 하고 있는 거예요. 직함이랑 보상이 여전히 "프론트엔드 개발자"라면 회사는 결합된 엔지니어링 산출물에 상당한 할인을 받고 있는 거죠.
+
+---
+
+## 의사결정 프레임워크: 업스킬할 것인가, 거절할 것인가
+
+새로운 책임이 떨어지면 수용할지 저항할지 구조적으로 판단하는 방법이 필요해요. "팀 플레이어"가 되어야 한다는 압박이 모든 결정을 흡수 방향으로 편향시키니까 직감은 믿기 어려워요. 새로운 책임에 반복적으로 적용할 수 있는 두 축 프레임워크예요.
+
+### 두 축 평가
+
+**축 1: 업계 흐름.** 이 기술이 업계 전반에서 프론트엔드 역할의 표준 기대치가 되고 있나요? 프레임워크 기본값(서버 컴포넌트는 Next.js App Router 기본값이에요), 플랫폼 기능(Vercel, Netlify, Cloudflare 모두 프론트엔드 개발자가 엣지 동작 설정할 걸 가정해요), 여러 회사의 채용 공고를 살펴보세요. 우리 회사만 이 기술을 기대한다면, 업계 변화가 아니라 인력 부족일 수 있어요.
+
+**축 2: 커리어 정합성.** 이 기술을 배우면 원하는 커리어 방향으로 나아가는 데 도움이 되나요? 스태프 프론트엔드 엔지니어, 풀스택 아키텍트, 엔지니어링 매니저 중 어느 방향이든, 각 경로마다 이득이 되는 스킬 확장이 달라요. 어떤 커리어 방향으로도 도움이 안 되는 기술은 성장이 아니라 부담이에요.
+
+```
+                    높은 커리어 정합성
+                        │
+      Q3: 맥락과 함께      │        Q1: 즉시 학습
+         위임            │
+                        │
+  낮은 업계 ──────────────┼────────────── 높은 업계
+  흐름                   │               흐름
+                        │
+      Q4: 단호하게        │        Q2: 전략적으로
+         거절            │            학습
+                        │
+                    낮은 커리어 정합성
+
+```
+
+**사분면 1: 즉시 학습 (높은 업계 흐름 + 높은 커리어 정합성)**
+
+React 서버 컴포넌트, 엣지 함수 기초, ORM 기초(Prisma, Drizzle), 캐싱 전략 패턴(재검증, stale-while-revalidate, CDN 캐시 세분화). 업계 전반에서 표준이 되고 있고 사실상 모든 시니어 프론트엔드 커리어 경로에 매핑돼요. 저항하면 커리어 리스크예요. 최선의 학습 에너지를 여기에 쏟으세요.
+
+**사분면 2: 전략적으로 학습 (높은 업계 흐름 + 낮은 커리어 정합성)**
+
+CI/CD 파이프라인 설정, 모니터링 및 옵저버빌리티 설정, 프리뷰 배포 인프라. 업계 전반에서 진짜로 현대 프론트엔드 역할의 일부가 되고 있지만, 특정 커리어 목표와는 안 맞을 수 있어요. 대화 가능하고 스스로 막히지 않을 정도로 배우되, 프로덕션 인시던트 속에서 불 끄면서 흡수하는 게 아니라 전담 학습 시간이랑 교육 자원을 협상하세요.
+
+**사분면 3: 맥락과 함께 위임 (낮은 업계 흐름 + 높은 커리어 정합성)**
+
+회사 특유의 레거시 인프라, 커스텀 내부 배포 도구, 독자적 플랫폼 연동. 진짜 흥미롭고 커리어 목표랑 맞을 수 있지만 업계 전반의 기대치가 되고 있진 않아요. 원하면 배우되 의무감은 느끼지 않아도 돼요.
+
+**사분면 4: 단호하게 거절 (낮은 업계 흐름 + 낮은 커리어 정합성)**
+
+Kubernetes 클러스터 관리, 멀티 클라우드 Terraform 작성, 구축하지도 않았고 런북도 없는 인프라 온콜 로테이션. 이건 흐릿한 경계의 착취예요. 해당 책임이 보안 폭발 반경을 수반하거나, 온콜 부담이 있거나, 소유권 불분명하거나, 옵저버빌리티나 런북이 없거나, 부여받지 않은 접근 권한이 필요하면 전담 플랫폼이나 DevOps 역할에 속하는 신호예요.
+
+거절할 때 쓸 수 있는 말: *"이게 성공적으로 이루어지도록 확실히 하고 싶어요. 이 책임은 현재 제가 없는 [교육/접근 권한/런북]을 필요로 하고, 뭔가 잘못되면 [구체적인 시스템]에 영향을 줘요. 올바른 소유자를 찾을 수 있을까요? 프론트엔드 연동 포인트에서는 기꺼이 협력할게요."*
+
+---
+
+## 실용적인 업스킬 경로: 90일 계획
+
+### 1-4주차: 서버 컴포넌트와 데이터 레이어 기초
+
+이미 만지고 있는 아키텍처부터 시작하세요. 4주차까지 목표는 적절한 에러 처리, 로딩 상태, TypeScript 타입을 갖춘 DB 쿼리 서버 컴포넌트를 자신 있게 작성하는 거예요.
+
+```tsx
+// app/products/page.tsx
+import { Suspense } from 'react'
+import { db } from '@/lib/database'
+import { products } from '@/lib/schema'
+import { desc } from 'drizzle-orm'
+
+interface Product {
+  id: string
+  name: string
+  price: number
+  createdAt: Date
+}
+
+async function getProducts(): Promise<Product[]> {
+  try {
+    return await db
+      .select()
+      .from(products)
+      .orderBy(desc(products.createdAt))
+      .limit(20)
+  } catch (error) {
+    console.error('상품 조회 실패:', error)
+    throw new Error('상품을 불러올 수 없습니다. 다시 시도해 주세요.')
+  }
+}
+
+async function ProductList() {
+  const allProducts = await getProducts()
+
+  if (allProducts.length === 0) {
+    return <p>상품이 없습니다.</p>
+  }
+
+  return (
+    <ul>
+      {allProducts.map((product) => (
+        <li key={product.id}>
+          {product.name} — ${product.price.toFixed(2)}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <main>
+      <h1>최신 상품</h1>
+      <Suspense fallback={<p>상품 불러오는 중...</p>}>
+        <ProductList />
+      </Suspense>
+    </main>
+  )
+}
+
+```
+
+```tsx
+// app/products/error.tsx
+'use client'
+
+export default function ProductsError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div>
+      <h2>{error.message}</h2>
+      <button onClick={() => reset()}>다시 시도</button>
+    </div>
+  )
+}
+
+```
+
+구조 포인트: 데이터 페칭을 타입 있는 비동기 함수로 분리했고, 스트리밍 로딩 상태를 위해 Suspense로 감쌌고, 에러 처리는 임시 try/catch 대신 App Router의 error.tsx 관례를 써요. 에러 바운더리 파일은 reset 콜백이 클라이언트 사이드 동작이라 'use client'가 필요해요.
+
+DB 드라이버가 서버리스랑 안 맞으면 PgBouncer, Prisma Accelerate, Neon 서버리스 드라이버 같은 커넥션 풀링 프록시가 필요해요. 프로덕션 배포 전에 동시 서버리스 호출 하에서 DB 커넥션 동작을 꼭 테스트하세요.
+
+### 5-8주차: 엣지 함수와 캐싱
+
+```tsx
+// middleware.ts
+import { NextRequest, NextResponse } from 'next/server'
+
+const EXPERIMENT_COOKIE = 'ab-pricing-variant'
+const VARIANTS = ['control', 'new-pricing'] as const
+type Variant = (typeof VARIANTS)[number]
+
+export function middleware(request: NextRequest) {
+  if (!request.nextUrl.pathname.startsWith('/pricing')) {
+    return NextResponse.next()
+  }
+
+  const existingVariant = request.cookies.get(EXPERIMENT_COOKIE)?.value
+  const variant: Variant =
+    existingVariant && (VARIANTS as readonly string[]).includes(existingVariant)
+      ? (existingVariant as Variant)
+      : VARIANTS[Math.random() < 0.5 ? 0 : 1]
+
+  const url = request.nextUrl.clone()
+  url.pathname = `/pricing/${variant}`
+  const response = NextResponse.rewrite(url)
+
+  if (!existingVariant) {
+    response.cookies.set(EXPERIMENT_COOKIE, variant, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+    })
+  }
+
+  response.headers.set('x-experiment-variant', variant)
+  response.headers.set('Vary', 'x-experiment-variant')
+  response.headers.set('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=1200')
+
+  return response
+}
+
+export const config = {
+  matcher: ['/pricing/:path*'],
+}
+
+```
+
+엣지에서 변형 할당하고, 쿠키에 유지하고, 변형별 라우트로 rewrite하고, 캐시 헤더 세팅하는 A/B 테스트 패턴이에요. Cookie 전체에 Vary 걸면 분석 쿠키, 세션 토큰 등 관련 없는 쿠키 조합마다 별도 캐시 항목이 생겨서 캐시 히트율이 조용히 망가져요. x-experiment-variant 같은 커스텀 헤더에 Vary 거는 게 훨씬 안전해요.
+
+### 9-12주차: CI/CD와 옵저버빌리티
+
+Vercel Git 연동으로 시작해서 타입 체크, 린팅, 테스트를 먼저 돌리는 GitHub Actions 워크플로우를 만들어보세요. 그다음 Core Web Vitals 추적, 에러율 모니터링, 캐시 히트율 관찰을 추가하세요.
+
+추천 도구: Web Vitals용 Vercel Analytics/Speed Insights, 에러 추적용 Sentry(서버 컴포넌트 지원), 엣지 미들웨어 디버깅용 플랫폼 내장 함수 로그. OpenTelemetry 기초도 이때 배우면 좋은데, 인시던트 중에 흡수하지 말고 전담 학습 시간을 협상하세요.
+
+---
+
+## 불편한 대화: 역할을 재협상하는 방법
+
+### 세 가지 시나리오, 세 가지 스크립트
+
+**스크립트 1: 직함이랑 보상 조정 요청**
+
+*"지난 [기간] 동안 제 역할이 [DB 쿼리 최적화, 엣지 미들웨어, CI/CD 파이프라인 유지보수] 같은 것들로 확장됐어요. 이 책임들은 보통 풀스택이나 플랫폼 엔지니어링 역할로 분류되고 더 높은 보상을 받아요. [Stack Overflow 설문/levels.fyi] 기준으로요. 현재 담당하는 범위를 반영해서 직함이랑 보상을 조정하는 걸 논의하고 싶어요. 구체적인 책임 목록이랑 표준 역할 정의 매핑 문서 준비했어요."*
+
+서면 문서 꼭 가져가세요. 전통적인 프론트엔드 범위 밖의 책임, 언제 맡았는지, 어떤 역할에 해당하는지 명시하세요.
+
+**스크립트 2: 학습 시간 요청**
+
+*"[구체적인 책임] 기꺼이 맡겠는데, 제대로 하고 싶어요. [옵저버빌리티 기초 강좌 2주, 스테이징 환경 접근] 같은 게 필요해요. 프로덕션에서 완전히 책임지기 전에 준비 기간 포함한 일정을 합의할 수 있을까요?"*
+
+꺼림칙한 게 아니라 품질 보증으로 프레이밍하는 게 포인트예요.
+
+**스크립트 3: 사분면 4 책임 거절**
+
+*"생각해봤는데, [Kubernetes 관리/Terraform/내가 안 만든 서비스 온콜]은 다른 소유자가 필요한 것 같아요. 뭔가 잘못되면 [구체적인 시스템]에 영향이 크고, 안전하게 인시던트 처리할 교육이랑 런북이 없어요. 프론트엔드 연동 포인트는 제가 소유하고 이걸 맡을 팀과 협력할게요. 적절한 사람이나 팀을 찾을 수 있을까요?"*
+
+인프라 소유권, 온콜, 인시던트 처리를 명확히 하는 RACI 문서를 만들어두면 대립 대신 명확화 작업으로 분위기가 달라져요.
+
+---
+
+## 프론트엔드 개발자는 죽었다, 프론트엔드 개발자 만세
+
+"순수한" 프론트엔드 개발자가 죽어가는 게 아니에요. 프론트엔드의 정의가 확장되고 있는 거예요. React 서버 컴포넌트는 React 아키텍처의 공식 부분이고, Next.js는 서버 사이드 렌더링을 기본값으로 만들었고, 엣지 플랫폼은 프론트엔드 개발자가 미들웨어를 작성할 걸 가정해요. 일시적인 트렌드가 아니라 새로운 아키텍처예요.
+
+근데 이 환경에서 잘 나가는 개발자는 맡겨지는 모든 걸 그냥 흡수하는 사람이 아닐 거예요. 위 프레임워크로 진정한 커리어 성장과 회사 헤드카운트 예산에만 이득이 되는 범위 확장을 구별하면서 의도적으로 확장하는 사람들이 될 거예요.
+
+앞으로 프론트엔드 역할은 엣지 AI 추론 통합, 컴포넌트 트리에서의 실시간 데이터 파이프라인, 배포 후 뒤늦은 생각이 아닌 개발 워크플로우 일급 관심사로서의 옵저버빌리티를 포함하게 될 거예요. 그 미래를 준비하는 개발자는 지금 무엇을 배우고, 위임하고, 거절할지 의식적으로 선택하는 사람들이에요.
+
+아무것도 안 하면 두 가지 결과가 똑같이 가능해요: 진짜 변화에 저항해서 커리어 침체, 또는 모든 변화를 무분별하게 흡수해서 번아웃. 의사결정 프레임워크가 성장과 확산을 구분하는 도구예요. PR 큐에 새로운 책임이 나타날 때마다 꺼내 쓰세요.
