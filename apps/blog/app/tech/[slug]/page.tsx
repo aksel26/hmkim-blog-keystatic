@@ -187,6 +187,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                     <div className="container mx-auto px-6 max-w-4xl mb-12">
                         <video
                             src={post.thumbnailVideo}
+                            poster={post.thumbnailImage || undefined}
                             className="w-full rounded-xl"
                             autoPlay
                             muted
