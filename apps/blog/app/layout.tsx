@@ -1,4 +1,5 @@
 import ClientLayout from "@/components/layout/ClientLayout";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import { getAllPosts } from "@/lib/keystatic/reader";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
@@ -54,6 +55,7 @@ export default async function RootLayout({
       <body
         className={`${freesentation.className} antialiased`}
       >
+        {process.env.NODE_ENV === 'production' && <GoogleAnalytics />}
         <ClientLayout searchData={searchData}>{children}</ClientLayout>
       </body>
     </html>
