@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import SubscribeForm from "./SubscribeForm";
 
@@ -53,14 +53,14 @@ const itemVariants = {
 export function SubscribeContent() {
   return (
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6 py-16">
-      <motion.div
+      <m.div
         className="w-full max-w-lg"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Back Link */}
-        <motion.div variants={itemVariants} className="mb-8">
+        <m.div variants={itemVariants} className="mb-8">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground transition-colors"
@@ -68,15 +68,15 @@ export function SubscribeContent() {
             <ArrowLeft className="h-4 w-4" />
             홈으로 돌아가기
           </Link>
-        </motion.div>
+        </m.div>
 
         {/* Card */}
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800/50 p-8 md:p-10 shadow-xl dark:shadow-gray-900/50"
         >
           {/* Icon */}
-          <motion.div
+          <m.div
             className="mx-auto mb-6 flex h-20 w-20 items-center justify-center"
             variants={mailIconVariants}
             initial="initial"
@@ -90,7 +90,7 @@ export function SubscribeContent() {
               height={64}
               className="object-contain"
             />
-          </motion.div>
+          </m.div>
 
           {/* Title */}
           <h1 className="mb-3 text-center text-3xl font-bold tracking-tight">
@@ -106,16 +106,16 @@ export function SubscribeContent() {
           {/* Form */}
           <SubscribeForm />
 
-        </motion.div>
+        </m.div>
 
         {/* Footer note */}
-        <motion.p
+        <m.p
           variants={itemVariants}
           className="mt-6 text-center text-xs text-foreground/40"
         >
           이메일 주소는 뉴스레터 발송 목적으로만 사용됩니다.
-        </motion.p>
-      </motion.div>
+        </m.p>
+      </m.div>
     </main>
   );
 }

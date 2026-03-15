@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 interface NewsletterCTAProps {
@@ -44,7 +44,7 @@ export function NewsletterCTA({
         <div className="container mx-auto max-w-4xl px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <motion.div
+              <m.div
                 className="flex h-12 w-12 items-center justify-center"
                 variants={mailIconVariants}
                 initial="initial"
@@ -58,7 +58,7 @@ export function NewsletterCTA({
                   height={40}
                   className="object-contain"
                 />
-              </motion.div>
+              </m.div>
               <div className="text-center sm:text-left">
                 <p className="font-semibold">새 글 알림 받기</p>
                 <p className="text-sm text-foreground/60">
@@ -84,7 +84,7 @@ export function NewsletterCTA({
       <div
         className={`flex items-center justify-center gap-3 rounded-lg border border-electric-blue/20 bg-electric-blue/5 px-4 py-3 ${className}`}
       >
-        <motion.div
+        <m.div
           variants={mailIconVariants}
           initial="initial"
           animate="animate"
@@ -97,7 +97,7 @@ export function NewsletterCTA({
             height={20}
             className="object-contain"
           />
-        </motion.div>
+        </m.div>
         <span className="text-sm">새 글 알림을 받고 싶으신가요?</span>
         <Link
           href="/subscribe"
@@ -114,7 +114,7 @@ export function NewsletterCTA({
     <div
       className={`rounded-2xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-8 text-center ${className}`}
     >
-      <motion.div
+      <m.div
         className="mx-auto mb-4 flex h-14 w-14 items-center justify-center"
         variants={mailIconVariants}
         initial="initial"
@@ -128,7 +128,7 @@ export function NewsletterCTA({
           height={48}
           className="object-contain"
         />
-      </motion.div>
+      </m.div>
 
       <h3 className="mb-2 text-xl font-bold">이 글이 도움이 되셨나요?</h3>
 

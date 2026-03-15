@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import Link from 'next/link';
 import { Github, Linkedin, Mail, ExternalLink } from 'lucide-react';
 
@@ -67,7 +67,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
     return (
         <div className="min-h-screen">
             {/* Hero Section */}
-            <motion.section
+            <m.section
                 className="container mx-auto max-w-6xl px-6 pt-20 pb-16 md:pt-32 md:pb-24"
                 initial="hidden"
                 animate="visible"
@@ -76,7 +76,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-start">
                     {/* Left Column - Main Info */}
                     <div className="lg:col-span-7 space-y-8">
-                        <motion.div variants={fadeUpVariants} className="space-y-2">
+                        <m.div variants={fadeUpVariants} className="space-y-2">
                             <span className="text-sm font-mono uppercase tracking-[0.2em] text-foreground/50 ">
                                 FrontEnd Developer
                             </span>
@@ -84,19 +84,19 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                                 <span className="text-electric-blue">김현민</span>
                                 <span className="text-life-orange">.</span>
                             </h1>
-                        </motion.div>
+                        </m.div>
 
-                        <motion.p
+                        <m.p
                             variants={fadeUpVariants}
                             className="text-lg md:text-xl text-foreground/70 leading-relaxed max-w-xl"
                         >
                             직관적이고 빠른 웹 애플리케이션을 만듭니다.<br/>
                             새로운 기술을 탐구하고, 코드와 일상을 통해
                             그 여정을 나누는 것을 좋아합니다.
-                        </motion.p>
+                        </m.p>
 
                         {/* Social Links */}
-                        <motion.div variants={fadeUpVariants} className="flex items-center gap-4">
+                        <m.div variants={fadeUpVariants} className="flex items-center gap-4">
                             {socialLinks.map((social) => (
                                 <Link
                                     key={social.label}
@@ -109,11 +109,11 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                                     <social.icon className="w-5 h-5 text-foreground/60 group-hover:text-electric-blue transition-colors" />
                                 </Link>
                             ))}
-                        </motion.div>
+                        </m.div>
                     </div>
 
                     {/* Right Column - Stats Card */}
-                    <motion.div
+                    <m.div
                         variants={scaleInVariants}
                         className="lg:col-span-5 relative"
                     >
@@ -153,30 +153,30 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                                 </div>
                             </div>
                         </div>
-                    </motion.div>
+                    </m.div>
                 </div>
-            </motion.section>
+            </m.section>
 
             {/* Tech Stack Section */}
-            <motion.section
+            <m.section
                 className="container mx-auto max-w-6xl px-6 py-16 md:py-24"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-100px' }}
                 variants={containerVariants}
             >
-                <motion.div variants={fadeUpVariants} className="mb-12">
+                <m.div variants={fadeUpVariants} className="mb-12">
                     <span className="text-sm font-mono uppercase tracking-[0.2em] text-foreground/50">
                         사용하는 기술
                     </span>
                     <h2 className="text-3xl md:text-4xl font-bold tracking-tight mt-2">
                         Tech <span className="text-tech-blue">Stack</span>
                     </h2>
-                </motion.div>
+                </m.div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                     {techStack.map((tech, index) => (
-                        <motion.div
+                        <m.div
                             key={tech.name}
                             variants={fadeUpVariants}
                             className={`group relative p-5 rounded-xl border transition-all duration-300 cursor-default
@@ -196,20 +196,20 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                             {tech.highlight && (
                                 <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-tech-blue animate-pulse" />
                             )}
-                        </motion.div>
+                        </m.div>
                     ))}
                 </div>
-            </motion.section>
+            </m.section>
 
             {/* CTA Section */}
-            <motion.section
+            <m.section
                 className="container mx-auto max-w-6xl px-6 py-16 md:py-24"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true, margin: '-100px' }}
                 variants={containerVariants}
             >
-                <motion.div
+                <m.div
                     variants={scaleInVariants}
                     className="relative overflow-hidden rounded-2xl bg-foreground p-8 md:p-12"
                 >
@@ -247,8 +247,8 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                             </Link>
                         </div>
                     </div>
-                </motion.div>
-            </motion.section>
+                </m.div>
+            </m.section>
         </div>
     );
 }

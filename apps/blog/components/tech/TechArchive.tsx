@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { formatDate } from '@/lib/utils';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Loader2 } from 'lucide-react';
@@ -47,7 +47,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
   return (
     <div className="container mx-auto max-w-7xl px-6 py-12">
       {/* Header */}
-      <motion.header
+      <m.header
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -59,10 +59,10 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         <p className="text-lg text-foreground/70">
           Explorations in code, architecture, and engineering.
         </p>
-      </motion.header>
+      </m.header>
 
       {/* Tag Cloud */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1 }}
@@ -94,10 +94,10 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
             </button>
           ))}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* Posts Grid */}
-      <motion.div
+      <m.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.2 }}
@@ -106,7 +106,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         {displayedItems.map((post, index) => {
           const isNewItem = index >= newItemsStartIndex;
           return (
-            <motion.article
+            <m.article
               key={post.slug}
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -167,10 +167,10 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                   )}
                 </div>
               </Link>
-            </motion.article>
+            </m.article>
           );
         })}
-      </motion.div>
+      </m.div>
 
       {/* Load More Trigger */}
       <div
@@ -178,23 +178,23 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         className="flex justify-center items-center py-8 mt-8"
       >
         {isLoading && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex items-center gap-2 text-foreground/50"
           >
             <Loader2 className="h-5 w-5 animate-spin" />
             <span className="text-sm">Loading more posts...</span>
-          </motion.div>
+          </m.div>
         )}
         {!hasMore && displayedItems.length > 9 && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="text-sm text-foreground/40"
           >
             모든 포스트를 불러왔습니다
-          </motion.p>
+          </m.p>
         )}
       </div>
 
