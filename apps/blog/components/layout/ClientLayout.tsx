@@ -5,6 +5,7 @@ import Header from './Header';
 import Footer from './Footer';
 
 import { ThemeProvider } from '@/components/theme-provider';
+import { LazyMotion, domAnimation } from 'framer-motion';
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -38,10 +39,12 @@ export default function ClientLayout({
       defaultTheme="system"
 
     >
-      <Header onSearchOpen={() => setSearchOpen(true)} />
-      <main className="min-h-screen">{children}</main>
-      <Footer />
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} items={searchData} />
+      <LazyMotion features={domAnimation} strict>
+        <Header onSearchOpen={() => setSearchOpen(true)} />
+        <main className="min-h-screen">{children}</main>
+        <Footer />
+        <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} items={searchData} />
+      </LazyMotion>
     </ThemeProvider>
   );
 }

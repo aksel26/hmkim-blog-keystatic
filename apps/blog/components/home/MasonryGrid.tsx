@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { cn, formatDate } from '@/lib/utils';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Loader2 } from 'lucide-react';
@@ -61,7 +61,7 @@ export default function MasonryGrid({ posts }: MasonryGridProps) {
                     }
 
                     return (
-                        <motion.div
+                        <m.div
                             key={`${post.category}-${post.slug}`}
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -130,7 +130,7 @@ export default function MasonryGrid({ posts }: MasonryGridProps) {
                                     {formatDate(post.createdAt)}
                                 </time>
                             </div>
-                        </motion.div>
+                        </m.div>
                     );
                 })}
             </div>
@@ -141,23 +141,23 @@ export default function MasonryGrid({ posts }: MasonryGridProps) {
                 className="flex justify-center items-center py-8 mt-8"
             >
                 {isLoading && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="flex items-center gap-2 text-foreground/50"
                     >
                         <Loader2 className="h-5 w-5 animate-spin" />
                         <span className="text-sm">Loading more posts...</span>
-                    </motion.div>
+                    </m.div>
                 )}
                 {!hasMore && displayedItems.length > 6 && (
-                    <motion.p
+                    <m.p
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="text-sm text-foreground/40"
                     >
                         모든 포스트를 불러왔습니다
-                    </motion.p>
+                    </m.p>
                 )}
             </div>
         </div>

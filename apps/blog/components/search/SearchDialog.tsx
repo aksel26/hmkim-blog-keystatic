@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { Search, X, Loader2 } from "lucide-react";
 import { josa, disassemble, getChoseong } from "es-hangul";
 import { SearchItem } from "@/lib/types";
@@ -93,7 +93,7 @@ export function SearchDialog({ open, onOpenChange, items }: SearchDialogProps) {
       {open && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -106,7 +106,7 @@ export function SearchDialog({ open, onOpenChange, items }: SearchDialogProps) {
             className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] sm:pt-[15vh] px-4"
             onClick={() => onOpenChange(false)}
           >
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
@@ -168,12 +168,8 @@ export function SearchDialog({ open, onOpenChange, items }: SearchDialogProps) {
                           </span>
 
                           {index === selectedIndex && (
-                            <motion.div
-                              layoutId="search-result-active"
+                            <div
                               className="absolute left-0 w-[2px] h-full bg-primary"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
                             />
                           )}
                         </div>
@@ -188,7 +184,7 @@ export function SearchDialog({ open, onOpenChange, items }: SearchDialogProps) {
                   검색어를 입력하세요.
                 </div>
               )}
-            </motion.div>
+            </m.div>
           </div>
         </>
       )}

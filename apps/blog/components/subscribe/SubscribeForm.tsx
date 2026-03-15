@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Mail, User, Loader2 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import PrivacyModal from "./PrivacyModal";
@@ -59,7 +59,7 @@ export default function SubscribeForm() {
 
   return (
     <>
-      <motion.form
+      <m.form
         onSubmit={handleSubmit}
         className="w-full max-w-md space-y-6"
         initial={{ opacity: 0, y: 20 }}
@@ -126,13 +126,13 @@ export default function SubscribeForm() {
 
         {/* Error Message */}
         {error && (
-          <motion.p
+          <m.p
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-sm text-red-500"
           >
             {error}
-          </motion.p>
+          </m.p>
         )}
 
         {/* Submit Button */}
@@ -150,7 +150,7 @@ export default function SubscribeForm() {
             "동의 및 구독하기"
           )}
         </Button>
-      </motion.form>
+      </m.form>
 
       <PrivacyModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>

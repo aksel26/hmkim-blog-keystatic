@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Share2, Heart, MessageCircle, Check, Link2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 
 interface StickySidebarProps {
     shareData?: {
@@ -96,19 +96,19 @@ export default function StickySidebar({ shareData }: StickySidebarProps) {
             <div className="flex flex-col items-center gap-6">
                 {/* Share Button */}
                 <div className="relative" ref={shareMenuRef}>
-                    <motion.button
+                    <m.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleShare}
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                     >
                         <Share2 className="h-5 w-5" />
-                    </motion.button>
+                    </m.button>
 
                     {/* Share Menu */}
                     <AnimatePresence>
                         {showShareMenu && (
-                            <motion.div
+                            <m.div
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
@@ -157,29 +157,29 @@ export default function StickySidebar({ shareData }: StickySidebarProps) {
                                     </svg>
                                     <span>LinkedIn</span>
                                 </button>
-                            </motion.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </div>
 
                 {/* Like Button (placeholder) */}
-                <motion.button
+                <m.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                     <Heart className="h-5 w-5" />
-                </motion.button>
+                </m.button>
 
                 {/* Comment Button */}
-                <motion.button
+                <m.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={scrollToComments}
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                     <MessageCircle className="h-5 w-5" />
-                </motion.button>
+                </m.button>
             </div>
         </div>
     );

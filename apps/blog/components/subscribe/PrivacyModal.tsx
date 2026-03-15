@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { X } from "lucide-react";
 import Button from "@/components/ui/Button";
 
@@ -15,7 +15,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -24,7 +24,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
           />
 
           {/* Modal */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -74,7 +74,7 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             <div className="mt-6 flex justify-end">
               <Button onClick={onClose}>확인</Button>
             </div>
-          </motion.div>
+          </m.div>
         </>
       )}
     </AnimatePresence>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, m } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Search, Menu, X } from 'lucide-react';
@@ -77,14 +77,11 @@ export default function Header({ onSearchOpen }: HeaderProps) {
             >
               {item.label}
               {isActive(item.href) && (
-                <motion.div
-                  layoutId="navbar-indicator"
+                <m.div
                   className="absolute bottom-0 left-0 h-0.5 w-full bg-electric-blue"
-                  transition={{
-                    type: 'spring',
-                    stiffness: 380,
-                    damping: 30,
-                  }}
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.2 }}
                 />
               )}
             </Link>
@@ -144,7 +141,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -152,7 +149,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
               className="fixed inset-0 top-16 z-40 bg-background/60 backdrop-blur-xl md:hidden h-screen"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -194,7 +191,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           </>
         )}
       </AnimatePresence>

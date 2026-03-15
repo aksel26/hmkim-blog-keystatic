@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import confetti from "canvas-confetti";
 import { PartyPopper, ArrowLeft } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -22,44 +22,44 @@ export default function SubscribeCompletePage() {
 
   return (
     <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6 py-16">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
         className="w-full max-w-md text-center"
       >
         {/* Icon */}
-        <motion.div
+        <m.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.2 }}
           className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30"
         >
           <PartyPopper className="h-10 w-10 text-green-600" />
-        </motion.div>
+        </m.div>
 
         {/* Title */}
-        <motion.h1
+        <m.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="mb-3 text-3xl font-bold tracking-tight"
         >
           구독이 완료되었습니다!
-        </motion.h1>
+        </m.h1>
 
         {/* Description */}
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="mb-4 text-foreground/70"
         >
           새로운 글이 발행되면 이메일로 알려드릴게요.
-        </motion.p>
+        </m.p>
 
         {/* Contact Info */}
-        <motion.p
+        <m.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -73,10 +73,10 @@ export default function SubscribeCompletePage() {
             kevinxkim2023@gmail.com
           </a>
           으로 연락주세요.
-        </motion.p>
+        </m.p>
 
         {/* Back Button */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
@@ -87,8 +87,8 @@ export default function SubscribeCompletePage() {
               블로그로 돌아가기
             </Button>
           </Link>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </main>
   );
 }
