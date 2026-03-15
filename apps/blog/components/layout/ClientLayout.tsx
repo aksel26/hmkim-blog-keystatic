@@ -7,8 +7,13 @@ import Footer from './Footer';
 import { ThemeProvider } from '@/components/theme-provider';
 
 import { useState } from 'react';
-import { SearchDialog } from '@/components/search/SearchDialog';
+import dynamic from 'next/dynamic';
 import { SearchItem } from '@/lib/types';
+
+const SearchDialog = dynamic(
+  () => import('@/components/search/SearchDialog').then(mod => mod.SearchDialog),
+  { ssr: false }
+);
 
 export default function ClientLayout({
   children,

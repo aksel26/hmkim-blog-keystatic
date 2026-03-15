@@ -86,6 +86,7 @@ export default function MasonryGrid({ posts }: MasonryGridProps) {
                                         src={post.thumbnailImage}
                                         alt={post.title}
                                         fill
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                         priority={index < 2}
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
