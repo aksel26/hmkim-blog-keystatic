@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
 import { executeDeploy, skipDeploy } from "@/lib/workflow/executor";
 
@@ -59,18 +59,21 @@ export async function POST(
         await jobManager.updateJob(jobId, { status: "pending_deploy" });
       }
 
-      // Execute deploy in background
-      setImmediate(() => {
-        executeDeploy(jobId).catch((error) => {
-          console.error(`Background deploy failed for job ${jobId}:`, error);
-        });
-      });
-
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         message: "PR 생성이 시작되었습니다.",
         nextStatus: "deploying",
       });
+
+      after(async () => {
+        try {
+          await executeDeploy(jobId);
+        } catch (error) {
+          console.error(`Background deploy failed for job ${jobId}:`, error);
+        }
+      });
+
+      return response;
     } else {
       // Skip deploy
       await skipDeploy(jobId);

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
 import { executeWorkflow } from "@/lib/workflow/executor";
 import type { GenerateRequest, GenerateResponse } from "@/lib/types";
@@ -33,27 +33,28 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Execute workflow in background (non-blocking)
-    setImmediate(() => {
-      executeWorkflow(
-        job.id,
-        body.topic.trim(),
-        body.category || "tech",
-        {
-          tone: body.tone,
-          targetReader: body.targetReader,
-          template: body.template,
-        }
-      ).catch((error) => {
-        console.error(`Background workflow failed for job ${job.id}:`, error);
-      });
-    });
-
     const response: GenerateResponse = {
       jobId: job.id,
       status: "queued",
       streamUrl: `/api/jobs/${job.id}/stream`,
     };
+
+    after(async () => {
+      try {
+        await executeWorkflow(
+          job.id,
+          body.topic.trim(),
+          body.category || "tech",
+          {
+            tone: body.tone,
+            targetReader: body.targetReader,
+            template: body.template,
+          }
+        );
+      } catch (error) {
+        console.error(`Background workflow failed for job ${job.id}:`, error);
+      }
+    });
 
     return NextResponse.json(response, { status: 201 });
   } catch (error) {
