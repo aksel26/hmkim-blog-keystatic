@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { m } from "framer-motion";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import SubscribeForm from "./SubscribeForm";
 
 const mailIconVariants = {

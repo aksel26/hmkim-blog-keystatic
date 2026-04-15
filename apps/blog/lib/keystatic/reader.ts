@@ -5,23 +5,37 @@ import keystaticConfig from '@/keystatic.config';
 // Pass empty string for local storage mode
 export const reader = createReader('', keystaticConfig);
 
+type TechEntry = NonNullable<Awaited<ReturnType<typeof reader.collections.tech.read>>>;
+type LifeEntry = NonNullable<Awaited<ReturnType<typeof reader.collections.life.read>>>;
+
+type TechListItem = Omit<TechEntry, 'content'> & { slug: string };
+type LifeListItem = Omit<LifeEntry, 'content'> & { slug: string };
+
+function stripContent<T extends { content?: unknown }>(entry: T): Omit<T, 'content'> {
+  const copy = { ...entry };
+  delete copy.content;
+  return copy;
+}
+
 // Helper functions for Tech posts
-export async function getAllTechPosts(onlyPublished = true) {
+export async function getAllTechPosts(onlyPublished = true): Promise<TechListItem[]> {
   const slugs = await reader.collections.tech.list();
   const posts = await Promise.all(
     slugs.map(async (slug) => {
       const post = await reader.collections.tech.read(slug);
-      const { content, ...postData } = post || {};
+      if (!post) return null;
+      const postData = stripContent(post);
       return {
         slug,
         ...postData,
-      };
+      } satisfies TechListItem;
     })
   );
+  const existingPosts = posts.filter((post): post is TechListItem => post !== null);
 
   const filteredPosts = onlyPublished
-    ? posts.filter((post) => post?.status === 'published')
-    : posts;
+    ? existingPosts.filter((post) => post.status === 'published')
+    : existingPosts;
 
   return filteredPosts.sort(
     (a, b) =>
@@ -35,22 +49,24 @@ export async function getTechPost(slug: string) {
 }
 
 // Helper functions for Life posts
-export async function getAllLifePosts(onlyPublished = true) {
+export async function getAllLifePosts(onlyPublished = true): Promise<LifeListItem[]> {
   const slugs = await reader.collections.life.list();
   const posts = await Promise.all(
     slugs.map(async (slug) => {
       const post = await reader.collections.life.read(slug);
-      const { content, ...postData } = post || {};
+      if (!post) return null;
+      const postData = stripContent(post);
       return {
         slug,
         ...postData,
-      };
+      } satisfies LifeListItem;
     })
   );
+  const existingPosts = posts.filter((post): post is LifeListItem => post !== null);
 
   const filteredPosts = onlyPublished
-    ? posts.filter((post) => post?.status === 'published')
-    : posts;
+    ? existingPosts.filter((post) => post.status === 'published')
+    : existingPosts;
 
   return filteredPosts.sort(
     (a, b) =>

@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, m } from "framer-motion";
-import { Search, X, Loader2 } from "lucide-react";
-import { josa, disassemble, getChoseong } from "es-hangul";
+import { Search } from "lucide-react";
+import { disassemble, getChoseong } from "es-hangul";
 import { SearchItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 

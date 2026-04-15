@@ -3,8 +3,17 @@ import Markdoc, { Config, nodes, Tag } from '@markdoc/markdoc';
 import Image from 'next/image';
 import { CodeBlock } from './CodeBlock';
 
+type MarkdocNodeInput = Parameters<typeof Markdoc.transform>[0];
+
+type MarkdocNodeLike = {
+    type?: string;
+    attributes?: Record<string, unknown>;
+    content?: unknown;
+    children?: unknown;
+};
+
 interface MarkdocRendererProps {
-    node: any; // Markdoc node
+    node: unknown;
 }
 
 function slugify(text: string): string {
@@ -16,7 +25,11 @@ function slugify(text: string): string {
         .trim();
 }
 
-function getTextContent(node: any): string {
+function isMarkdocNodeLike(node: unknown): node is MarkdocNodeLike {
+    return typeof node === 'object' && node !== null;
+}
+
+function getTextContent(node: unknown): string {
     if (!node) return '';
     if (typeof node === 'string') return node;
 
@@ -26,17 +39,17 @@ function getTextContent(node: any): string {
     }
 
     // Handle text nodes with content property (Markdoc format)
-    if (node.attributes?.content && typeof node.attributes.content === 'string') {
+    if (isMarkdocNodeLike(node) && typeof node.attributes?.content === 'string') {
         return node.attributes.content;
     }
 
     // Check for content directly on node
-    if (typeof node.content === 'string') {
+    if (isMarkdocNodeLike(node) && typeof node.content === 'string') {
         return node.content;
     }
 
     // Recursively handle children
-    if (node.children) {
+    if (isMarkdocNodeLike(node) && node.children) {
         return getTextContent(node.children);
     }
 
@@ -160,7 +173,7 @@ const components = {
 };
 
 export function MarkdocRenderer({ node }: MarkdocRendererProps) {
-    const renderable = Markdoc.transform(node, config);
+    const renderable = Markdoc.transform(node as MarkdocNodeInput, config);
     return (
         <div className="prose dark:prose-invert mx-auto max-w-none">
             {Markdoc.renderers.react(renderable, React, { components })}
