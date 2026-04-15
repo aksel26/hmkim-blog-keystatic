@@ -50,7 +50,7 @@ export default function SubscribeForm() {
 
       // 성공 시 완료 페이지로 이동
       router.push("/subscribe/complete");
-    } catch (err) {
+    } catch {
       setError("서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
       setIsLoading(false);

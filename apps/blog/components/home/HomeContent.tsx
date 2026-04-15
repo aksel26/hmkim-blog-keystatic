@@ -12,7 +12,7 @@ interface HomeContentProps {
 
 export default function HomeContent({ initialPosts }: HomeContentProps) {
     const [activeTab, setActiveTab] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery] = useState('');
 
     const filteredPosts = useMemo(() => {
         return initialPosts.filter((post) => {
@@ -42,8 +42,6 @@ export default function HomeContent({ initialPosts }: HomeContentProps) {
             <SearchTabs
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
             />
             <MasonryGrid posts={filteredPosts} />
 

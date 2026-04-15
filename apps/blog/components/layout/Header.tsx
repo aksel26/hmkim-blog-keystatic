@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Search, Menu, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { SearchItem } from '@/lib/types';
 
 interface HeaderProps {
   onSearchOpen: () => void;
@@ -157,7 +156,7 @@ export default function Header({ onSearchOpen }: HeaderProps) {
               className="fixed inset-x-0 top-16 z-50 flex flex-col bg-background/80 backdrop-blur-lg p-6 md:hidden border-t border-b border-b-gray-100"
             >
               <div className="flex flex-col space-y-4">
-                {navItems.map((item, index) => (
+                {navItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

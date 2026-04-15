@@ -110,20 +110,27 @@ const createCommonFields = (pathPrefix: string) => ({
 // Storage configuration based on environment
 // 1. 브라우저 환경(Admin UI)인지 확인합니다.
 const isClient = typeof window !== 'undefined';
+const hasGitHubKeystaticEnv = Boolean(
+  process.env.KEYSTATIC_GITHUB_CLIENT_ID &&
+  process.env.KEYSTATIC_GITHUB_CLIENT_SECRET &&
+  process.env.KEYSTATIC_SECRET
+);
 
 // 2. 관리자 UI일 때는 GitHub 전체 루트 기준 경로('apps/blog/...')를 사용하고,
 //    서버(블로그 렌더링)일 때는 현재 앱 기준 경로('content/...')를 사용합니다.
 const pathPrefix = isClient ? 'apps/blog/' : '';
 
-const storage ={
-      kind: 'github' as const,
-      repo: {
-        owner: 'aksel26',
-        name: 'hmkim-blog-keystatic',
-      },
-    }
-// const pathPrefix = process.env.NEXT_KEYSTATIC_STORAGE_KIND === 'github' ? 'apps/blog/' : '';
-// console.log("🔍 ~  ~ apps/blog/keystatic.config.ts:121 ~ pathPrefix:", pathPrefix);
+const githubStorage = {
+  kind: 'github' as const,
+  repo: {
+    owner: 'aksel26',
+    name: 'hmkim-blog-keystatic',
+  },
+};
+
+const storage = isClient || hasGitHubKeystaticEnv
+  ? githubStorage
+  : { kind: 'local' as const };
 
 export default config({
   storage,

@@ -104,7 +104,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 gap-y-12"
       >
         {displayedItems.map((post, index) => {
-          const isNewItem = index >= newItemsStartIndex;
+          const isNewItem = index >= newItemsStartIndex && newItemsStartIndex > 0;
           return (
             <m.article
               key={post.slug}

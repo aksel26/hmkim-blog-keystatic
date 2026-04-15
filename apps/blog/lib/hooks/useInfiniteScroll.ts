@@ -64,7 +64,13 @@ export function useInfiniteScroll<T>(
 
   // items가 변경되면 리셋 (필터링 등)
   useEffect(() => {
-    reset();
+    const timeoutId = window.setTimeout(() => {
+      reset();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
   }, [items, reset]);
 
   // Intersection Observer 설정
