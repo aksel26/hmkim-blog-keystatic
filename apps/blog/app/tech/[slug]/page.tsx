@@ -103,6 +103,8 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                         title: post.title,
                         text: post.summary,
                     }}
+                    category="tech"
+                    slug={params.slug}
                 />
 
                 {/* Table of Contents (Desktop - fixed position) */}
