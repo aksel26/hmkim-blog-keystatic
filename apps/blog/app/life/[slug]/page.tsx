@@ -103,6 +103,8 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                         title: post.title,
                         text: post.summary || '',
                     }}
+                    category="life"
+                    slug={params.slug}
                 />
 
                 {/* Table of Contents (Desktop - fixed position) */}
