@@ -146,6 +146,51 @@ export interface Database {
           viewed_at?: string;
         };
       };
+      post_likes: {
+        Row: {
+          id: number;
+          post_category: PostCategory;
+          post_slug: string;
+          like_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          post_category: PostCategory;
+          post_slug: string;
+          like_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          post_category?: PostCategory;
+          post_slug?: string;
+          like_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      post_like_logs: {
+        Row: {
+          id: number;
+          post_category: PostCategory;
+          post_slug: string;
+          visitor_id: string;
+          liked_at: string;
+        };
+        Insert: {
+          post_category: PostCategory;
+          post_slug: string;
+          visitor_id: string;
+          liked_at?: string;
+        };
+        Update: {
+          post_category?: PostCategory;
+          post_slug?: string;
+          visitor_id?: string;
+          liked_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -163,6 +208,17 @@ export interface Database {
         Returns: {
           view_count: number;
           unique_view_count: number;
+        }[];
+      };
+      toggle_post_like: {
+        Args: {
+          p_category: string;
+          p_slug: string;
+          p_visitor_id: string;
+        };
+        Returns: {
+          like_count: number;
+          liked: boolean;
         }[];
       };
     };
@@ -186,6 +242,13 @@ export type PostViewUpdate = Database["public"]["Tables"]["post_views"]["Update"
 
 export type PostViewLog = Database["public"]["Tables"]["post_view_logs"]["Row"];
 export type PostViewLogInsert = Database["public"]["Tables"]["post_view_logs"]["Insert"];
+
+export type PostLike = Database["public"]["Tables"]["post_likes"]["Row"];
+export type PostLikeInsert = Database["public"]["Tables"]["post_likes"]["Insert"];
+export type PostLikeUpdate = Database["public"]["Tables"]["post_likes"]["Update"];
+
+export type PostLikeLog = Database["public"]["Tables"]["post_like_logs"]["Row"];
+export type PostLikeLogInsert = Database["public"]["Tables"]["post_like_logs"]["Insert"];
 
 // 댓글 with 대댓글 수
 export interface CommentWithReplies extends Comment {
