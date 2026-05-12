@@ -67,7 +67,7 @@ export function CommentItem({
   };
 
   const toggleReplies = async () => {
-    if (!showReplies && replies.length === 0 && comment.reply_count && comment.reply_count > 0) {
+    if (!showReplies && replies.length === 0 && (comment.reply_count ?? 0) > 0) {
       await loadReplies();
     }
     setShowReplies(!showReplies);
@@ -299,7 +299,7 @@ export function CommentItem({
         )}
 
         {/* Replies Toggle */}
-        {!isReply && comment.reply_count && comment.reply_count > 0 && (
+        {!isReply && (comment.reply_count ?? 0) > 0 && (
           <button
             onClick={toggleReplies}
             className="inline-flex items-center gap-1 mt-3 text-xs text-blue-500 hover:text-blue-600 transition-colors"
