@@ -1,0 +1,269 @@
+---
+title: 싱글 스레드 Redis가 빠른 5가지 구조적 이유
+summary: >
+  싱글 스레드인데 어떻게 초당 수십만 건을 처리할까. Redis의 성능을 In-Memory, I/O Multiplexing, 자료구조,
+  RESP, Pipelining 다섯 관점에서 정리한다.
+keywords:
+  - Redis
+  - Architecture
+  - Performance
+  - In-memory
+  - Database
+status: published
+tags:
+  - Redis
+  - Architecture
+  - Performance
+  - In-memory
+  - Database
+createdAt: 2026-05-27
+updatedAt: 2026-05-27
+thumbnailImage: /images/thumbnails/redis-fast-5-reasson/thumbnailImage.png
+---
+# 싱글 스레드 Redis가 빠른 5가지 구조적 이유
+
+Redis는 명령을 싱글 스레드로 처리한다. 그런데 단일 노드에서 초당 수십만 QPS가 나온다.
+
+멀티 스레드가 곧 성능이라는 통념을 거스르는 동작이라 처음 들으면 의아하다.
+
+빠른 부분에 집중하고, 느린 부분을 명령 경로에서 도려낸다. 거칠게 말하면 이 한 문장으로 정리된다. 다섯 가지 관점으로 쪼개 본다.
+
+## 싱글 스레드가 느리다는 오해
+
+멀티 스레드 자체가 빠른 건 아니다.
+
+자료구조 보호를 위한 mutex/spinlock 경쟁, 컨텍스트 스위칭 비용(스레드 전환 한 번에 1~10μs), CPU 코어 간 캐시 라인 동기화, 그리고 데드락과 레이스 컨디션 같은 디버깅 부담을 끌고 들어온다.
+
+Redis는 이 비용 자체를 발생시키지 않는다. 대신 다른 부분에서 성능을 끌어올린다.
+
+참고로 Redis 6부터 네트워크 I/O는 멀티 스레드 옵션이 있지만, 명령 실행은 여전히 싱글 스레드다.
+
+## 1. In-Memory
+
+저장 매체별 접근 시간을 보면 격차가 한눈에 드러난다.
+
+{% table %}
+- 매체
+- 평균 접근 시간
+---
+- HDD random read
+- 약 10,000,000 ns (10 ms)
+---
+- SSD random read
+- 약 100,000 ns (0.1 ms)
+---
+- RAM access
+- 약 100 ns
+---
+- L1 cache
+- 약 1 ns
+{% /table %}
+
+RAM은 HDD보다 약 6자릿수 빠르다. Redis는 데이터를 RAM에만 두고, 영속성이 필요하면 RDB 스냅샷이나 AOF(Append-Only File)로 따로 처리한다.
+
+요점은 메인 명령 경로(hot path)에 디스크가 끼지 않는다는 것이다.
+
+```
+[Client] → [Network] → [Parse] → [Execute on RAM] → [Response]
+```
+
+AOF를 켜둬도 디스크 쓰기는 `appendfsync` 정책에 따라 비동기로 처리되므로 명령 실행 자체를 막지 않는다.
+
+## 2. I/O Multiplexing
+
+클라이언트마다 스레드를 하나씩 붙이는 방식은 동시 접속이 만 단위로 가면 한계에 부딪힌다. 흔히 C10K 문제라고 한다.
+
+Redis는 OS가 제공하는 I/O 멀티플렉싱으로 이를 우회한다.
+
+{% table %}
+- 메커니즘
+- OS
+- 동작 방식
+---
+- `select` / `poll`
+- 모든 POSIX
+- 모든 소켓을 매번 순회 (O(n))
+---
+- `epoll`
+- Linux
+- 이벤트 발생한 소켓만 알림
+---
+- `kqueue`
+- BSD/macOS
+- epoll과 유사
+---
+- `IOCP`
+- Windows
+- 완전 비동기 모델
+{% /table %}
+
+그 위에 이벤트 루프가 돈다. 이벤트가 들어오면 명령을 파싱하고 실행한 뒤 응답을 큐에 넣고, 다음 이벤트로 넘어간다.
+
+부수적인 효과가 하나 있다. 모든 명령이 같은 스레드에서 순차로 실행되므로 락이 필요 없다. `INCR`이나 `LPUSH` 같은 명령이 원자적(atomic)인 이유가 여기에 있다.
+
+## 3. O(1) 중심의 자료구조
+
+Redis의 자료구조는 대부분 상수 시간 접근을 보장한다.
+
+{% table %}
+- 자료구조
+- 주요 연산
+- 시간 복잡도
+- 내부 구현
+---
+- String
+- GET / SET
+- O(1)
+- 동적 문자열 (SDS)
+---
+- Hash
+- HGET / HSET
+- O(1)
+- Hash table
+---
+- Set
+- SADD / SISMEMBER
+- O(1)
+- Hash table
+---
+- List
+- LPUSH / RPUSH
+- O(1)
+- Quicklist
+---
+- Sorted Set
+- ZADD / ZSCORE
+- O(log n)
+- Skip List + Hash table
+{% /table %}
+
+눈여겨볼 부분은 Sorted Set이다. 정렬된 데이터를 다루는 일반적인 선택은 Red-Black Tree나 AVL Tree 같은 균형 트리인데, Redis 저자 Salvatore Sanfilippo는 Skip List를 골랐다.
+
+Skip List는 정렬된 연결 리스트 위에 상위 레벨을 확률적으로 쌓은 구조다.
+
+```
+L3:  [1]─────────────────────[9]
+L2:  [1]────────[4]──────────[9]
+L1:  [1]─[2]─[3]─[4]─[5]─[6]─[7]─[9]   ← base level
+
+```
+
+성능은 균형 트리와 같은 O(log n)이지만, 구현이 훨씬 단순하다. 회전(rotation) 로직이 없고, 메모리 지역성이 좋아 캐시 친화적이다. 같은 성능이면 단순한 쪽을 택한다는 기준이 자료구조 선택에까지 적용된 사례다.
+
+## 4. RESP Protocol
+
+Redis가 클라이언트와 주고받는 프로토콜은 RESP(REdis Serialization Protocol)다. 텍스트 기반인데 극도로 단순하다.
+
+`SET key value` 명령은 wire 상에서 이렇게 흐른다.
+
+```
+*3\r\n$3\r\nSET\r\n$3\r\nkey\r\n$5\r\nvalue\r\n
+
+```
+
+{% table %}
+- 토큰
+- 의미
+---
+- `*3`
+- 배열, 원소 3개
+---
+- `$3`
+- 다음 bulk string의 길이는 3바이트
+---
+- `SET`
+- 실제 데이터
+---
+- `\r\n`
+- 구분자
+{% /table %}
+
+JSON과 비교해보면 차이가 분명해진다.
+
+{% table %}
+- 측면
+- JSON
+- RESP
+---
+- 길이 정보
+- 끝까지 읽어야 알 수 있음
+- 앞에 박혀 있음
+---
+- 따옴표/이스케이프
+- 처리 필요
+- 불필요
+---
+- 공백 처리
+- 무시해야 함
+- 없음
+---
+- 구분자 탐색
+- 중첩 구조 추적
+- 단순 `\r\n`
+---
+- 사람이 읽기
+- 가능
+- 가능 (telnet 디버깅)
+{% /table %}
+
+길이가 앞에 박혀 있다는 점이 결국 핵심이다. 다음에 몇 바이트를 읽어야 할지 미리 알 수 있으니 버퍼링과 파싱이 거의 공짜에 가까워진다.
+
+## 5. Pipelining
+
+실제 운영에서 처리량을 가장 크게 좌우하는 요인이다.
+
+RTT(Round Trip Time)는 요청을 보내고 응답을 받기까지의 왕복 시간이다. 같은 데이터센터 안이라도 0.5~1 ms 정도가 든다. 명령 1,000개를 하나씩 보내면 RTT만으로 500 ms ~ 1 s가 사라진다.
+
+Pipelining은 응답을 기다리지 않고 명령을 한꺼번에 쏟아붓는다.
+
+```
+순차 처리:  [REQ]→[RES]  [REQ]→[RES]  [REQ]→[RES]  ...  (N × RTT)
+
+파이프라인: [REQ][REQ][REQ][REQ]...
+                    ↓
+            [RES][RES][RES][RES]...  (1~2 × RTT)
+
+```
+
+1,000개 명령이 1~2회 왕복으로 끝나니 처리량이 수십~수백 배로 뛴다. 싱글 스레드 Redis가 수십만 QPS를 찍을 수 있는 가장 실질적인 이유다.
+
+## 운영 관점에서 짚어둘 것
+
+**비싼 명령은 전체를 막는다.** O(n) 명령이 길어지면 그동안 다른 모든 클라이언트가 대기한다. `KEYS`, `FLUSHALL`, 큰 컬렉션에 대한 `LRANGE 0 -1`이 대표적이다. 키 패턴 매칭이 필요하면 커서 기반의 `SCAN` 계열로 대체하는 편이 안전하다.
+
+**Pipelining과 Transaction은 다르다.** 둘 다 명령을 묶지만 목적이 다르다.
+
+{% table %}
+- 구분
+- Pipelining
+- MULTI/EXEC
+---
+- 목적
+- 처리량 개선
+- 원자성 보장
+---
+- 명령 사이 다른 클라이언트 끼어들기
+- 가능
+- 불가능
+---
+- 사용 시점
+- 일괄 SET/GET
+- 잔액 차감 + 로그 기록처럼 묶음으로 처리해야 할 때
+{% /table %}
+
+**클러스터 모드에서 파이프라인은 자동으로 분할되지 않는다.** 키가 여러 슬롯에 흩어지면 그대로 깨진다. Hash tag(`{tag}`)로 같은 슬롯에 묶거나, 클라이언트 측에서 슬롯별로 그룹핑해야 한다.
+
+## 마치며
+
+각각의 설계는 따로 떼어놓고 보면 평범하다. RAM에 둔다, epoll을 쓴다, O(1) 자료구조를 쓴다, 프로토콜을 단순하게 만든다, RTT를 줄인다.
+
+그런데 다섯이 합쳐지면 멀티 스레드 + 락 구조보다 빠른 시스템이 된다.
+
+성능을 끌어올리려면 반드시 더 복잡한 구조를 쌓아야 한다는 통념을, Redis는 정반대 방향에서 깨고 있다.
+
+## 참고
+
+- [원본 영상: 싱글스레드 Redis가 수십만 QPS를 내는 구조적 비밀](https://youtu.be/H-jSrhvnaLY)
+- [Redis 공식 문서 — Pipelining](https://redis.io/docs/latest/develop/use/pipelining/)
+- [Redis 공식 문서 — RESP protocol spec](https://redis.io/docs/latest/develop/reference/protocol-spec/)
+- [Antirez 블로그 — Skip Lists에 관한 글](http://antirez.com/news/86)
