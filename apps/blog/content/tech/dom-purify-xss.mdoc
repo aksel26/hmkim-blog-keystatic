@@ -1,0 +1,222 @@
+---
+title: '## DOMPurify를 쓰는데도 XSS가 남는 이유 — 싱크를 없애는 접근'
+summary: |
+  DOMPurify를 붙였는데도 mXSS는 왜 남을까. innerHTML 싱크 자체를 없애는 방향으로 생각을 바꾸면 우회 자체가 사라진다.
+keywords:
+  - 보안
+  - XSS
+  - 프론트엔드
+status: published
+tags:
+  - 보안
+  - XSS
+  - dangerouslySetInnerHTML
+  - sanitize
+createdAt: 2026-06-09
+updatedAt: 2026-06-09
+thumbnailImage: /images/thumbnails/dom-purify-xss/thumbnailImage.png
+---
+# DOMPurify를 쓰는데도 XSS가 남는 이유 — 싱크를 없애는 접근
+
+서버에서 받은 HTML을 화면에 그려야 하는 상황, 한 번쯤 겪어보셨을 겁니다. 공지사항, FAQ, 채팅 메시지처럼 굵게·줄바꿈·링크 정도의 서식이 섞여 들어오는 데이터요. React라면 자연스럽게 `dangerouslySetInnerHTML`로 손이 가고, 양심상 DOMPurify 같은 sanitize 라이브러리를 한 겹 덧대게 됩니다.
+
+그런데 얼마 전 코드 리뷰를 하다가 이런 생각이 들었습니다. "sanitize를 붙였으니 XSS는 막은 거 맞나?"
+
+결론부터 말하면, **아니요. 정확히는 '많이 줄였지만 통로는 열어둔' 상태**입니다.
+
+이 글에서는 sanitize의 한계가 어디에서 오는지, 그리고 왜 "걸러내기"보다 "통로 자체를 없애기"가 더 안전한지를 코드와 함께 풀어보려 합니다.
+
+## XSS의 본질은 '싱크'에 있다
+
+먼저 용어 하나. **싱크(sink)** 는 "데이터가 코드로 해석되는 지점"을 말합니다. XSS가 터지는 곳은 언제나 이 싱크입니다. 사용자가 넣은 데이터가 어딘가에서 그냥 문자열이 아니라 실행 가능한 코드로 바뀌는 순간, 거기가 사고 현장이죠.
+
+`dangerouslySetInnerHTML`이 바로 그 대표적인 싱크입니다. 이름값을 합니다. 받은 문자열을 그대로 브라우저의 HTML 파서에 넘기거든요. 파서 입장에선 그게 평범한 데이터인지 공격 코드인지 알 길이 없습니다. `<img src=x onerror="...">` 같은 게 들어와도 충실하게 파싱해서 `onerror`를 실행해버립니다.
+
+```tsx
+// 이게 싱크다. 받은 문자열이 HTML 파서로 직행한다.
+<div dangerouslySetInnerHTML={{ __html: message }} />
+
+```
+
+그래서 보통은 여기에 sanitize를 끼웁니다. "넘기기 전에 위험한 걸 한 번 걸러내자"는 발상이죠.
+
+```tsx
+import DOMPurify from "dompurify";
+
+// 한 겹 정제하고 넘긴다.
+<div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message) }} />
+
+```
+
+훨씬 낫습니다. DOMPurify는 잘 만든 라이브러리고, 대부분의 공격을 막아줍니다. 하지만 여기엔 미묘한 함정이 하나 남아 있습니다.
+
+## sanitize가 완벽하지 않은 이유 — mXSS
+
+문제는 **정제가 끝난 깨끗한 문자열을, 브라우저가 화면에 그리려고 한 번 더 파싱한다**는 데 있습니다. sanitize 시점의 HTML과 브라우저가 최종적으로 렌더링하는 HTML이 항상 같지 않다는 거죠.
+
+브라우저는 HTML을 파싱할 때 나름의 정규화·교정을 합니다. 닫히지 않은 태그를 알아서 닫아주고, 잘못 중첩된 태그를 재배치하죠. 문제는 이 "알아서 고쳐주는" 과정에서 **sanitize 시점엔 멀쩡했던 문자열이 다른 모양으로 변한다**는 겁니다.
+
+아주 단순화한 예를 들면 이렇습니다. sanitize는 `<` `>` 같은 특수문자가 그냥 텍스트로 들어왔다고 판단해 통과시켰는데, 브라우저가 화면에 그릴 땐 그걸 **진짜 태그로 재해석**해버리는 식이죠. 정제 시점의 "안전한 텍스트"가 렌더 시점엔 "실행되는 태그"로 둔갑하는 겁니다. 특히 `<svg>`나 `<template>` 안쪽처럼 파싱 규칙이 평소와 달라지는 구역이 단골 무대입니다. 이렇게 **sanitize는 통과했지만 브라우저가 재해석하며 공격 코드로 변하는** 부류를 mXSS(mutation XSS)라고 부릅니다.
+
+```
+[sanitize 한 결과 문자열]  →  안전해 보임 ✅
+        ↓ 브라우저가 화면에 그리려고 다시 파싱
+[재파싱·정규화된 DOM]      →  모양이 바뀌며 공격 코드로 둔갑 💥
+
+```
+
+DOMPurify도 알려진 mXSS 벡터들은 계속 패치하지만, 본질적으로 이건 **"문자열을 다시 파싱하는 싱크가 남아 있는 한" 끝나지 않는 추격전**입니다. 새 우회가 나오면 막고, 또 나오면 막고. 라이브러리 버전을 부지런히 올려야 하는 이유도 여기 있습니다.
+
+그래서 질문을 바꿔봤습니다. **걸러내는 걸 더 잘하는 대신, 다시 파싱하는 그 싱크를 아예 없애면 어떨까?**
+
+## 발상의 전환: 문자열로 되돌리지 않는다
+
+핵심 아이디어는 이렇습니다.
+
+> HTML을 **한 번만** 파싱하고, 그 결과를 다시는 문자열로 직렬화하지 않는다.
+
+`DOMParser`로 HTML을 inert(비활성, 실제로 실행되지 않는) 문서로 한 번 파싱합니다. 그다음 그 노드 트리를 직접 순회하면서, 허용한 태그·속성만 골라 `React.createElement`로 **React 엘리먼트를 새로 짓습니다.** 결과물은 문자열이 아니라 React 가상 DOM이에요.
+
+이렇게 하면 두 가지가 동시에 닫힙니다.
+
+1. **재파싱 싱크가 없다.** 파싱 결과가 곧장 React 엘리먼트가 되고, 다시 문자열로 돌아가지 않으니 "재파싱하면서 둔갑"할 단계 자체가 사라집니다. mXSS의 발판이 없어집니다.
+1. **이벤트 속성을 애초에 쳐다보지 않는다.** 속성을 화이트리스트로 명시해서 읽기 때문에, 원본에 `onerror`나 `onclick`이 있어도 코드가 그 키를 읽지 않습니다. 걸러내는 게 아니라, 처음부터 복사 대상이 아닌 거죠.
+
+추격전을 더 잘하는 대신, 추격전이 벌어지는 무대 자체를 치워버리는 셈입니다. 코드로 보면 생각보다 간단합니다.
+
+## 구현해보기
+
+말로는 추상적이니 코드로 봅시다. 놀랄 만큼 짧습니다. 딱 두 개의 화이트리스트와 변환 함수 하나면 됩니다.
+
+```tsx
+// safeMarkup.js
+import React from "react";
+
+// (1) 살려둘 태그만 적는다. 여기 없는 태그는 통과 못 한다.
+const ALLOWED_TAGS = new Set([
+  "a", "b", "br", "div", "em", "i", "li", "ol",
+  "p", "span", "strong", "u", "ul",
+]);
+
+// (2) 복사할 속성만 적는다. onerror·onclick은 여기 없으니 자동으로 무시된다.
+const ALLOWED_ATTRS = ["class", "href"];
+
+// 노드 하나를 React 엘리먼트로 바꾼다
+const nodeToReact = (node, key) => {
+  // 글자는 그대로 둔다 → React가 알아서 이스케이프해준다
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+  if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+  const tag = node.tagName.toLowerCase();
+  const children = Array.from(node.childNodes)
+    .map((child, i) => nodeToReact(child, `${key}-${i}`));
+
+  // 허용 목록에 없는 태그(script 등)는 내용만 살리고 껍데기는 버린다
+  if (!ALLOWED_TAGS.has(tag)) {
+    return React.createElement(React.Fragment, { key }, ...children);
+  }
+
+  // 허용한 속성만 골라 복사한다
+  const props = { key };
+  for (const name of ALLOWED_ATTRS) {
+    const value = node.getAttribute(name);
+    if (value) props[name === "class" ? "className" : name] = value;
+  }
+
+  return React.createElement(tag, props, ...children);
+};
+
+export const renderSafeMarkup = (value) => {
+  const html = String(value ?? "");
+  // 파싱만 하고 실행은 안 되는 inert 문서를 만든다
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return Array.from(doc.body.childNodes)
+    .map((node, i) => nodeToReact(node, `n-${i}`));
+};
+
+```
+
+이 코드가 하는 일을 세 줄로 풀면 이렇습니다.
+
+1. **`DOMParser`로 딱 한 번 파싱한다.** `parseFromString(..., "text/html")`로 만든 문서는 "비활성(inert)" 상태라, `<script>`가 들어 있어도 실행되지 않습니다. 그냥 분석용 트리일 뿐입니다.
+1. **트리를 돌면서 React 엘리먼트로 새로 짓는다.** 글자는 React가 자동으로 이스케이프해주고, 허용한 태그만 `createElement`로 만듭니다. 모르는 태그는 내용만 남기고 껍데기를 벗겨버립니다(`Fragment`).
+1. **허용한 속성만 복사한다.** `class`, `href`만 명시했으니, 원본에 `onerror="해킹코드"`가 있어도 **코드가 그 속성을 읽는 줄 자체가 없습니다.** 막는 게 아니라, 처음부터 쳐다보지 않는 거죠.
+
+마지막 3번이 이 방식의 진짜 핵심입니다. sanitize는 "위험한 걸 찾아서 지우는" 일이라 새 우회가 나올 때마다 목록을 갱신해야 하지만, 이건 **"안전한 것만 가져오는"** 일이라 모르는 공격은 그냥 따라오지 못합니다.
+
+사용하는 쪽도 단정해집니다.
+
+```tsx
+// ❌ Before: 문자열이 HTML 파서로 직행하는 싱크
+<div dangerouslySetInnerHTML={{ __html: message }} />
+
+// ✅ After: 싱크 없이 React 엘리먼트로 렌더
+<div className="chat-message">{renderSafeMarkup(message)}</div>
+
+```
+
+`dangerouslySetInnerHTML`이라는 단어가 코드에서 사라진 것 자체가 성과입니다. "이 위험한 패턴이 코드에 없다"를 `grep` 한 줄로 검증할 수 있으니까요.
+
+> [!note] 실전에서 더 채울 것 위 코드는 뼈대만 보여주려고 줄인 버전입니다. 실제 운영에 쓰려면 세 가지를 더하면 됩니다 — (1) `href`·`src`에서 `javascript:` 스킴을 거르는 URL 검증, (2) `img`·`table` 같은 태그를 허용 목록에 추가, (3) `DOMParser`가 없는 SSR 환경용 폴백. 하지만 **방어의 핵심 구조는 위가 전부**입니다. 나머지는 살을 붙이는 일입니다.
+
+## 두 방식 비교
+
+{% table %}
+- 항목
+- sanitize (DOMPurify)
+- 싱크 제거 (DOMParser → React)
+---
+- 접근 방식
+- 나쁜 걸 찾아 제거 (블랙리스트)
+- 좋은 것만 골라 재구성 (화이트리스트)
+---
+- mXSS
+- 재파싱 싱크가 남아 여지 있음
+- 재직렬화 안 함 → 원천 차단
+---
+- 이벤트 속성
+- 제거 규칙에 의존
+- 애초에 읽지 않음
+---
+- 라이브러리 의존
+- 버전 추격 필요
+- 외부 의존 없음
+---
+- 출력물
+- HTML 문자열
+- React 엘리먼트
+---
+- 표현력
+- 원본 HTML 거의 보존
+- 허용 목록만큼만 (제약 있음)
+{% /table %}
+
+## 알아둘 점 — 공짜는 아니다
+
+이 방식이 더 안전한 건 맞지만, 트레이드오프가 있습니다. 정직하게 짚고 갑니다.
+
+**inline `style`이 사라진다.** 위 구현은 `style` 속성을 복사하지 않습니다. 보안상 타당한 선택이지만(인라인 스타일도 공격 벡터가 될 수 있음), 원본 콘텐츠가 인라인 스타일로 정렬·색상을 맞추고 있었다면 **렌더는 되는데 서식이 달라집니다.** 서버에서 내려오는 HTML이 스타일에 의존한다면 시각 QA가 필요합니다. 정 필요하면 `text-align`, `color` 정도의 안전한 속성만 값 검증을 거쳐 다시 화이트리스트에 넣는 절충도 가능합니다.
+
+**허용 목록 관리 비용.** 새 태그·속성이 필요할 때마다 목록을 손봐야 합니다. 다만 이건 단점이자 장점입니다 — 무엇이 통과하는지가 코드에 명시적으로 드러나니까요.
+
+**표현력의 제약.** 임의의 복잡한 HTML을 100% 그대로 보존해야 하는 요구(예: 리치 텍스트 에디터 출력 전체)에는 부적합할 수 있습니다. "제한된 서식의 신뢰할 수 없는 HTML"에 가장 잘 맞습니다.
+
+> 한 줄로 정리하면: **표현력을 조금 내주고 안전성을 크게 얻는 거래**입니다. 채팅·공지·외부 응답처럼 "굵게·링크·이미지 정도면 충분하고, 대신 절대 뚫리면 안 되는" 데이터에 특히 잘 맞습니다.
+
+## 마치며
+
+핵심은 사고방식의 전환입니다.
+
+- XSS는 **싱크**에서 터진다. `dangerouslySetInnerHTML`은 대표적인 싱크다.
+- sanitize는 강력하지만 **재파싱 싱크가 남아** mXSS 추격전이 끝나지 않는다.
+- 더 근본적인 방향은 **문자열로 되돌리지 않는 것** — `DOMParser`로 한 번 파싱하고 React 엘리먼트로 재구성하면 싱크 자체가 사라진다.
+- 이벤트 속성을 "제거"하는 게 아니라 **"처음부터 읽지 않는"** 화이트리스트 방식이라, 모르는 공격에도 강하다.
+- 대신 표현력을 일부 내주는 트레이드오프가 있으니, 데이터 성격에 맞게 선택한다.
+
+"막을 수 있나?"가 아니라 "**막을 게 남아 있나?**"를 묻는 쪽이 결국 더 편합니다. 통로가 없으면 지킬 것도 없으니까요.
+
+### 더 읽어볼 거리
+
+- [OWASP — DOM based XSS Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html)
+- [DOMPurify — mutation XSS 관련 이슈 트래커](https://github.com/cure53/DOMPurify)
+- [MDN — DOMParser](https://developer.mozilla.org/en-US/docs/Web/API/DOMParser)
