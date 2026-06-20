@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -357,11 +358,13 @@ export function ContentPreview({
               </label>
               {currentThumbnailData ? (
                 <div className="mt-1 rounded-lg overflow-hidden border bg-muted">
-                  <img
+                  <Image
                     src={`data:image/png;base64,${currentThumbnailData}`}
                     alt="썸네일 미리보기"
-                    className="w-full h-auto object-cover"
-                    style={{ aspectRatio: '16/9' }}
+                    width={1280}
+                    height={720}
+                    unoptimized
+                    className="h-auto w-full object-cover"
                   />
                 </div>
               ) : (

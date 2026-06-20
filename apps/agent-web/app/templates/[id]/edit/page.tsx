@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TemplateForm from "@/components/templates/TemplateForm";
@@ -32,25 +32,20 @@ export default function EditTemplatePage({
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
-  const [initialData, setInitialData] = useState<{
-    name: string;
-    subject: string;
-    body: string;
-  } | null>(null);
 
   const { data: template, isLoading } = useQuery({
     queryKey: ["template", id],
     queryFn: () => fetchTemplate(id),
   });
 
-  useEffect(() => {
-    if (template) {
-      setInitialData({
-        name: template.name,
-        subject: template.subject,
-        body: template.body,
-      });
-    }
+  const initialData = useMemo(() => {
+    if (!template) return null;
+
+    return {
+      name: template.name,
+      subject: template.subject,
+      body: template.body,
+    };
   }, [template]);
 
   const mutation = useMutation({

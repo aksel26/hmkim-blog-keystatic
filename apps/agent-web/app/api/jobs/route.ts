@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
-import type { JobStatus, Category, JobsListResponse } from "@/lib/types";
+import type {
+  Category,
+  JobStatus,
+  JobsListResponse,
+  PostMetadata,
+  PRResult,
+  ResearchData,
+  ReviewResult,
+  Template,
+  ValidationResult,
+} from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,21 +35,21 @@ export async function GET(request: NextRequest) {
         id: job.id,
         topic: job.topic,
         category: job.category as Category,
-        template: job.template as any,
+        template: job.template as Template | null,
         status: job.status as JobStatus,
         currentStep: job.current_step,
         progress: job.progress,
-        researchData: job.research_data as any,
+        researchData: job.research_data as ResearchData | null,
         draftContent: job.draft_content,
         finalContent: job.final_content,
-        metadata: job.metadata as any,
-        reviewResult: job.review_result as any,
-        validationResult: job.validation_result as any,
+        metadata: job.metadata as PostMetadata | null,
+        reviewResult: job.review_result as ReviewResult | null,
+        validationResult: job.validation_result as ValidationResult | null,
         humanApproval: job.human_approval,
         humanFeedback: job.human_feedback,
         thumbnailData: job.thumbnail_data,
         filepath: job.filepath,
-        prResult: job.pr_result as any,
+        prResult: job.pr_result as PRResult | null,
         commitHash: job.commit_hash,
         error: job.error,
         createdAt: job.created_at,
