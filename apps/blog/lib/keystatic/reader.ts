@@ -8,16 +8,23 @@ export const reader = createReader('', keystaticConfig);
 // Helper functions for Tech posts
 export async function getAllTechPosts(onlyPublished = true) {
   const slugs = await reader.collections.tech.list();
-  const posts = await Promise.all(
-    slugs.map(async (slug) => {
-      const post = await reader.collections.tech.read(slug);
-      const { content, ...postData } = post || {};
-      return {
-        slug,
-        ...postData,
-      };
-    })
-  );
+  const posts = (
+    await Promise.all(
+      slugs.map(async (slug) => {
+        const post = await reader.collections.tech.read(slug);
+        if (!post) return null;
+
+        const postData = Object.fromEntries(
+          Object.entries(post).filter(([key]) => key !== 'content')
+        ) as Omit<typeof post, 'content'>;
+
+        return {
+          slug,
+          ...postData,
+        };
+      })
+    )
+  ).filter((post): post is NonNullable<typeof post> => post !== null);
 
   const filteredPosts = onlyPublished
     ? posts.filter((post) => post?.status === 'published')
@@ -37,16 +44,23 @@ export async function getTechPost(slug: string) {
 // Helper functions for Life posts
 export async function getAllLifePosts(onlyPublished = true) {
   const slugs = await reader.collections.life.list();
-  const posts = await Promise.all(
-    slugs.map(async (slug) => {
-      const post = await reader.collections.life.read(slug);
-      const { content, ...postData } = post || {};
-      return {
-        slug,
-        ...postData,
-      };
-    })
-  );
+  const posts = (
+    await Promise.all(
+      slugs.map(async (slug) => {
+        const post = await reader.collections.life.read(slug);
+        if (!post) return null;
+
+        const postData = Object.fromEntries(
+          Object.entries(post).filter(([key]) => key !== 'content')
+        ) as Omit<typeof post, 'content'>;
+
+        return {
+          slug,
+          ...postData,
+        };
+      })
+    )
+  ).filter((post): post is NonNullable<typeof post> => post !== null);
 
   const filteredPosts = onlyPublished
     ? posts.filter((post) => post?.status === 'published')

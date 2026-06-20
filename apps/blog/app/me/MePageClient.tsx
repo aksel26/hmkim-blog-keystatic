@@ -2,7 +2,7 @@
 
 import { m } from 'framer-motion';
 import Link from 'next/link';
-import { Github, Linkedin, Mail, ExternalLink } from 'lucide-react';
+import { Github, Mail, ExternalLink } from 'lucide-react';
 
 interface MePageClientProps {
     techPostsCount: number;
@@ -175,7 +175,7 @@ export default function MePageClient({ techPostsCount, lifePostsCount }: MePageC
                 </m.div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                    {techStack.map((tech, index) => (
+                    {techStack.map((tech) => (
                         <m.div
                             key={tech.name}
                             variants={fadeUpVariants}

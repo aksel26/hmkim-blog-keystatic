@@ -13,6 +13,11 @@ export function formatDate(date: string): string {
   });
 }
 
+export function isGifImage(src: string): boolean {
+  const path = src.split(/[?#]/, 1)[0];
+  return path.toLowerCase().endsWith('.gif');
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

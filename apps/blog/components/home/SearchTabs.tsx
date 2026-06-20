@@ -1,5 +1,3 @@
-import { Search } from 'lucide-react';
-
 import { TotalViewCounter } from '@/components/views/TotalViewCounter';
 
 interface SearchTabsProps {
@@ -12,8 +10,6 @@ interface SearchTabsProps {
 export default function SearchTabs({
     activeTab,
     onTabChange,
-    searchQuery,
-    onSearchChange,
 }: SearchTabsProps) {
     const tabs = [
         { id: 'all', label: 'All' },
