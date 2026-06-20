@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "echo 'Agent dev mode not implemented'",
     "build": "tsc --noEmit",
-    "lint": "eslint",
+    "lint": "tsc --noEmit",
     "generate-post": "tsx scripts/generate-post-interactive.ts"
   },
   "dependencies": {

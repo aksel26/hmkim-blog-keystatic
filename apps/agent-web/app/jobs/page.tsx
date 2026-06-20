@@ -11,7 +11,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { formatRelativeTime, truncate } from "@/lib/utils";
-import type { JobStatus, JobsListResponse } from "@/lib/types";
+import type { JobsListResponse } from "@/lib/types";
 import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 const statusOptions = [

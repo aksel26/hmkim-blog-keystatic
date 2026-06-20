@@ -36,6 +36,7 @@ export function useJobStream(
   const isTerminatedRef = useRef(false);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
+  const connectRef = useRef<() => void>(() => {});
 
   const { onProgress, onComplete, onError, onReviewRequired, onPendingDeploy } = options;
 
@@ -82,21 +83,13 @@ export function useJobStream(
             // step 기반으로 상태 결정 (status보다 step이 더 정확함)
             // human_review, pending_deploy step이면 해당 상태로 설정
             // 그 외의 step(write, review 등)이면 해당 status 사용
-            setStatus((prev) => {
-              const specialStatuses: JobStatus[] = ["human_review", "pending_deploy"];
-
-              // step이 특수 상태면 해당 상태로 설정
-              if (currentStep === "human_review") {
-                return "human_review";
-              }
-              if (currentStep === "pending_deploy") {
-                return "pending_deploy";
-              }
-
-              // step이 일반 상태(write, review 등)면 status 사용
-              // 이전이 특수 상태여도 현재 step이 일반이면 변경 허용 (workflow 진행 중)
-              return newStatus;
-            });
+            if (currentStep === "human_review") {
+              setStatus("human_review");
+            } else if (currentStep === "pending_deploy") {
+              setStatus("pending_deploy");
+            } else {
+              setStatus(newStatus);
+            }
 
             // progress 이벤트에서도 status가 특수 상태면 해당 콜백 호출
             // (review-required/pending-deploy 이벤트가 누락된 경우를 대비)
@@ -157,11 +150,15 @@ export function useJobStream(
       const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 10000);
       reconnectTimeoutRef.current = setTimeout(() => {
         if (!isTerminatedRef.current && eventSourceRef.current === eventSource) {
-          connect();
+          connectRef.current();
         }
       }, delay);
     };
   }, [jobId, disconnect, onProgress, onComplete, onError, onReviewRequired, onPendingDeploy]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   // Auto-connect when jobId changes
   useEffect(() => {
@@ -169,14 +166,15 @@ export function useJobStream(
     isTerminatedRef.current = false;
     reconnectAttemptsRef.current = 0;
 
-    if (jobId) {
-      connect();
-    }
+    const timeoutId = jobId ? setTimeout(connect, 0) : null;
 
     return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       disconnect();
     };
-  }, [jobId]); // Only depend on jobId, not connect/disconnect
+  }, [jobId, connect, disconnect]);
 
   return {
     isConnected,
