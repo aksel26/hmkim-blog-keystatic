@@ -4,6 +4,16 @@ export interface TocItem {
     level: number;
 }
 
+type MarkdocNodeLike = {
+    type?: string;
+    attributes?: {
+        level?: number;
+        content?: unknown;
+    };
+    content?: unknown;
+    children?: unknown;
+};
+
 function slugify(text: string): string {
     return text
         .toLowerCase()
@@ -13,14 +23,8 @@ function slugify(text: string): string {
         .trim();
 }
 
-interface MarkdocLikeNode {
-    type?: string;
-    attributes?: {
-        content?: unknown;
-        level?: unknown;
-    };
-    content?: unknown;
-    children?: unknown;
+function isMarkdocNodeLike(node: unknown): node is MarkdocNodeLike {
+    return typeof node === 'object' && node !== null;
 }
 
 function getTextContent(node: unknown): string {
@@ -33,20 +37,18 @@ function getTextContent(node: unknown): string {
     }
 
     // Handle text nodes with content property (Markdoc format)
-    if (typeof node === 'object') {
-        const markdocNode = node as MarkdocLikeNode;
+    if (isMarkdocNodeLike(node) && typeof node.attributes?.content === 'string') {
+        return node.attributes.content;
+    }
 
-        if (typeof markdocNode.attributes?.content === 'string') {
-            return markdocNode.attributes.content;
-        }
+    // Check for content directly on node
+    if (isMarkdocNodeLike(node) && typeof node.content === 'string') {
+        return node.content;
+    }
 
-        if (typeof markdocNode.content === 'string') {
-            return markdocNode.content;
-        }
-
-        if (markdocNode.children) {
-            return getTextContent(markdocNode.children);
-        }
+    // Recursively handle children
+    if (isMarkdocNodeLike(node) && node.children) {
+        return getTextContent(node.children);
     }
 
     return '';
@@ -60,13 +62,14 @@ export function extractTocFromMarkdoc(node: unknown): TocItem[] {
     function traverse(node: unknown) {
         if (!node) return;
 
-        if (typeof node !== 'object') return;
-
-        const markdocNode = node as MarkdocLikeNode;
-        const level = markdocNode.attributes?.level;
-
-        if (markdocNode.type === 'heading' && typeof level === 'number' && level >= 2 && level <= 4) {
-            const text = getTextContent(markdocNode);
+        if (
+            isMarkdocNodeLike(node) &&
+            node.type === 'heading' &&
+            typeof node.attributes?.level === 'number' &&
+            node.attributes.level >= 2 &&
+            node.attributes.level <= 4
+        ) {
+            const text = getTextContent(node);
             let id = slugify(text);
 
             // Handle empty or duplicate slugs
@@ -82,14 +85,14 @@ export function extractTocFromMarkdoc(node: unknown): TocItem[] {
             usedIds.set(id.replace(/-\d+$/, ''), count + 1);
 
             items.push({
-                id,
-                text: text || `Heading ${items.length + 1}`,
-                level,
-            });
+                    id,
+                    text: text || `Heading ${items.length + 1}`,
+                    level: node.attributes.level,
+                });
         }
 
-        if (Array.isArray(markdocNode.children)) {
-            markdocNode.children.forEach(traverse);
+        if (isMarkdocNodeLike(node) && Array.isArray(node.children)) {
+            node.children.forEach(traverse);
         }
     }
 

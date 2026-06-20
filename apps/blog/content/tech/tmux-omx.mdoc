@@ -1,0 +1,251 @@
+---
+title: tmux 실전 정리 — omx 팀 모드를 돌리려면 알아야 할 것
+summary: >-
+  cmux에서 omx 에이전트 팀을 띄우려다 tmux를 쓰라는 메시지를 만났다. 왜 tmux가 필요한지 짚고, 실전에서 바로 쓰는 사용법을
+  정리했다.
+keywords:
+  - cmux
+  - tmux
+  - omx
+  - terminal
+  - codex
+status: published
+tags:
+  - cumx
+  - tmux
+  - omx
+  - codex
+  - CLI
+createdAt: 2026-06-15
+updatedAt: 2026-06-15
+thumbnailImage: /images/thumbnails/tmux-omx/thumbnailImage.png
+---
+## omx 팀 모드가 막혀서 tmux를 배웠다
+
+Codex CLI에 omx(Oh My codeX)를 얹어 에이전트 팀을 굴려보려던 참이었다. 터미널은 cmux. 워커 세 개를 병렬로 띄우고 HUD로 모델·브랜치·토큰을 한눈에 보겠다는 그림이었는데, `omx team`을 치는 순간 기대했던 패널이 뜨지 않았다. 대신 돌아온 건 tmux를 쓰라는 안내였다.
+
+좀 의아했다. cmux는 그 자체가 분할 패널을 native로 지원하는 에이전트 전용 터미널인데, 왜 굳이 tmux를 또 요구할까. 답을 찾다 보니 omx가 팀을 돌리는 방식 자체에 tmux가 박혀 있었다. 이 글은 그 이유를 짚고, 내친김에 제대로 익힌 tmux 사용법을 실전 위주로 정리한 기록이다.
+
+## omx 팀 모드는 왜 tmux를 요구하나
+
+omx는 Codex CLI 위에 훅·에이전트 팀·HUD를 얹는 오케스트레이션 레이어다. 역할별 에이전트를 여러 개 병렬로 돌리는 게 핵심인데, 이 "병렬로 세션을 띄우고 살려두는" 일을 직접 구현하지 않고 tmux에 맡긴다.
+
+팀 모드를 켜면 omx는 리더 세션을 detached tmux 안에서 시작한다. 워커 패널과 HUD 패널을 만드는 것도, 세션이 중간에 끊겼을 때 복구하는 것도 tmux가 담당한다. omx 입장에선 tmux의 detach/attach와 패널 관리가 팀 런타임의 바닥인 셈이다. macOS·Linux에서 tmux가 깔려 있으면 이 경로로 자동 진입한다.
+
+cmux도 손을 놓고 있는 건 아니다. `cmux omx`로 띄우면 omx가 부르는 tmux 명령을 가로채 cmux native split으로 번역하는 shim이 돈다. 워커 패널이 cmux 분할로, HUD가 상태 패널로 자연스럽게 들어온다. 문제는 이 shim이 안 걸리거나 tmux 자체가 PATH에 없을 때다. 그러면 omx는 진짜 tmux를 찾아 나서고 못 찾으면 거기서 멈춘다. 내가 만난 메시지가 정확히 그 지점이었다.
+
+정리하면 tmux는 곁다리가 아니라 팀 모드의 전제다. `omx doctor`로 사전 조건을 점검하면 tmux 누락도 같이 잡힌다. 우회하느라 시간 쓰는 것보다 tmux를 제대로 깔고 익히는 쪽이 빨랐다.
+
+## tmux가 뭐고 왜 쓰는걸까?
+
+tmux는 터미널 멀티플렉서다. 터미널 창 하나 안에서 여러 세션과 화면을 띄우고, 창을 닫거나 SSH가 끊겨도 그 안의 프로세스를 살려둔다.
+
+장점을 짧게 추리면 이렇다.
+
+- **세션 영속성**: 연결이 끊겨도 작업이 죽지 않는다. tmux를 쓰는 가장 큰 이유다.
+- **화면 분할·탭**: 에디터·로그·테스트를 한 화면에서 나눠 본다.
+- **어디서나 재접속**: 집 노트북에서 띄운 세션을 회사에서 그대로 이어받는다.
+- **설정·플러그인**: 한 번 손봐두면 일상 사용성이 확 올라간다.
+- omx처럼 세션을 오래 살려둬야 하는 도구의 런타임 바닥이 된다.
+
+`nohup`이나 `&`로 백그라운드 실행만 흉내 낼 수도 있다. 차이는 나중에 그 화면으로 똑같이 돌아갈 수 있느냐다. tmux는 돌아갈 수 있고, 그게 결정적이다.
+
+## 3계층 구조부터
+
+tmux는 세 층으로 터미널을 관리한다. 이 구조만 잡으면 나머지는 단축키 암기다.
+
+{% table %}
+- 계층
+- 비유
+- 특징
+---
+- 세션(Session)
+- 프로젝트 전체
+- 창을 닫거나 SSH가 끊겨도 살아있음
+---
+- 윈도우(Window)
+- 브라우저 탭
+- 세션 안의 탭, 화면 전체를 차지
+---
+- 페인(Pane)
+- 분할된 화면
+- 윈도우를 좌우·상하로 쪼갠 영역
+{% /table %}
+
+### Prefix 키
+
+tmux의 거의 모든 단축키는 Prefix를 먼저 누르고 명령 키를 누르는 식이다. 기본값은 `Ctrl+b`. "지금부터 tmux한테 말 건다"는 신호라고 보면 된다. 아래에선 이걸 `<prefix>`로 적는다.
+
+## 세션 관리 — 진짜 핵심
+
+쉘에서 바로 치는 명령들:
+
+```
+tmux new -s work          # 'work' 세션 새로 시작
+tmux ls                   # 세션 목록
+tmux attach -t work       # 'work' 세션에 다시 접속
+tmux kill-session -t work # 세션 종료
+
+```
+
+tmux 안에서 쓰는 단축키:
+
+{% table %}
+- 단축키
+- 동작
+---
+- `<prefix> d`
+- Detach — 세션을 백그라운드로 보내고 빠져나오기
+---
+- `<prefix> s`
+- 세션 목록에서 전환
+---
+- `<prefix> $`
+- 현재 세션 이름 변경
+{% /table %}
+
+원격 서버에서 오래 걸리는 빌드나 배포를 돌릴 때의 흐름이 이렇다. `tmux new -s build`로 시작하고 `<prefix> d`로 빠져나오면 SSH가 끊겨도 작업은 돈다. 나중에 `tmux attach -t build`로 복귀하면 끝. 이 detach/attach 사이클이 tmux를 쓰는 이유의 8할이다. omx 팀 모드가 기대는 것도 바로 이 detached 세션 복구다.
+
+## 윈도우(탭) 관리
+
+{% table %}
+- 단축키
+- 동작
+---
+- `<prefix> c`
+- 새 윈도우
+---
+- `<prefix> n` / `p`
+- 다음 / 이전 윈도우
+---
+- `<prefix> 0~9`
+- 번호로 이동
+---
+- `<prefix> ,`
+- 이름 변경
+---
+- `<prefix> w`
+- 목록에서 선택
+---
+- `<prefix> &`
+- 현재 윈도우 닫기
+{% /table %}
+
+## 페인(분할) 관리 — 제일 자주 쓴다
+
+{% table %}
+- 단축키
+- 동작
+---
+- `<prefix> %`
+- 세로 분할(좌우)
+---
+- `<prefix> "`
+- 가로 분할(상하)
+---
+- `<prefix> 방향키`
+- 페인 간 이동
+---
+- `<prefix> o`
+- 다음 페인으로 순환
+---
+- `<prefix> z`
+- 현재 페인 전체화면 토글
+---
+- `<prefix> x`
+- 현재 페인 닫기
+---
+- `<prefix> { / }`
+- 페인 위치 swap
+---
+- `<prefix> Space`
+- 레이아웃 변경
+---
+- `<prefix> Ctrl+방향키`
+- 페인 크기 조절
+{% /table %}
+
+실전 레이아웃 하나. 왼쪽 큰 페인에 에디터, 오른쪽 위에 서버 로그, 오른쪽 아래에 테스트 실행. 한 페인에 집중하고 싶으면 `<prefix> z`로 전체화면을 켰다가 다시 끄면 된다. 디버깅할 때 이 토글을 제일 많이 쓴다.
+
+## 스크롤 & 복사 모드
+
+tmux 안에서 마우스 없이 출력을 위로 올리려면 복사 모드로 들어가야 한다.
+
+- `<prefix> [` 로 복사(스크롤) 모드 진입. 방향키·PageUp으로 이동, `q`로 종료.
+- 모드 안에서 `Space`로 선택 시작 → `Enter`로 복사 → `<prefix> ]`로 붙여넣기.
+
+`setw -g mode-keys vi`를 켜두면 복사 모드에서 vi 키 바인딩(`/` 검색 등)을 쓴다.
+
+## ~/.tmux.conf — 한 번만 손보기
+
+기본 설정은 불편한 구석이 많다. 아래 정도만 잡아도 체감이 달라진다.
+
+```
+# Prefix를 Ctrl+a로 (Ctrl+b보다 손이 편하다)
+unbind C-b
+set -g prefix C-a
+bind C-a send-prefix
+
+# 마우스 지원 (스크롤·페인 선택·크기조절)
+set -g mouse on
+
+# 분할 키를 | 와 - 로
+bind | split-window -h
+bind - split-window -v
+
+# 설정 리로드
+bind r source-file ~/.tmux.conf \; display "Reloaded!"
+
+# 윈도우·페인 번호 1부터
+set -g base-index 1
+setw -g pane-base-index 1
+
+# vi 스타일 복사 모드
+setw -g mode-keys vi
+
+# 히스토리 버퍼 늘리기
+set -g history-limit 50000
+
+# 256색
+set -g default-terminal "tmux-256color"
+
+```
+
+적용은 `tmux source-file ~/.tmux.conf`, 위 설정이 들어가 있으면 `<prefix> r`로도 된다.
+
+## 플러그인은 선택
+
+TPM(Tmux Plugin Manager)을 깔면 더 멀리 간다.
+
+{% table %}
+- 플러그인
+- 역할
+---
+- tmux-resurrect + tmux-continuum
+- 재부팅해도 세션·레이아웃 복원
+---
+- tmux-yank
+- 시스템 클립보드 연동
+---
+- vim-tmux-navigator
+- vim과 tmux 페인을 `Ctrl+hjkl`로 한 번에 이동
+{% /table %}
+
+## 마치며
+
+처음엔 cmux가 분할을 native로 지원하니 tmux는 안 써도 되는 줄 알았다. 실제론 omx 팀 모드가 tmux의 detached 세션과 패널 관리를 런타임으로 깔고 있어서, tmux 없이는 팀이 뜨지 않았다. 우회보다 정공법이 빨랐던 셈이다.
+
+먼저 익숙해지면 좋은 건 세 가지다.
+
+1. `tmux new -s 이름` + `<prefix> d` + `tmux attach` — 세션 detach/attach.
+1. `<prefix> %` / `"` + `<prefix> z` — 페인 분할과 전체화면 토글.
+1. `~/.tmux.conf`에 마우스 on과 Prefix 변경 정도만 잡기.
+
+세션 영속성, 이거 하나가 tmux의 전부라고 해도 된다. 연결이 끊겨도 작업이 살아있다는 것. omx든 원격 빌드든, 결국 기대는 지점은 같다.
+
+## 참고
+
+- [tmux 공식 wiki](https://github.com/tmux/tmux/wiki)
+- [TPM (Tmux Plugin Manager)](https://github.com/tmux-plugins/tpm)
+- [tmux cheat sheet](https://tmuxcheatsheet.com/)
+- [oh-my-codex (omx)](https://github.com/Yeachan-Heo/oh-my-codex)

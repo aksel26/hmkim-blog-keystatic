@@ -10,12 +10,40 @@ interface StickySidebarProps {
         text?: string;
         url?: string;
     };
+    category?: 'tech' | 'life';
+    slug?: string;
 }
 
-export default function StickySidebar({ shareData }: StickySidebarProps) {
+function getOrCreateVisitorId(): string {
+    if (typeof window === 'undefined') return '';
+
+    const key = 'blog_visitor_id';
+    let visitorId = localStorage.getItem(key);
+
+    if (!visitorId) {
+        visitorId = crypto.randomUUID();
+        localStorage.setItem(key, visitorId);
+    }
+
+    return visitorId;
+}
+
+function formatLikeCount(count: number): string {
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+    if (count >= 1000) return (count / 1000).toFixed(1) + 'K';
+    return count.toString();
+}
+
+export default function StickySidebar({ shareData, category, slug }: StickySidebarProps) {
     const [copied, setCopied] = useState(false);
     const [showShareMenu, setShowShareMenu] = useState(false);
     const shareMenuRef = useRef<HTMLDivElement>(null);
+
+    const [likeCount, setLikeCount] = useState<number | null>(null);
+    const [liked, setLiked] = useState(false);
+    const [likeAnimKey, setLikeAnimKey] = useState(0);
+    const isTogglingRef = useRef(false);
+    const canLike = Boolean(category && slug);
 
     // 외부 클릭 시 메뉴 닫기
     useEffect(() => {
@@ -33,6 +61,77 @@ export default function StickySidebar({ shareData }: StickySidebarProps) {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showShareMenu]);
+
+    // 좋아요 상태 초기 조회
+    useEffect(() => {
+        if (!canLike) return;
+
+        let cancelled = false;
+        const fetchLike = async () => {
+            try {
+                const visitorId = getOrCreateVisitorId();
+                const params = new URLSearchParams({
+                    category: category!,
+                    slug: slug!,
+                });
+                if (visitorId) params.set('visitorId', visitorId);
+
+                const response = await fetch(`/api/likes?${params.toString()}`);
+                if (!response.ok || cancelled) return;
+
+                const data = await response.json();
+                setLikeCount(data.like_count ?? 0);
+                setLiked(Boolean(data.liked));
+            } catch (error) {
+                console.error('Failed to fetch like:', error);
+            }
+        };
+
+        fetchLike();
+        return () => {
+            cancelled = true;
+        };
+    }, [canLike, category, slug]);
+
+    const handleLikeToggle = async () => {
+        if (!canLike || isTogglingRef.current) return;
+        isTogglingRef.current = true;
+
+        const visitorId = getOrCreateVisitorId();
+        if (!visitorId) {
+            isTogglingRef.current = false;
+            return;
+        }
+
+        const previousLiked = liked;
+        const previousCount = likeCount ?? 0;
+        const optimisticLiked = !previousLiked;
+        const optimisticCount = Math.max(previousCount + (optimisticLiked ? 1 : -1), 0);
+
+        setLiked(optimisticLiked);
+        setLikeCount(optimisticCount);
+        if (optimisticLiked) setLikeAnimKey((k) => k + 1);
+
+        try {
+            const response = await fetch('/api/likes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ category, slug, visitorId }),
+            });
+
+            if (!response.ok) throw new Error('Failed to toggle like');
+
+            const data = await response.json();
+            setLikeCount(data.like_count ?? 0);
+            setLiked(Boolean(data.liked));
+        } catch (error) {
+            console.error('Failed to toggle like:', error);
+            setLiked(previousLiked);
+            setLikeCount(previousCount);
+        } finally {
+            isTogglingRef.current = false;
+        }
+    };
 
     const handleShare = () => {
         setShowShareMenu(!showShareMenu);
@@ -162,14 +261,41 @@ export default function StickySidebar({ shareData }: StickySidebarProps) {
                     </AnimatePresence>
                 </div>
 
-                {/* Like Button (placeholder) */}
-                <m.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100"
-                >
-                    <Heart className="h-5 w-5" />
-                </m.button>
+                {/* Like Button */}
+                <div className="flex flex-col items-center gap-1">
+                    <m.button
+                        whileHover={canLike ? { scale: 1.1 } : undefined}
+                        whileTap={canLike ? { scale: 0.95 } : undefined}
+                        onClick={handleLikeToggle}
+                        disabled={!canLike}
+                        aria-label={liked ? '좋아요 취소' : '좋아요'}
+                        aria-pressed={liked}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${
+                            liked
+                                ? 'bg-pink-100 text-pink-600 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-400 dark:hover:bg-pink-900/50'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100'
+                        } ${!canLike ? 'cursor-not-allowed opacity-60' : ''}`}
+                    >
+                        <m.span
+                            key={likeAnimKey}
+                            initial={liked ? { scale: 0.6 } : false}
+                            animate={liked ? { scale: [0.6, 1.25, 1] } : { scale: 1 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            className="flex"
+                        >
+                            <Heart
+                                className="h-5 w-5"
+                                fill={liked ? 'currentColor' : 'none'}
+                                strokeWidth={liked ? 0 : 2}
+                            />
+                        </m.span>
+                    </m.button>
+                    {canLike && likeCount !== null && likeCount > 0 && (
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums">
+                            {formatLikeCount(likeCount)}
+                        </span>
+                    )}
+                </div>
 
                 {/* Comment Button */}
                 <m.button
