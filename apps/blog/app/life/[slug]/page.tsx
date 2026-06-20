@@ -1,5 +1,6 @@
-import { getLifePost, getAllLifePosts } from '@/lib/keystatic/reader';
+import { getLifePost, getAllLifePosts, getRelatedPosts } from '@/lib/keystatic/reader';
 import { MarkdocRenderer } from '@/components/MarkdocRenderer';
+import { RelatedPosts } from '@/components/RelatedPosts';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -76,6 +77,7 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
 
     const { node } = await post.content();
     const tocItems = extractTocFromMarkdoc(node);
+    const relatedPosts = await getRelatedPosts('life', params.slug, post.tags);
     const postUrl = `${baseUrl}/life/${params.slug}`;
 
     return (
@@ -215,6 +217,9 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                         <MarkdocRenderer node={node} />
                     </div>
                 </article>
+
+                {/* Related Posts */}
+                <RelatedPosts posts={relatedPosts} category="life" />
 
                 {/* Comment Section */}
                 <div className="container mx-auto max-w-3xl px-6 mt-8">

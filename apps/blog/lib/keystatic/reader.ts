@@ -123,3 +123,40 @@ export async function getAllKeywords(onlyPublished = true) {
   const keywords = posts.flatMap((post) => post?.keywords || []);
   return Array.from(new Set(keywords));
 }
+
+// Get related posts within the same category, ranked by shared-tag count
+// (falls back to most-recent posts when there is no tag overlap)
+export async function getRelatedPosts(
+  category: 'tech' | 'life',
+  currentSlug: string,
+  tags: readonly string[] = [],
+  limit = 3
+) {
+  const posts =
+    category === 'tech' ? await getAllTechPosts() : await getAllLifePosts();
+
+  const tagSet = new Set(tags);
+
+  const ranked = posts
+    .filter((post) => post.slug !== currentSlug)
+    .map((post) => ({
+      post,
+      score: (post.tags || []).filter((tag) => tagSet.has(tag)).length,
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return (
+        new Date(b.post.createdAt || '').getTime() -
+        new Date(a.post.createdAt || '').getTime()
+      );
+    });
+
+  return ranked.slice(0, limit).map(({ post }) => ({
+    slug: post.slug,
+    title: post.title || 'Untitled',
+    summary: post.summary || '',
+    createdAt: post.createdAt || '',
+    tags: [...(post.tags || [])],
+    thumbnailImage: post.thumbnailImage || undefined,
+  }));
+}

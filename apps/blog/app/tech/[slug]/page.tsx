@@ -1,5 +1,6 @@
-import { getTechPost, getAllTechPosts } from '@/lib/keystatic/reader';
+import { getTechPost, getAllTechPosts, getRelatedPosts } from '@/lib/keystatic/reader';
 import { MarkdocRenderer } from '@/components/MarkdocRenderer';
+import { RelatedPosts } from '@/components/RelatedPosts';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
@@ -76,6 +77,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
 
     const { node } = await post.content();
     const tocItems = extractTocFromMarkdoc(node);
+    const relatedPosts = await getRelatedPosts('tech', params.slug, post.tags);
     const postUrl = `${baseUrl}/tech/${params.slug}`;
 
     return (
@@ -208,6 +210,9 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                         <MarkdocRenderer node={node} />
                     </div>
                 </article>
+
+                {/* Related Posts */}
+                <RelatedPosts posts={relatedPosts} category="tech" />
 
                 {/* Comment Section */}
                 <div className="container mx-auto max-w-3xl px-6 mt-8">
