@@ -1,6 +1,20 @@
 import type { MetadataRoute } from 'next';
 import { getAllTechPosts, getAllLifePosts } from '@/lib/keystatic/reader';
 
+function getLatestModified(posts: Array<{ updatedAt?: string | null; createdAt?: string | null }>) {
+  const timestamps = posts
+    .map((post) => post.updatedAt || post.createdAt)
+    .filter((date): date is string => Boolean(date))
+    .map((date) => new Date(date).getTime())
+    .filter((time) => Number.isFinite(time));
+
+  if (timestamps.length === 0) {
+    return new Date().toISOString();
+  }
+
+  return new Date(Math.max(...timestamps)).toISOString();
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hmkim.blog';
 
@@ -8,6 +22,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getAllTechPosts(),
     getAllLifePosts(),
   ]);
+
+  const latestTechModified = getLatestModified(techPosts);
+  const latestLifeModified = getLatestModified(lifePosts);
+  const latestSiteModified = getLatestModified([...techPosts, ...lifePosts]);
 
   const techPostUrls: MetadataRoute.Sitemap = techPosts.map((post) => ({
     url: `${baseUrl}/tech/${post.slug}`,
@@ -26,25 +44,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
       url: baseUrl,
-      lastModified: new Date().toISOString(),
+      lastModified: latestSiteModified,
       changeFrequency: 'daily',
       priority: 1,
     },
     {
       url: `${baseUrl}/tech`,
-      lastModified: new Date().toISOString(),
+      lastModified: latestTechModified,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/life`,
-      lastModified: new Date().toISOString(),
+      lastModified: latestLifeModified,
       changeFrequency: 'weekly',
       priority: 0.9,
     },
     {
       url: `${baseUrl}/me`,
-      lastModified: new Date().toISOString(),
+      lastModified: latestSiteModified,
       changeFrequency: 'monthly',
       priority: 0.6,
     },

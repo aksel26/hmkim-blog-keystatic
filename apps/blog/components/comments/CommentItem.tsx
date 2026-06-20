@@ -116,7 +116,7 @@ export function CommentItem({
       if (onUpdate) {
         onUpdate(data.comment);
       }
-    } catch (err) {
+    } catch {
       setError("네트워크 오류가 발생했습니다");
     } finally {
       setIsProcessing(false);
@@ -151,7 +151,7 @@ export function CommentItem({
       if (onDelete) {
         onDelete(comment.id);
       }
-    } catch (err) {
+    } catch {
       setError("네트워크 오류가 발생했습니다");
     } finally {
       setIsProcessing(false);

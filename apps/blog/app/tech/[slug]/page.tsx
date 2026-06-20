@@ -3,7 +3,7 @@ import { MarkdocRenderer } from '@/components/MarkdocRenderer';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { formatDate } from '@/lib/utils';
+import { formatDate, isGifImage } from '@/lib/utils';
 import StickySidebar from '@/components/StickySidebar';
 import ScrollButtons from '@/components/ScrollButtons';
 import { MobileTableOfContents, DesktopTableOfContents } from '@/components/TableOfContents';
@@ -176,6 +176,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                                 src={post.thumbnailImage}
                                 alt={post.title}
                                 fill
+                                unoptimized={isGifImage(post.thumbnailImage)}
                                 className="object-cover"
                                 priority
                             />

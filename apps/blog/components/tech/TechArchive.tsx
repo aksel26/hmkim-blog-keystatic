@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { m } from 'framer-motion';
-import { formatDate } from '@/lib/utils';
+import { formatDate, isGifImage } from '@/lib/utils';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Loader2 } from 'lucide-react';
 
@@ -126,6 +126,7 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
                       alt={post.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      unoptimized={isGifImage(post.thumbnailImage)}
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>

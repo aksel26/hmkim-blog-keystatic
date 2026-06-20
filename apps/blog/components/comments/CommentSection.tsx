@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageSquare, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { CommentWithReplies } from "@/lib/supabase/schema";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentItem";
@@ -51,7 +51,7 @@ export function CommentSection({ category, slug }: CommentSectionProps) {
         setComments(data.comments || []);
         setNextCursor(data.nextCursor);
         setHasMore(data.hasMore);
-      } catch (err) {
+      } catch {
         setError("댓글을 불러오는데 실패했습니다");
       } finally {
         setIsLoading(false);

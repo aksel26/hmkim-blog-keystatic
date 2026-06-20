@@ -1,10 +1,19 @@
 import React from 'react';
-import Markdoc, { Config, nodes, Tag } from '@markdoc/markdoc';
+import Markdoc, { Config, nodes, Tag, type Node as MarkdocNode } from '@markdoc/markdoc';
 import Image from 'next/image';
 import { CodeBlock } from './CodeBlock';
+import { isGifImage } from '@/lib/utils';
 
 interface MarkdocRendererProps {
-    node: any; // Markdoc node
+    node: MarkdocNode | MarkdocNode[];
+}
+
+interface MarkdocLikeNode {
+    attributes?: {
+        content?: unknown;
+    };
+    content?: unknown;
+    children?: unknown;
 }
 
 function slugify(text: string): string {
@@ -16,7 +25,7 @@ function slugify(text: string): string {
         .trim();
 }
 
-function getTextContent(node: any): string {
+function getTextContent(node: unknown): string {
     if (!node) return '';
     if (typeof node === 'string') return node;
 
@@ -26,21 +35,42 @@ function getTextContent(node: any): string {
     }
 
     // Handle text nodes with content property (Markdoc format)
-    if (node.attributes?.content && typeof node.attributes.content === 'string') {
-        return node.attributes.content;
-    }
+    if (typeof node === 'object') {
+        const markdocNode = node as MarkdocLikeNode;
 
-    // Check for content directly on node
-    if (typeof node.content === 'string') {
-        return node.content;
-    }
+        if (typeof markdocNode.attributes?.content === 'string') {
+            return markdocNode.attributes.content;
+        }
 
-    // Recursively handle children
-    if (node.children) {
-        return getTextContent(node.children);
+        if (typeof markdocNode.content === 'string') {
+            return markdocNode.content;
+        }
+
+        if (markdocNode.children) {
+            return getTextContent(markdocNode.children);
+        }
     }
 
     return '';
+}
+
+function getImageAltText({ src, alt, title }: { src: string; alt?: string; title?: string }) {
+    const explicitText = alt?.trim() || title?.trim();
+    if (explicitText) return explicitText;
+
+    const path = src.split(/[?#]/, 1)[0];
+    const filename = path.split('/').pop() || '';
+    let decodedFilename = filename;
+
+    try {
+        decodedFilename = decodeURIComponent(filename);
+    } catch {
+        decodedFilename = filename;
+    }
+
+    const name = decodedFilename.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+
+    return name || '본문 이미지';
 }
 
 const config: Config = {
@@ -107,19 +137,24 @@ const components = {
             {children}
         </CodeBlock>
     ),
-    Image: ({ src, alt, title }: { src: string; alt?: string; title?: string }) => (
-        <span className="block relative w-full">
-            <Image
-                src={src}
-                alt={alt || ''}
-                title={title}
-                width={800}
-                height={600}
-                className="rounded-lg object-cover w-full h-auto"
-                sizes="(max-width: 768px) 100vw, 800px"
-            />
-        </span>
-    ),
+    Image: ({ src, alt, title }: { src: string; alt?: string; title?: string }) => {
+        const altText = getImageAltText({ src, alt, title });
+
+        return (
+            <span className="block relative w-full">
+                <Image
+                    src={src}
+                    alt={altText}
+                    title={title}
+                    width={800}
+                    height={600}
+                    unoptimized={isGifImage(src)}
+                    className="rounded-lg object-cover w-full h-auto"
+                    sizes="(max-width: 768px) 100vw, 800px"
+                />
+            </span>
+        );
+    },
     Table: ({ children }: { children: React.ReactNode }) => (
         <table className="w-full table-fixed border-collapse">
             {children}
@@ -160,7 +195,10 @@ const components = {
 };
 
 export function MarkdocRenderer({ node }: MarkdocRendererProps) {
-    const renderable = Markdoc.transform(node, config);
+    const renderable = Array.isArray(node)
+        ? Markdoc.transform(node, config)
+        : Markdoc.transform(node, config);
+
     return (
         <div className="prose dark:prose-invert mx-auto max-w-none">
             {Markdoc.renderers.react(renderable, React, { components })}

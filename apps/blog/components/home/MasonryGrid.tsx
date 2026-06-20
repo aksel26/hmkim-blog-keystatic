@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { m } from 'framer-motion';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, isGifImage } from '@/lib/utils';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Loader2 } from 'lucide-react';
 
@@ -88,6 +88,7 @@ export default function MasonryGrid({ posts }: MasonryGridProps) {
                                         fill
                                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                                         priority={index < 2}
+                                        unoptimized={isGifImage(post.thumbnailImage)}
                                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                                     />
                                 )}

@@ -14,8 +14,7 @@ export function PersonSchema({
   url = `${baseUrl}/me`,
   jobTitle = '프론트엔드 개발자',
   sameAs = [
-    'https://github.com/hmkim',
-    'https://linkedin.com/in/hmkim',
+    'https://github.com/aksel26',
   ],
 }: PersonSchemaProps = {}) {
   const jsonLd = {
