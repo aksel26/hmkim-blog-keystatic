@@ -23,6 +23,10 @@ export function BlogPostingSchema({
   thumbnailImage,
   category,
 }: BlogPostingSchemaProps) {
+  const imageUrl = thumbnailImage
+    ? (thumbnailImage.startsWith('http') ? thumbnailImage : `${baseUrl}${thumbnailImage}`)
+    : `${url}/opengraph-image`;
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -48,12 +52,10 @@ export function BlogPostingSchema({
     inLanguage: 'ko-KR',
     keywords: tags.join(', '),
     articleSection: category === 'tech' ? 'Technology' : 'Lifestyle',
-    ...(thumbnailImage && {
-      image: {
-        '@type': 'ImageObject',
-        url: thumbnailImage.startsWith('http') ? thumbnailImage : `${baseUrl}${thumbnailImage}`,
-      },
-    }),
+    image: {
+      '@type': 'ImageObject',
+      url: imageUrl,
+    },
   };
 
   return (

@@ -32,6 +32,7 @@ export async function generateMetadata(
 
     return {
         title: `${post.title} | HM Blog`,
+        ...(post.status === 'draft' && { robots: { index: false, follow: false } }),
         description: post.summary,
         keywords: post.keywords ? [...post.keywords] : post.tags ? [...post.tags] : [],
         authors: [{ name: '김현민', url: `${baseUrl}/me` }],
