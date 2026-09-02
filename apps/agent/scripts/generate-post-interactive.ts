@@ -157,14 +157,6 @@ async function main() {
       }
     }
 
-    if (finalState.filepath) {
-      console.log(chalk.white.bold('파일: ') + chalk.blue(finalState.filepath));
-    }
-
-    if (finalState.commitHash) {
-      console.log(chalk.white.bold('커밋: ') + chalk.yellow(finalState.commitHash.substring(0, 7)));
-    }
-
     if (finalState.validationResult && !finalState.validationResult.passed) {
       console.log('\n' + chalk.red.bold('검증 경고:'));
       finalState.validationResult.errors.forEach((error) => {
@@ -172,10 +164,12 @@ async function main() {
       });
     }
 
-    if (finalState.humanApproval === false) {
+    if (finalState.prResult?.prUrl) {
+      console.log('\n' + chalk.green('PR이 생성되었습니다. 검토 후 머지하세요. 🎉\n'));
+    } else if (finalState.humanApproval === false) {
       console.log('\n' + chalk.red(`반려 ${MAX_REJECTIONS}회를 넘겨 배포 없이 종료했습니다.\n`));
     } else {
-      console.log('\n' + chalk.green('블로그 포스트가 성공적으로 생성되었습니다! 🎉\n'));
+      console.log('\n' + chalk.red('검증 실패 상태라 PR을 만들지 않았습니다. 위 오류를 참고해 다시 실행하세요.\n'));
     }
   } catch (error) {
     if (currentSpinner) {

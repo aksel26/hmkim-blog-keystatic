@@ -12,8 +12,10 @@
  *
  * - 검증 실패 여부와 무관하게 humanReview로 넘어간다. 형식 오류는 사람이 보고 판단한다.
  * - 반려 시 리서치는 항상 재사용한다. 피드백은 create(와 write)가 프롬프트에 반영한다.
- *   기본 재진입점은 create: 초안·리뷰를 다시 만들지 않아 LLM 호출 2회를 아낀다.
- * - 썸네일은 slug가 바뀌지 않았으면 재생성하지 않는다 (이미지 생성이 가장 비싼 호출).
+ *   기본 재진입점은 create: 사람이 검토한 finalContent를 초안 자리에 놓고 피드백만 반영한다.
+ *   초안·리뷰를 다시 만들지 않아 LLM 호출 2회를 아낀다.
+ * - 썸네일은 제목이 바뀌지 않았으면 재생성하지 않는다 (이미지 생성이 가장 비싼 호출).
+ * - 검증 실패 상태에서는 승인해도 PR을 만들지 않는다. 형식이 깨진 파일로 블로그 빌드를 깨지 않기 위한 하한선이다.
  * - deploy는 검증 통과 + skipDeploy=false 일 때만 PR을 만든다. 자동 게시는 하지 않는다.
  * - 콜백(onProgress/onHumanReview)과 skipDeploy는 config.configurable로 노드에 전달한다.
  */
@@ -36,12 +38,10 @@ import {
 import { geminiResearcher } from '../agents/gemini-researcher';
 import { geminiWriter } from '../agents/gemini-writer';
 import { geminiCreator } from '../agents/gemini-creator';
-import { reviewer } from '../agents/reviewer';
+import { reviewer, ReviewResult } from '../agents/reviewer';
 import { validator } from '../agents/validator';
 import { gitCommitAndPush, PRResult } from '../tools/git-manager';
 import { generateThumbnail } from '../tools/thumbnail-generator';
-
-type ReviewResult = NonNullable<Awaited<ReturnType<typeof reviewer>>['reviewResult']>;
 
 const StateAnnotation = Annotation.Root({
   topic: Annotation<string>,
@@ -54,15 +54,13 @@ const StateAnnotation = Annotation.Root({
   researchData: Annotation<ResearchData | undefined>,
   draftContent: Annotation<string | undefined>,
   finalContent: Annotation<string | undefined>,
-  images: Annotation<string[] | undefined>,
   humanApproval: Annotation<boolean | undefined>,
   humanFeedback: Annotation<string | undefined>,
   metadata: Annotation<PostMetadata | undefined>,
-  filepath: Annotation<string | undefined>,
   validationResult: Annotation<ValidationResult | undefined>,
   reviewResult: Annotation<ReviewResult | undefined>,
   thumbnailImage: Annotation<BlogPostState['thumbnailImage']>,
-  commitHash: Annotation<string | undefined>,
+  thumbnailFor: Annotation<string | undefined>, // 썸네일을 만들 때의 제목
   prResult: Annotation<PRResult | undefined>,
   rejections: Annotation<number | undefined>,
   rerunFrom: Annotation<RerunFrom | undefined>,
@@ -116,16 +114,19 @@ async function create(state: State, config: LangGraphRunnableConfig) {
 // 썸네일은 실패해도 워크플로우를 멈추지 않는다 (generateThumbnail이 null 반환)
 async function thumbnail(state: State, config: LangGraphRunnableConfig) {
   if (!state.metadata) return {};
-  // 재실행 시 slug(=제목 기반)가 그대로면 기존 이미지를 재사용하고 경로만 다시 붙인다
+  const { title } = state.metadata;
+  // 재실행 시 제목이 그대로면 기존 이미지를 재사용하고 경로만 다시 붙인다
   const prev = state.thumbnailImage;
-  if (prev && prev.path.includes(`/${state.metadata.slug}/`)) {
+  if (prev && state.thumbnailFor === title) {
     return { metadata: { ...state.metadata, thumbnailImage: prev.path } };
   }
   await announce(config, 'thumbnail', '🖼️ 5단계: 썸네일 이미지 생성', 65);
   const result = await generateThumbnail(state.metadata, state.category || 'tech', cfg(config).onProgress);
-  if (!result) return {};
+  // 실패하면 이전 제목의 이미지가 남지 않도록 비운다 (metadata에 경로가 없는데 파일만 커밋되는 것 방지)
+  if (!result) return { thumbnailImage: undefined, thumbnailFor: undefined };
   return {
     thumbnailImage: result,
+    thumbnailFor: title,
     metadata: { ...state.metadata, thumbnailImage: result.path },
   };
 }
@@ -142,7 +143,7 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
 
   await announce(config, 'human_review', '👤 7단계: 사용자 검토 대기 중...', 85);
   const { approved, feedback, rerunFrom = 'create' } = await onHumanReview(state);
-  if (approved) return { humanApproval: true, humanFeedback: feedback };
+  if (approved) return { humanApproval: true };
 
   const rejections = (state.rejections ?? 0) + 1;
   if (rejections > MAX_REJECTIONS) {
@@ -155,9 +156,16 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
     return { humanApproval: false, humanFeedback: feedback, rejections };
   }
 
-  const label = rerunFrom === 'write' ? '2단계(Write)' : '4단계(Create)';
-  await announce(config, rerunFrom, `📝 피드백 반영하여 ${label}부터 재실행... (${rejections}/${MAX_REJECTIONS})`, rerunFrom === 'write' ? 30 : 60);
-  return { humanApproval: false, humanFeedback: feedback, rerunFrom, rejections };
+  await announce(config, 'human_review', `📝 피드백 반영하여 재실행 (${rejections}/${MAX_REJECTIONS})`, 85);
+  return {
+    humanApproval: false,
+    humanFeedback: feedback,
+    rerunFrom,
+    rejections,
+    // create부터 다시 돌 때는 사람이 검토한 최종본을 초안 자리에 놓는다.
+    // 그래야 피드백이 원본 초안이 아니라 검토본에 적용되고 이전 라운드 결과가 유지된다.
+    ...(rerunFrom === 'create' && state.finalContent ? { draftContent: state.finalContent } : {}),
+  };
 }
 
 async function deploy(state: State, config: LangGraphRunnableConfig) {
@@ -211,8 +219,8 @@ const graph = new StateGraph(StateAnnotation)
 
 export const blogWorkflowGraph = graph.compile();
 
-// 반려 1회당 최대 super-step 6개(write~humanReview) × MAX_REJECTIONS + 처음 8개. 넉넉히 2배.
-const RECURSION_LIMIT = (8 + 6 * MAX_REJECTIONS) * 2;
+// 최악 경로: 첫 패스 7 step + (MAX_REJECTIONS + 1)번째 반려까지 각 6 step(write~humanReview). 넉넉히 2배.
+const RECURSION_LIMIT = (7 + 6 * (MAX_REJECTIONS + 1)) * 2;
 
 /**
  * 워크플로우 실행
@@ -246,7 +254,7 @@ export async function runBlogWorkflow(
     status: 'completed',
     message: '🎉 워크플로우 완료!',
     progress: 100,
-    data: { filepath: state.filepath, prResult: state.prResult },
+    data: { prResult: state.prResult },
   });
 
   return state;

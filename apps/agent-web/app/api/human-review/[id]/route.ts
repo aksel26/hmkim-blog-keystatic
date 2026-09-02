@@ -31,6 +31,14 @@ export async function POST(
       );
     }
 
+    // 반려 상한 초과·실패로 끝난 job은 재실행 주체가 없으므로 거부
+    if (job.status === "completed" || job.status === "failed") {
+      return NextResponse.json(
+        { error: `Job already ${job.status}` },
+        { status: 400 }
+      );
+    }
+
     // Verify job is in human_review status
     // Check status, current_step, or progress_logs for timing issues
     const isHumanReview =
@@ -91,14 +99,15 @@ export async function POST(
         }
         await jobManager.submitHumanReview(jobId, false, body.feedback.trim());
 
+        // action은 executor가 progress_logs에서 읽어 재진입점(rewrite→write, feedback→create)을 정한다
         await jobManager.logProgress(jobId, {
           step: "human_review",
           status: "completed",
           message: `Human review: ${body.action}`,
-          data: { feedback: body.feedback },
+          data: { feedback: body.feedback, action: body.action },
         });
 
-        nextStep = "writing";
+        nextStep = body.action === "rewrite" ? "writing" : "creating";
         break;
 
       default:

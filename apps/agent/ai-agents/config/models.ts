@@ -47,7 +47,8 @@ export const gemini = new ChatGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
   temperature: 0.7,
   maxOutputTokens: 8192,
-  // 무료 티어 429(rate limit)는 LangChain AsyncCaller가 지수 백오프로 재시도한다.
-  // 4xx 중 400~409는 재시도하지 않는다. 기본값 6은 대기가 너무 길어 3으로 제한.
+  // 호출 실패는 LangChain AsyncCaller가 지수 백오프로 재시도한다. 무료 티어 429가 주 대상.
+  // Gemini SDK 오류는 response.status가 없어 AsyncCaller의 4xx 제외 목록이 적용되지 않고
+  // 모든 실패를 재시도하므로, 기본값 6 대신 3으로 상한을 둔다.
   maxRetries: 3,
 });

@@ -40,6 +40,15 @@ export async function geminiCreator(
       ? `\n\n사용자 피드백:\n${state.humanFeedback}\n\n위 피드백을 반영하여 콘텐츠를 개선해주세요.`
       : '';
 
+    // 리뷰어가 지적한 개선점 반영 (이게 없으면 review 단계가 결과물에 아무 영향을 못 준다)
+    const r = state.reviewResult;
+    const reviewIssues = r
+      ? [...r.codeIssues, ...r.techIssues, ...r.seoIssues].map((i) => `- ${i.issue} → ${i.suggestion}`)
+      : [];
+    const reviewInstruction = reviewIssues.length
+      ? `\n\n리뷰어가 지적한 개선점 (반영하세요):\n${reviewIssues.join('\n')}`
+      : '';
+
     onProgress?.({
       step: 'create',
       status: 'progress',
@@ -80,7 +89,7 @@ ${toneInstruction}
 ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
-${feedbackInstruction}
+${reviewInstruction}${feedbackInstruction}
 
 `;
 
@@ -103,7 +112,7 @@ ${toneInstruction}
 ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
-${feedbackInstruction}
+${reviewInstruction}${feedbackInstruction}
 
 `;
 
@@ -214,7 +223,8 @@ JSON만 반환해주세요.
       tags: (parsedMetadata.tags || []).slice(0, 5),
       createdAt: currentDate,
       updatedAt: currentDate,
-      slug: parsedMetadata.slug,
+      // 재실행 시 slug를 유지한다. URL과 썸네일 경로가 흔들리지 않고, 제목만 바뀐 경우를 구분할 수 있다.
+      slug: state.metadata?.slug ?? parsedMetadata.slug,
     };
 
     // 메타데이터 검증

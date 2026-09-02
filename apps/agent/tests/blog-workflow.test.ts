@@ -10,20 +10,24 @@ const stub = (rel: string, exports: Record<string, unknown>) => {
 };
 
 const calls: string[] = [];
-const agent = (name: string, patch: unknown) => async () => {
+const inputs: Record<string, unknown[]> = {};
+const agent = (name: string, patch: unknown) => async (state: unknown) => {
   calls.push(name);
-  return patch;
+  (inputs[name] ??= []).push(state);
+  return typeof patch === 'function' ? patch() : patch;
 };
-const metadata = { title: 't', slug: 'my-slug', tags: [] };
+let title = 't';
 const thumb = { buffer: '', mimeType: 'image/png', path: '/images/thumbnails/my-slug/thumbnailImage.png' };
 
 stub('../ai-agents/agents/gemini-researcher', { geminiResearcher: agent('research', { researchData: { sources: [], summary: 's', keyPoints: [] } }) });
 stub('../ai-agents/agents/gemini-writer', { geminiWriter: agent('write', { draftContent: 'draft' }) });
 stub('../ai-agents/agents/reviewer', { reviewer: agent('review', { reviewResult: { seoScore: 1 } }) });
-stub('../ai-agents/agents/gemini-creator', { geminiCreator: agent('create', { finalContent: 'final', metadata }) });
+stub('../ai-agents/agents/gemini-creator', {
+  geminiCreator: agent('create', () => ({ finalContent: 'final', metadata: { title, slug: 'my-slug', tags: [] } })),
+});
 stub('../ai-agents/tools/thumbnail-generator', { generateThumbnail: agent('thumbnail', thumb) });
 stub('../ai-agents/agents/validator', { validator: agent('validate', { validationResult: { passed: true, errors: [] } }) });
-stub('../ai-agents/tools/git-manager', { gitCommitAndPush: agent('deploy', { commitHash: 'abc' }) });
+stub('../ai-agents/tools/git-manager', { gitCommitAndPush: agent('deploy', { prResult: { prUrl: 'https://example/pr/1' } }) });
 
 const { runBlogWorkflow, MAX_REJECTIONS } = require('../ai-agents/workflows/blog-workflow');
 
@@ -33,14 +37,23 @@ const run = (review: (n: number) => unknown, skipDeploy = true) => {
   return runBlogWorkflow('topic', undefined, async () => review(++n), 'tech', skipDeploy);
 };
 
-beforeEach(() => { calls.length = 0; });
+beforeEach(() => { calls.length = 0; title = 't'; for (const k in inputs) delete inputs[k]; });
 
-test('반려(기본)는 create부터 재실행하고 썸네일은 slug가 같으면 재생성하지 않는다', async () => {
+test('반려(기본)는 검토본을 초안 삼아 create부터 재실행하고, 제목이 같으면 썸네일을 재생성하지 않는다', async () => {
   const state = await run((n) => (n === 1 ? { approved: false, feedback: '더 짧게' } : { approved: true }));
   assert.deepEqual(calls, [...FIRST_PASS, 'create', 'validate']);
+  assert.equal((inputs.create[1] as { draftContent: string }).draftContent, 'final');
   assert.equal(state.humanApproval, true);
   assert.equal(state.metadata.thumbnailImage, thumb.path);
-  assert.equal(state.commitHash, undefined); // skipDeploy
+  assert.equal(state.prResult, undefined); // skipDeploy
+});
+
+test('제목이 바뀌면 썸네일을 다시 만든다', async () => {
+  await run((n) => {
+    title = `t${n}`;
+    return n === 1 ? { approved: false } : { approved: true };
+  });
+  assert.deepEqual(calls, [...FIRST_PASS, 'create', 'thumbnail', 'validate']);
 });
 
 test("rerunFrom='write'면 초안부터 다시 쓴다", async () => {
@@ -59,5 +72,5 @@ test('반려가 MAX_REJECTIONS를 넘으면 배포 없이 종료한다', async (
 test('승인 + skipDeploy=false면 deploy가 실행된다', async () => {
   const state = await run(() => ({ approved: true }), false);
   assert.equal(calls.at(-1), 'deploy');
-  assert.equal(state.commitHash, 'abc');
+  assert.equal(state.prResult.prUrl, 'https://example/pr/1');
 });

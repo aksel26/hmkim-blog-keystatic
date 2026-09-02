@@ -48,6 +48,9 @@ export type Category = 'tech' | 'life';
  * 워크플로우 전체 상태 관리
  */
 export interface BlogPostState {
+  // 리뷰 결과 (reviewer → creator 프롬프트에 반영)
+  reviewResult?: import('../agents/reviewer').ReviewResult;
+
   // 기본 정보
   topic: string;
   category?: Category;
