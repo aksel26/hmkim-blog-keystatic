@@ -102,12 +102,18 @@ research → write → review → create → thumbnail → validate → humanRev
 
 `validate`는 LLM 없이 결정론적 규칙(제목 길이, 태그 수, 코드블록 짝 등)만 검사한다. 내용 품질 판단은 humanReview로 넘긴다.
 
+반려 시 리서치는 재사용하고 피드백을 소비하는 create부터 다시 돈다. 반려 상한은 3회다. 설계 근거는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)에 있다.
+
+지금까지 이 파이프라인으로 나간 포스트는 전체  중 5편이다 (2026-01-23 ~ 02-13, PR #16·#25·#27·#29·#31).
+
 ### agent-web
 
-Agent의 웹 UI 버전. 포스트 생성 큐 관리, 스케줄링, 이메일 템플릿 관리 등의 기능을 제공한다.
+Agent를 브라우저에서 돌리는 UI. 생성 작업을 Supabase `jobs` 테이블에 기록하고 진행 상황을 스트리밍한다.
+사용자 검토와 배포 승인을 화면에서 처리하며, 트렌드 키워드 조회·뉴스레터 발송·구독자 관리·이메일 템플릿 기능이 있다.
 
 ## 문서
 
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - 파이프라인 설계와 판단 근거
 - [docs/PRD.md](docs/PRD.md) - 제품 요구사항
 - [docs/DESIGN.md](docs/DESIGN.md) - 디자인 가이드
 
