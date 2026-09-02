@@ -152,6 +152,8 @@ export async function executeWorkflow(
           console.log(
             `[Workflow] Human review completed: approved=${job.human_approval}`
           );
+          // rerunFrom은 생략 → 기본값 'create'. feedback/rewrite 액션을 구분해 write부터
+          // 돌리려면 jobs 테이블에 액션 컬럼을 추가해야 한다.
           return {
             approved: job.human_approval,
             feedback: job.human_feedback || undefined,
@@ -176,8 +178,8 @@ export async function executeWorkflow(
       options
     );
 
-    // 검증 결과 확인
-    if (result.validationResult?.passed) {
+    // 검증 통과 + 사람 승인(반려 상한 초과 시 humanApproval=false)일 때만 배포 대기로
+    if (result.validationResult?.passed && result.humanApproval !== false) {
       // DB에서 현재 값을 읽어 사용자가 human_review 중 직접 편집한 콘텐츠를 보존
       const currentJob = await jobManager.getJob(jobId);
 
@@ -212,11 +214,11 @@ export async function executeWorkflow(
       await jobManager.logProgress(jobId, {
         step: "complete",
         status: "completed",
-        message: "워크플로우 완료 (검증 실패)",
+        message: result.humanApproval === false ? "워크플로우 완료 (반려 횟수 초과)" : "워크플로우 완료 (검증 실패)",
         data: { validationResult: result.validationResult },
       });
 
-      console.log(`[Workflow] Validation failed, workflow completed for job ${jobId}`);
+      console.log(`[Workflow] Not deployable (validation or rejection limit), workflow completed for job ${jobId}`);
     }
   } catch (error) {
     console.error(`[Workflow] Error executing workflow for job ${jobId}:`, error);
