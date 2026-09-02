@@ -6,7 +6,8 @@
     "dev": "echo 'Agent dev mode not implemented'",
     "build": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "generate-post": "tsx scripts/generate-post-interactive.ts"
+    "generate-post": "tsx scripts/generate-post-interactive.ts",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.41.0",
