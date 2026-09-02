@@ -48,3 +48,7 @@ next-env.d.ts
 # oh-my-claudecode (runtime cache / session state — may contain local absolute paths)
 .omc/
 **/.omc/
+
+# 로컬 에이전트 설정 (개인 환경, 트래킹 제외)
+.claude/
+.antigravity/
