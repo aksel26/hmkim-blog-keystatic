@@ -49,7 +49,7 @@ pnpm generate-post    # 인터랙티브 CLI로 포스트 생성
 
 ### apps/agent
 - **AI**: LangChain + LangGraph(StateGraph) + Gemini 2.0 Flash 단일 모델 (`ai-agents/config/models.ts`)
-- **워크플로우**: `ai-agents/workflows/blog-workflow.ts` - StateGraph 8노드: research → write → review → create → thumbnail → validate → humanReview → deploy(PR). 반려 시 write로 되돌아감
+- **워크플로우**: `ai-agents/workflows/blog-workflow.ts` - StateGraph 8노드: research → write → review → create → thumbnail → validate → humanReview → deploy(PR). 반려 시 기본은 create부터, `rerunFrom: 'write'`면 write부터
 - **테스트**: `pnpm --filter agent test` (에이전트 stub, 그래프 분기 검사)
 - **에이전트**: gemini-researcher, gemini-writer, gemini-creator, reviewer, validator
 

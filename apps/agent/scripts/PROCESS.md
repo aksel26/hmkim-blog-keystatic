@@ -1,3 +1,5 @@
+> 구축 당시 Claude에게 준 프롬프트 기록이다. 현재 구성과 다른 부분이 있다 (Claude·Anthropic 미사용, Gemini 단일 모델, StateGraph). 현재 구조는 docs/ARCHITECTURE.md를 본다.
+
 
 1단계: 프로젝트 초기 설정
 

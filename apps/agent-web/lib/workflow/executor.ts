@@ -13,7 +13,7 @@
  * 8. Deploy (95%)
  */
 
-import { runBlogWorkflow } from "@agent/ai-agents/workflows/blog-workflow";
+import { runBlogWorkflow, type HumanReviewCallback } from "@agent/ai-agents/workflows/blog-workflow";
 import { gitCommitAndPush } from "@agent/ai-agents/tools/git-manager";
 import type { StreamEvent, BlogPostState } from "@agent/ai-agents/types/workflow";
 import { jobManager } from "@/lib/queue/job-manager";
@@ -104,7 +104,7 @@ export async function executeWorkflow(
     };
 
     // Human Review 콜백 (Validate 후에 호출됨)
-    const onHumanReview = async (state: BlogPostState & { reviewResult?: unknown }) => {
+    const onHumanReview: HumanReviewCallback = async (state) => {
       console.log(`[Workflow] Human review requested for job ${jobId}`);
 
       // 상태를 human_review로 변경
@@ -139,7 +139,7 @@ export async function executeWorkflow(
       const startTime = Date.now();
 
       while (Date.now() - startTime < maxWaitTime) {
-        const job = await jobManager.getJob(jobId);
+        const job = await jobManager.getReviewDecision(jobId);
 
         console.log(`[Workflow] Polling human review for job ${jobId}: human_approval=${job?.human_approval}, status=${job?.status}`);
 
@@ -152,11 +152,15 @@ export async function executeWorkflow(
           console.log(
             `[Workflow] Human review completed: approved=${job.human_approval}`
           );
-          // rerunFrom은 생략 → 기본값 'create'. feedback/rewrite 액션을 구분해 write부터
-          // 돌리려면 jobs 테이블에 액션 컬럼을 추가해야 한다.
+          if (job.human_approval) return { approved: true };
+
+          // human-review route가 남긴 액션으로 재진입점 결정: rewrite → write, feedback → create
+          const logs = await jobManager.getProgressLogs(jobId);
+          const action = [...logs].reverse().find((l) => l.step === "human_review" && l.data?.action)?.data?.action;
           return {
-            approved: job.human_approval,
+            approved: false,
             feedback: job.human_feedback || undefined,
+            rerunFrom: action === "rewrite" ? "write" : "create",
           };
         }
 
@@ -251,6 +255,11 @@ export async function executeDeploy(jobId: string): Promise<void> {
 
     if (job.status !== "pending_deploy") {
       throw new Error(`Invalid job status for deploy: ${job.status}`);
+    }
+
+    // 폴링 프로세스가 죽은 뒤 route가 직접 pending_deploy로 바꾼 경우에도 검증 게이트는 유지
+    if (!(job.validation_result as BlogPostState["validationResult"])?.passed) {
+      throw new Error("검증 실패 상태에서는 배포할 수 없습니다. 반려 후 다시 생성하세요.");
     }
 
     // 상태 업데이트: deploying
@@ -380,7 +389,7 @@ export async function skipDeploy(jobId: string): Promise<void> {
 async function runBlogWorkflowWithoutDeploy(
   topic: string,
   onProgress: (event: StreamEvent) => void | Promise<void>,
-  onHumanReview: (state: BlogPostState) => Promise<{ approved: boolean; feedback?: string }>,
+  onHumanReview: HumanReviewCallback,
   category: string = "tech",
   options?: { tone?: string; targetReader?: string; template?: string }
 ): Promise<BlogPostState> {

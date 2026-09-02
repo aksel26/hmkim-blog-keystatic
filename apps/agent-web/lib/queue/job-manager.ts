@@ -205,6 +205,26 @@ export class JobManager {
   }
 
   /**
+   * Human review 폴링용 최소 조회 (thumbnail_data 같은 큰 컬럼을 2초마다 읽지 않기 위해)
+   */
+  async getReviewDecision(
+    jobId: string
+  ): Promise<Pick<DbJob, "human_approval" | "human_feedback" | "status"> | null> {
+    const { data, error } = await this.supabase
+      .from("jobs")
+      .select("human_approval, human_feedback, status")
+      .eq("id", jobId)
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") return null;
+      throw new Error(`Failed to get review decision: ${error.message}`);
+    }
+
+    return data as Pick<DbJob, "human_approval" | "human_feedback" | "status">;
+  }
+
+  /**
    * Log progress event
    */
   async logProgress(
