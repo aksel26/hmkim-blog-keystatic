@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: agent typecheck
+        run: pnpm --filter agent exec tsc --noEmit
+      - name: agent tests
+        run: pnpm --filter agent test
+      - name: agent-web typecheck
+        run: pnpm --filter agent-web exec tsc --noEmit
