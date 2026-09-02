@@ -3,7 +3,7 @@
  * 초안을 개선하고 메타데이터 생성
  */
 
-import { geminiPro } from '../config/models';
+import { gemini } from '../config/models';
 import { BlogPostState, OnProgressCallback, PostMetadata } from '../types/workflow';
 
 /**
@@ -109,7 +109,7 @@ ${feedbackInstruction}
 
     const contentPrompt = isLifeCategory ? lifeContentPrompt : techContentPrompt;
 
-    const contentResponse = await geminiPro.invoke(contentPrompt);
+    const contentResponse = await gemini.invoke(contentPrompt);
     const finalContent = contentResponse.content.toString();
 
     onProgress?.({
@@ -193,7 +193,7 @@ JSON만 반환해주세요.
 
     const metadataPrompt = isLifeCategory ? lifeMetadataPrompt : techMetadataPrompt;
 
-    const metadataResponse = await geminiPro.invoke(metadataPrompt);
+    const metadataResponse = await gemini.invoke(metadataPrompt);
     const metadataContent = metadataResponse.content.toString();
 
     // JSON 추출 (코드 블록이 있을 경우 제거)
