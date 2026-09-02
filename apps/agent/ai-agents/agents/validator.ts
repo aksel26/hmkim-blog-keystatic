@@ -1,6 +1,13 @@
 /**
  * Validator Agent
  * 생성된 블로그 포스트 콘텐츠 검증 (파일 생성 전)
+ *
+ * 의도적으로 LLM을 쓰지 않는다.
+ * LLM 출력의 형식 검증을 다시 LLM에 맡기면 검증 자체가 비결정적이 되어
+ * 같은 입력이 어떤 날은 통과하고 어떤 날은 실패한다.
+ * 형식 규칙(제목 60자, 요약 150자, 태그 3~5개, 본문 500자, 코드블록 짝)은 여기서
+ * 결정론적으로 처리하고, 내용 품질 판단은 humanReview 단계로 위임한다.
+ * 실패해도 워크플로우를 멈추지 않고 오류 목록을 사람에게 보여준다.
  */
 
 import { BlogPostState, OnProgressCallback, ValidationResult } from '../types/workflow';

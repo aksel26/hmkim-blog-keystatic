@@ -47,4 +47,7 @@ export const gemini = new ChatGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
   temperature: 0.7,
   maxOutputTokens: 8192,
+  // 무료 티어 429(rate limit)는 LangChain AsyncCaller가 지수 백오프로 재시도한다.
+  // 4xx 중 400~409는 재시도하지 않는다. 기본값 6은 대기가 너무 길어 3으로 제한.
+  maxRetries: 3,
 });
