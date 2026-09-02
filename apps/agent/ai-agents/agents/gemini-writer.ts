@@ -3,7 +3,7 @@
  * 리서치 데이터를 바탕으로 블로그 초안 작성
  */
 
-import { geminiFlash } from '../config/models';
+import { gemini } from '../config/models';
 import { BlogPostState, OnProgressCallback } from '../types/workflow';
 
 /**
@@ -180,7 +180,7 @@ ${i + 1}. ${source.title}
 
     const prompt = isLifeCategory ? lifePrompt : techPrompt;
 
-    const response = await geminiFlash.invoke(prompt);
+    const response = await gemini.invoke(prompt);
     const draftContent = response.content.toString();
 
     onProgress?.({

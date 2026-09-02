@@ -3,7 +3,7 @@
  * Tavily Search API로 웹 검색 후 Gemini Flash로 결과 요약
  */
 
-import { geminiFlash } from '../config/models';
+import { gemini } from '../config/models';
 import { BlogPostState, OnProgressCallback, ResearchData } from '../types/workflow';
 
 /**
@@ -120,7 +120,7 @@ ${i + 1}. ${s.title}
 JSON만 반환해주세요.
 `;
 
-      const summaryResponse = await geminiFlash.invoke(summaryPrompt);
+      const summaryResponse = await gemini.invoke(summaryPrompt);
       const summaryContent = summaryResponse.content.toString();
 
       // JSON 추출
@@ -165,7 +165,7 @@ JSON만 반환해주세요.
 실제 존재하는 기술과 개념을 바탕으로 작성해주세요. JSON만 반환해주세요.
 `;
 
-      const geminiResponse = await geminiFlash.invoke(geminiResearchPrompt);
+      const geminiResponse = await gemini.invoke(geminiResearchPrompt);
       const geminiContent = geminiResponse.content.toString();
 
       // JSON 추출

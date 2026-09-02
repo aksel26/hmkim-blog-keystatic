@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { geminiPro } from '../ai-agents/config/models';
+import { gemini } from '../ai-agents/config/models';
 
 interface FeedbackContext {
   prNumber: string;
@@ -66,7 +66,7 @@ ${feedback}
 수정된 전체 콘텐츠(frontmatter 포함)를 반환해주세요.
 `;
 
-  const response = await geminiPro.invoke(prompt);
+  const response = await gemini.invoke(prompt);
   return response.content.toString();
 }
 

@@ -3,7 +3,7 @@
  * 코드 블록 문법 오류, 기술적 정확도, SEO 키워드 검토 및 수정 제안
  */
 
-import { geminiPro } from '../config/models';
+import { gemini } from '../config/models';
 import { BlogPostState, OnProgressCallback } from '../types/workflow';
 
 /**
@@ -115,7 +115,7 @@ ${contentToReview}
 JSON만 반환해주세요.
 `;
 
-    const reviewResponse = await geminiPro.invoke(reviewPrompt);
+    const reviewResponse = await gemini.invoke(reviewPrompt);
     const reviewContent = reviewResponse.content.toString();
 
     // JSON 추출
