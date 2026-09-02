@@ -48,8 +48,9 @@ pnpm generate-post    # 인터랙티브 CLI로 포스트 생성
 - **핵심 설정**: `keystatic.config.ts`, `next.config.ts` (MDX 설정 포함)
 
 ### apps/agent
-- **AI**: LangChain + Gemini/Claude
-- **워크플로우**: `ai-agents/workflows/` - 리서치 → 작성 → 검토 → 검증
+- **AI**: LangChain + LangGraph(StateGraph) + Gemini 2.0 Flash 단일 모델 (`ai-agents/config/models.ts`)
+- **워크플로우**: `ai-agents/workflows/blog-workflow.ts` - StateGraph 8노드: research → write → review → create → thumbnail → validate → humanReview → deploy(PR). 반려 시 write로 되돌아감
+- **테스트**: `pnpm --filter agent test` (에이전트 stub, 그래프 분기 검사)
 - **에이전트**: gemini-researcher, gemini-writer, gemini-creator, reviewer, validator
 
 ### apps/agent-web
@@ -59,7 +60,7 @@ pnpm generate-post    # 인터랙티브 CLI로 포스트 생성
 ## 환경변수
 
 `.env.example` 참조. 주요 변수:
-- `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`: AI 모델 API 키
+- `GOOGLE_API_KEY`: Gemini API 키 (에이전트 전체가 이 키 하나로 동작)
 - `TAVILY_API_KEY`: 웹 검색 (Agent)
 - `GITHUB_TOKEN`, `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BASE_BRANCH`: Agent PR 생성용
 - `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`: 네이버 API (트렌드)
