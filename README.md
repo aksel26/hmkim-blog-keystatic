@@ -105,7 +105,7 @@ research → write → review → create → thumbnail → validate → humanRev
 
 반려 상한은 3회다. 썸네일은 제목이 바뀔 때만 다시 만든다. 설계 근거는 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)에 있다.
 
-지금까지 이 파이프라인으로 나간 포스트는 전체 99편 중 12편이다 (2026-01-19 ~ 02-13, `post/` 브랜치 머지 기준).
+지금까지 이 파이프라인으로 나간 포스트는 전체 105편 중 12편이다 (2026-01-19 ~ 02-13, `post/` 브랜치 머지 기준).
 
 ### agent-web
 
