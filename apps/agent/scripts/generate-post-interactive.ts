@@ -9,7 +9,7 @@ import inquirer from 'inquirer';
 import chalk from 'chalk';
 import ora, { Ora } from 'ora';
 import dotenv from 'dotenv';
-import { runBlogWorkflow } from '../ai-agents/workflows/blog-workflow';
+import { runBlogWorkflow, HumanReviewCallback, MAX_REJECTIONS } from '../ai-agents/workflows/blog-workflow';
 import { BlogPostState, StreamEvent } from '../ai-agents/types/workflow';
 
 // 환경 변수 로드 (루트 디렉토리의 .env.local)
@@ -61,21 +61,25 @@ function handleProgress(event: StreamEvent) {
 /**
  * 사람 검토 핸들러
  */
-async function handleHumanReview(state: BlogPostState): Promise<{ approved: boolean; feedback?: string }> {
+const handleHumanReview: HumanReviewCallback = async (state: BlogPostState) => {
   if (currentSpinner) {
     currentSpinner.stop();
     currentSpinner = null;
   }
 
   console.log('\n' + chalk.yellow('='.repeat(60)));
-  console.log(chalk.yellow.bold('  초안 검토'));
+  console.log(chalk.yellow.bold('  검토 (배포될 최종본)'));
   console.log(chalk.yellow('='.repeat(60)) + '\n');
 
-  // 초안 미리보기 (처음 500자)
-  const preview = state.draftContent?.substring(0, 500) || '';
-  console.log(chalk.gray(preview));
-  if (state.draftContent && state.draftContent.length > 500) {
+  // 배포 대상은 finalContent이므로 그것을 보여준다 (처음 500자)
+  const content = state.finalContent ?? state.draftContent ?? '';
+  console.log(chalk.gray(content.substring(0, 500)));
+  if (content.length > 500) {
     console.log(chalk.gray('...(계속)'));
+  }
+  if (state.validationResult && !state.validationResult.passed) {
+    console.log('\n' + chalk.red('검증 실패:'));
+    state.validationResult.errors.forEach((e) => console.log(chalk.red(`  - ${e}`)));
   }
 
   console.log('\n' + chalk.yellow('='.repeat(60)) + '\n');
@@ -88,8 +92,8 @@ async function handleHumanReview(state: BlogPostState): Promise<{ approved: bool
       message: '초안을 어떻게 처리하시겠습니까?',
       choices: [
         { name: chalk.green('✓ 승인 (다음 단계로 진행)'), value: 'approve' },
-        { name: chalk.yellow('✎ 수정 요청 (피드백 제공)'), value: 'feedback' },
-        { name: chalk.red('↻ 다시 작성'), value: 'rewrite' },
+        { name: chalk.yellow('✎ 수정 요청 (피드백 반영해 Create부터 재실행)'), value: 'feedback' },
+        { name: chalk.red('↻ 다시 작성 (Write부터 재실행)'), value: 'rewrite' },
       ],
     },
   ]);
@@ -106,12 +110,11 @@ async function handleHumanReview(state: BlogPostState): Promise<{ approved: bool
       },
     ]);
 
-    return { approved: true, feedback };
+    return { approved: false, feedback, rerunFrom: 'create' };
   } else {
-    // rewrite
-    return { approved: false };
+    return { approved: false, rerunFrom: 'write' };
   }
-}
+};
 
 /**
  * 메인 함수
@@ -169,7 +172,11 @@ async function main() {
       });
     }
 
-    console.log('\n' + chalk.green('블로그 포스트가 성공적으로 생성되었습니다! 🎉\n'));
+    if (finalState.humanApproval === false) {
+      console.log('\n' + chalk.red(`반려 ${MAX_REJECTIONS}회를 넘겨 배포 없이 종료했습니다.\n`));
+    } else {
+      console.log('\n' + chalk.green('블로그 포스트가 성공적으로 생성되었습니다! 🎉\n'));
+    }
   } catch (error) {
     if (currentSpinner) {
       currentSpinner.fail(chalk.red('오류 발생'));

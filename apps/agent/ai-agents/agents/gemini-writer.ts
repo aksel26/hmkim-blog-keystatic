@@ -48,6 +48,10 @@ export async function geminiWriter(
     const targetReaderInstruction = state.targetReader
       ? `**타겟 독자**: ${state.targetReader}에 맞는 수준과 어휘로 작성하세요.`
       : '';
+    // 반려 후 write부터 재실행될 때 사람 피드백을 초안 단계에서부터 반영
+    const feedbackInstruction = state.humanFeedback
+      ? `**사용자 피드백 (반드시 반영)**: ${state.humanFeedback}`
+      : '';
 
     // 템플릿 매핑 (글 형식 지시)
     const templateMap: Record<string, string> = {
@@ -66,6 +70,7 @@ export async function geminiWriter(
 ${toneInstruction}
 ${targetReaderInstruction}
 ${templateInstruction}
+${feedbackInstruction}
 
 ## 리서치 요약
 ${summary}
@@ -122,6 +127,7 @@ ${i + 1}. ${source.title}
 ${toneInstruction}
 ${targetReaderInstruction}
 ${templateInstruction}
+${feedbackInstruction}
 
 다음 리서치 데이터를 바탕으로 "${state.topic}"에 블로그 포스트를 작성해주세요.
 

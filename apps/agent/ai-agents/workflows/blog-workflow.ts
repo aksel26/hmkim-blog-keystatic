@@ -3,12 +3,17 @@
  * LangGraph StateGraph로 선언한 블로그 생성 워크플로우
  *
  * START → research → write → review → create → thumbnail → validate → humanReview
- *                      ▲                                                   │
- *                      └──────────── 반려(approved=false) ─────────────────┤
+ *                      ▲                        ▲                             │
+ *                      │ rerunFrom='write'      │ rerunFrom='create' (기본)   │ 반려
+ *                      └────────────────────────┴─────────────────────────────┤
+ *                                                     반려 MAX_REJECTIONS 초과 → END
  *                                                                          ▼ 승인
  *                                                                        deploy → END
  *
  * - 검증 실패 여부와 무관하게 humanReview로 넘어간다. 형식 오류는 사람이 보고 판단한다.
+ * - 반려 시 리서치는 항상 재사용한다. 피드백은 create(와 write)가 프롬프트에 반영한다.
+ *   기본 재진입점은 create: 초안·리뷰를 다시 만들지 않아 LLM 호출 2회를 아낀다.
+ * - 썸네일은 slug가 바뀌지 않았으면 재생성하지 않는다 (이미지 생성이 가장 비싼 호출).
  * - deploy는 검증 통과 + skipDeploy=false 일 때만 PR을 만든다. 자동 게시는 하지 않는다.
  * - 콜백(onProgress/onHumanReview)과 skipDeploy는 config.configurable로 노드에 전달한다.
  */
@@ -59,13 +64,21 @@ const StateAnnotation = Annotation.Root({
   thumbnailImage: Annotation<BlogPostState['thumbnailImage']>,
   commitHash: Annotation<string | undefined>,
   prResult: Annotation<PRResult | undefined>,
+  rejections: Annotation<number | undefined>,
+  rerunFrom: Annotation<RerunFrom | undefined>,
 });
 
 type State = typeof StateAnnotation.State;
 
+/** 반려 후 어디부터 다시 돌릴지. create = 피드백만 반영, write = 초안부터 새로 */
+export type RerunFrom = 'write' | 'create';
+
 export type HumanReviewCallback = (
   state: BlogPostState
-) => Promise<{ approved: boolean; feedback?: string }>;
+) => Promise<{ approved: boolean; feedback?: string; rerunFrom?: RerunFrom }>;
+
+/** 이 횟수를 넘겨 반려되면 배포 없이 종료한다 */
+export const MAX_REJECTIONS = 3;
 
 interface WorkflowConfig {
   onProgress?: OnProgressCallback;
@@ -103,6 +116,11 @@ async function create(state: State, config: LangGraphRunnableConfig) {
 // 썸네일은 실패해도 워크플로우를 멈추지 않는다 (generateThumbnail이 null 반환)
 async function thumbnail(state: State, config: LangGraphRunnableConfig) {
   if (!state.metadata) return {};
+  // 재실행 시 slug(=제목 기반)가 그대로면 기존 이미지를 재사용하고 경로만 다시 붙인다
+  const prev = state.thumbnailImage;
+  if (prev && prev.path.includes(`/${state.metadata.slug}/`)) {
+    return { metadata: { ...state.metadata, thumbnailImage: prev.path } };
+  }
   await announce(config, 'thumbnail', '🖼️ 5단계: 썸네일 이미지 생성', 65);
   const result = await generateThumbnail(state.metadata, state.category || 'tech', cfg(config).onProgress);
   if (!result) return {};
@@ -123,11 +141,23 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
   if (!onHumanReview) return { humanApproval: true };
 
   await announce(config, 'human_review', '👤 7단계: 사용자 검토 대기 중...', 85);
-  const { approved, feedback } = await onHumanReview(state);
-  if (!approved) {
-    await announce(config, 'write', '📝 피드백 반영하여 2단계(Write)부터 재실행...', 30);
+  const { approved, feedback, rerunFrom = 'create' } = await onHumanReview(state);
+  if (approved) return { humanApproval: true, humanFeedback: feedback };
+
+  const rejections = (state.rejections ?? 0) + 1;
+  if (rejections > MAX_REJECTIONS) {
+    await cfg(config).onProgress?.({
+      step: 'human_review',
+      status: 'error',
+      message: `❌ 반려 ${MAX_REJECTIONS}회를 넘겨 배포 없이 종료합니다.`,
+      progress: 85,
+    });
+    return { humanApproval: false, humanFeedback: feedback, rejections };
   }
-  return { humanApproval: approved, humanFeedback: feedback };
+
+  const label = rerunFrom === 'write' ? '2단계(Write)' : '4단계(Create)';
+  await announce(config, rerunFrom, `📝 피드백 반영하여 ${label}부터 재실행... (${rejections}/${MAX_REJECTIONS})`, rerunFrom === 'write' ? 30 : 60);
+  return { humanApproval: false, humanFeedback: feedback, rerunFrom, rejections };
 }
 
 async function deploy(state: State, config: LangGraphRunnableConfig) {
@@ -167,15 +197,22 @@ const graph = new StateGraph(StateAnnotation)
   .addEdge('create', 'thumbnail')
   .addEdge('thumbnail', 'validate')
   .addEdge('validate', 'humanReview')
-  // 반려 → write부터 재실행 (리서치는 재사용), 승인 → deploy
-  .addConditionalEdges('humanReview', (s) => (s.humanApproval ? 'deploy' : 'write'), ['deploy', 'write'])
+  // 승인 → deploy, 반려 → rerunFrom 노드로 (리서치는 재사용), 상한 초과 → 종료
+  .addConditionalEdges(
+    'humanReview',
+    (s) => {
+      if (s.humanApproval) return 'deploy';
+      if ((s.rejections ?? 0) > MAX_REJECTIONS) return END;
+      return s.rerunFrom ?? 'create';
+    },
+    ['deploy', 'write', 'create', END]
+  )
   .addEdge('deploy', END);
 
 export const blogWorkflowGraph = graph.compile();
 
-// 반려 1회당 super-step 6개(write~humanReview). 100이면 약 15회 반려까지 허용.
-// ponytail: 단순 상한. 피드백 유형별 진입점 분기와 명시적 횟수 제한은 Phase 1-3에서.
-const RECURSION_LIMIT = 100;
+// 반려 1회당 최대 super-step 6개(write~humanReview) × MAX_REJECTIONS + 처음 8개. 넉넉히 2배.
+const RECURSION_LIMIT = (8 + 6 * MAX_REJECTIONS) * 2;
 
 /**
  * 워크플로우 실행
