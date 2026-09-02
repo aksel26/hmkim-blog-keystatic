@@ -28,7 +28,7 @@ export async function geminiCreator(
     onProgress?.({
       step: 'create',
       status: 'started',
-      message: 'Gemini Pro로 콘텐츠 개선 및 메타데이터 생성 중...',
+      message: 'Gemini로 콘텐츠 개선 및 메타데이터 생성 중...',
     });
 
     if (!state.draftContent) {
