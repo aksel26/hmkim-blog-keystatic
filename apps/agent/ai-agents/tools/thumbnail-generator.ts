@@ -42,6 +42,10 @@ Requirements:
 /**
  * 썸네일 이미지 생성
  *
+ * best-effort: 실패하면 null을 돌려주고 워크플로우는 계속 진행한다.
+ * 썸네일은 없어도 포스트를 낼 수 있고, 이미지 생성은 별도 SDK(@google/genai)라
+ * LangChain의 재시도가 적용되지 않는다. 필요하면 Keystatic에서 나중에 넣는다.
+ *
  * @param metadata 포스트 메타데이터 (제목, 요약, 키워드 등)
  * @param category 포스트 카테고리
  * @param onProgress 진행 상황 콜백 (선택)
