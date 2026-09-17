@@ -17,6 +17,7 @@ const agent = (name: string, patch: unknown) => async (state: unknown) => {
   return typeof patch === 'function' ? patch() : patch;
 };
 let title = 't';
+let passed = true;
 const thumb = { buffer: '', mimeType: 'image/png', path: '/images/thumbnails/my-slug/thumbnailImage.png' };
 
 stub('../ai-agents/agents/gemini-researcher', { geminiResearcher: agent('research', { researchData: { sources: [], summary: 's', keyPoints: [] } }) });
@@ -26,7 +27,7 @@ stub('../ai-agents/agents/gemini-creator', {
   geminiCreator: agent('create', () => ({ finalContent: 'final', metadata: { title, slug: 'my-slug', tags: [] } })),
 });
 stub('../ai-agents/tools/thumbnail-generator', { generateThumbnail: agent('thumbnail', thumb) });
-stub('../ai-agents/agents/validator', { validator: agent('validate', { validationResult: { passed: true, errors: [] } }) });
+stub('../ai-agents/agents/validator', { validator: agent('validate', () => ({ validationResult: { passed, errors: passed ? [] : ['bad'] } })) });
 stub('../ai-agents/tools/git-manager', { gitCommitAndPush: agent('deploy', { prResult: { prUrl: 'https://example/pr/1' } }) });
 
 const { runBlogWorkflow, MAX_REJECTIONS } = require('../ai-agents/workflows/blog-workflow');
@@ -37,7 +38,7 @@ const run = (review: (n: number) => unknown, skipDeploy = true) => {
   return runBlogWorkflow('topic', undefined, async () => review(++n), 'tech', skipDeploy);
 };
 
-beforeEach(() => { calls.length = 0; title = 't'; for (const k in inputs) delete inputs[k]; });
+beforeEach(() => { calls.length = 0; title = 't'; passed = true; for (const k in inputs) delete inputs[k]; });
 
 test('반려(기본)는 검토본을 초안 삼아 create부터 재실행하고, 제목이 같으면 썸네일을 재생성하지 않는다', async () => {
   const state = await run((n) => (n === 1 ? { approved: false, feedback: '더 짧게' } : { approved: true }));
@@ -73,4 +74,12 @@ test('승인 + skipDeploy=false면 deploy가 실행된다', async () => {
   const state = await run(() => ({ approved: true }), false);
   assert.equal(calls.at(-1), 'deploy');
   assert.equal(state.prResult.prUrl, 'https://example/pr/1');
+});
+
+test('승인했어도 검증 실패면 deploy를 건너뛴다', async () => {
+  passed = false;
+  const state = await run(() => ({ approved: true }), false);
+  assert.equal(state.humanApproval, true);
+  assert.ok(!calls.includes('deploy'));
+  assert.equal(state.prResult, undefined);
 });
