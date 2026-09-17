@@ -7,7 +7,8 @@
  *                      │ rerunFrom='write'      │ rerunFrom='create' (기본)   │ 반려
  *                      └────────────────────────┴─────────────────────────────┤
  *                                                     반려 MAX_REJECTIONS 초과 → END
- *                                                                          ▼ 승인
+ *                                                     승인 + 검증 실패      → END
+ *                                                                          ▼ 승인 + 검증 통과
  *                                                                        deploy → END
  *
  * - 검증 실패 여부와 무관하게 humanReview로 넘어간다. 형식 오류는 사람이 보고 판단한다.
@@ -15,7 +16,8 @@
  *   기본 재진입점은 create: 사람이 검토한 finalContent를 초안 자리에 놓고 피드백만 반영한다.
  *   초안·리뷰를 다시 만들지 않아 LLM 호출 2회를 아낀다.
  * - 썸네일은 제목이 바뀌지 않았으면 재생성하지 않는다 (이미지 생성이 가장 비싼 호출).
- * - 검증 실패 상태에서는 승인해도 PR을 만들지 않는다. 형식이 깨진 파일로 블로그 빌드를 깨지 않기 위한 하한선이다.
+ * - 검증 실패 상태에서는 승인해도 PR을 만들지 않는다 (humanReview 조건부 엣지가 END로 보낸다).
+ *   형식이 깨진 파일로 블로그 빌드를 깨지 않기 위한 하한선이다.
  * - deploy는 검증 통과 + skipDeploy=false 일 때만 PR을 만든다. 자동 게시는 하지 않는다.
  * - 콜백(onProgress/onHumanReview)과 skipDeploy는 config.configurable로 노드에 전달한다.
  */
@@ -143,7 +145,18 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
 
   await announce(config, 'human_review', '👤 7단계: 사용자 검토 대기 중...', 85);
   const { approved, feedback, rerunFrom = 'create' } = await onHumanReview(state);
-  if (approved) return { humanApproval: true };
+  if (approved) {
+    if (!state.validationResult?.passed) {
+      await cfg(config).onProgress?.({
+        step: 'deploy',
+        status: 'error',
+        message: '❌ 검증 실패로 배포가 건너뛰어졌습니다.',
+        progress: 90,
+        data: { validationResult: state.validationResult },
+      });
+    }
+    return { humanApproval: true };
+  }
 
   const rejections = (state.rejections ?? 0) + 1;
   if (rejections > MAX_REJECTIONS) {
@@ -170,16 +183,7 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
 
 async function deploy(state: State, config: LangGraphRunnableConfig) {
   const { onProgress, skipDeploy } = cfg(config);
-  if (!state.validationResult?.passed) {
-    await onProgress?.({
-      step: 'deploy',
-      status: 'error',
-      message: '❌ 검증 실패로 배포가 건너뛰어졌습니다.',
-      progress: 90,
-      data: { validationResult: state.validationResult },
-    });
-    return {};
-  }
+  // 검증 실패는 humanReview 엣지에서 END로 보내므로 여기 오면 validationResult.passed === true
   // skipDeploy: agent-web은 여기서 멈추고 별도 승인 후 executeDeploy로 PR을 만든다
   if (skipDeploy) return {};
 
@@ -205,11 +209,12 @@ const graph = new StateGraph(StateAnnotation)
   .addEdge('create', 'thumbnail')
   .addEdge('thumbnail', 'validate')
   .addEdge('validate', 'humanReview')
-  // 승인 → deploy, 반려 → rerunFrom 노드로 (리서치는 재사용), 상한 초과 → 종료
+  // 승인 + 검증 통과 → deploy, 승인 + 검증 실패 → 종료(PR 없음),
+  // 반려 → rerunFrom 노드로 (리서치는 재사용), 반려 상한 초과 → 종료
   .addConditionalEdges(
     'humanReview',
     (s) => {
-      if (s.humanApproval) return 'deploy';
+      if (s.humanApproval) return s.validationResult?.passed ? 'deploy' : END;
       if ((s.rejections ?? 0) > MAX_REJECTIONS) return END;
       return s.rerunFrom ?? 'create';
     },
@@ -217,6 +222,10 @@ const graph = new StateGraph(StateAnnotation)
   )
   .addEdge('deploy', END);
 
+// checkpointer는 아직 붙이지 않았다.
+// - CLI는 단일 프로세스라 MemorySaver로는 중단·재개 이점이 없다.
+// - agent-web은 humanReview 대기를 DB 폴링으로 처리한다. interrupt() + Postgres checkpointer로
+//   바꾸려면 재개 API(thread_id로 invoke 재호출)가 함께 필요해 별도 작업으로 미뤘다. docs/ARCHITECTURE.md 참고.
 export const blogWorkflowGraph = graph.compile();
 
 // 최악 경로: 첫 패스 7 step + (MAX_REJECTIONS + 1)번째 반려까지 각 6 step(write~humanReview). 넉넉히 2배.
