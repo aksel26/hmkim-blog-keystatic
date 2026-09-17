@@ -1,7 +1,8 @@
 /**
  * LLM 모델 설정
  *
- * 모든 에이전트가 gemini-2.0-flash 하나를 공유한다.
+ * 모든 에이전트가 gemini-3.6-flash 하나를 공유한다.
+ * (gemini-2.0-flash는 2026-09 API에서 퇴역해 404를 반환한다. API 안내에 따라 3.6-flash로 옮겼다.)
  * 이유: 무료 티어 한도 안에서 운영하기 위해 Pro 계열은 쓰지 않는다.
  * 과거에는 flash/pro/code 세 export가 있었지만 실제 설정이 전부 동일해 하나로 합쳤다.
  * 정확도가 필요해지면 여기서 model 값만 바꾸면 전 에이전트에 반영된다.
@@ -43,7 +44,7 @@ export function validateEnvVars() {
  * 공용 Gemini 모델 - 리서치, 초안, 검토, 메타데이터 생성 전부 이 인스턴스를 사용
  */
 export const gemini = new ChatGoogleGenerativeAI({
-  model: 'gemini-2.0-flash',
+  model: 'gemini-3.6-flash',
   apiKey: process.env.GOOGLE_API_KEY,
   temperature: 0.7,
   maxOutputTokens: 8192,

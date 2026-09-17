@@ -5,7 +5,7 @@
 
 ## 워크플로우
 
-LangGraph `StateGraph`로 선언한 8개 노드. 모든 LLM 노드는 Gemini 2.0 Flash 하나를 쓴다.
+LangGraph `StateGraph`로 선언한 8개 노드. 모든 LLM 노드는 Gemini 3.6 Flash 하나를 쓴다.
 
 ```mermaid
 flowchart LR

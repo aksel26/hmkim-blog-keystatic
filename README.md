@@ -11,7 +11,7 @@
 | 모노레포 | pnpm 10 + Turborepo |
 | 블로그 | Next.js 16, React 19, Keystatic CMS, Tailwind CSS v4 |
 | 데이터 | Supabase (댓글, 조회수, 구독자) |
-| AI Agent | LangChain + LangGraph (StateGraph), Gemini 2.0 Flash |
+| AI Agent | LangChain + LangGraph (StateGraph), Gemini 3.6 Flash |
 | Agent 웹 UI | Next.js 16, React Query, React Hook Form, Zod |
 
 ## 프로젝트 구조
@@ -87,7 +87,7 @@ Keystatic CMS 기반 기술 블로그. Markdoc(`.mdoc`) 형식으로 콘텐츠�
 
 ### agent
 
-LangGraph `StateGraph`로 선언한 8노드 워크플로우. 모든 노드는 Gemini 2.0 Flash 하나를 사용한다 (`ai-agents/config/models.ts`).
+LangGraph `StateGraph`로 선언한 8노드 워크플로우. 모든 노드는 Gemini 3.6 Flash 하나를 사용한다 (`ai-agents/config/models.ts`).
 
 ```
 research → write → review → create → thumbnail → validate → humanReview → deploy(PR)
