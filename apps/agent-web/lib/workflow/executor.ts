@@ -59,7 +59,6 @@ export async function executeWorkflow(
         human_review: 85,
         pending_deploy: 90,
         deploy: 95,
-        completed: 100,
         workflow: 90,
       };
 
@@ -74,13 +73,17 @@ export async function executeWorkflow(
         human_review: "human_review",
         pending_deploy: "pending_deploy",
         deploy: "deploying",
-        completed: "completed",
         workflow: "running",
       };
 
       // event.progress가 있으면 우선 사용, 없으면 stepProgress 매핑 사용
       const progress = event.progress ?? stepProgress[event.step] ?? 0;
       const currentStep = event.step;
+      // 그래프 종료 이벤트로는 job 상태를 바꾸지 않는다. 최종 상태(pending_deploy/completed)는 실행이 끝난 뒤 아래에서 정한다.
+      // 여기서 completed를 쓰면 pending_deploy로 고쳐지기 전 잠깐 동안 클라이언트가 끝난 작업으로 보고 SSE와 폴링을 끊어,
+      // 승인 후에도 화면이 검토 패널에 굳는다
+      if (event.step === "completed") return;
+
       const stepStatus: JobStatus = stepToStatus[event.step] || "running";
 
       // review step 완료 시 reviewResult 저장
