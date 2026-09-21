@@ -12,7 +12,7 @@ import { HumanReviewPanel } from "@/components/job/HumanReviewPanel";
 import { DeployApprovalPanel } from "@/components/job/DeployApprovalPanel";
 import { useJobStream } from "@/lib/hooks/use-job-stream";
 import { formatDate } from "@/lib/utils";
-import type { Job, JobStatus } from "@/lib/types";
+import type { FactCheckResult, Job, JobStatus } from "@/lib/types";
 
 interface JobWithLogs extends Job {
   progressLogs: Array<{
@@ -144,6 +144,12 @@ export default function JobDetailPage() {
   };
   const displayStatus = getDisplayStatus();
 
+  // 정확도 검증 결과는 jobs 컬럼이 아니라 fact_check 로그의 data에 있다 (가장 최근 라운드 것을 쓴다)
+  const factCheck = [...job.progressLogs]
+    .reverse()
+    .find((log) => log.step === "fact_check" && log.data?.factCheckResult)
+    ?.data?.factCheckResult as FactCheckResult | undefined;
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -240,6 +246,8 @@ export default function JobDetailPage() {
         <HumanReviewPanel
           jobId={jobId}
           reviewResult={job.reviewResult}
+          factCheck={factCheck}
+          sources={job.researchData?.sources}
           onReviewSubmitted={handleReviewSubmitted}
         />
       )}

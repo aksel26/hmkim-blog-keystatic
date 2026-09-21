@@ -8,12 +8,15 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { ConfirmModal } from "@/components/ui/confirm-dialog";
 import { SEOChecklistContent } from "@/components/editor/SEOChecklistContent";
 import { Loader2, CheckCircle, MessageSquare, RotateCcw, Pause, Info } from "lucide-react";
-import type { ReviewResult, HumanReviewAction, ValidationResult } from "@/lib/types";
+import type { ReviewResult, HumanReviewAction, ValidationResult, FactCheckResult } from "@/lib/types";
 
 interface HumanReviewPanelProps {
   jobId: string;
   reviewResult: ReviewResult | null;
   validationResult?: ValidationResult | null;
+  factCheck?: FactCheckResult | null;
+  /** 정확도 검증이 가리키는 참고 자료 (번호는 1부터) */
+  sources?: Array<{ title: string; url: string }> | null;
   metadata?: {
     title?: string;
     summary?: string;
@@ -27,6 +30,8 @@ export function HumanReviewPanel({
   jobId,
   reviewResult,
   validationResult,
+  factCheck,
+  sources,
   metadata,
   onReviewSubmitted,
 }: HumanReviewPanelProps) {
@@ -197,6 +202,65 @@ export function HumanReviewPanel({
               {reviewResult?.issues?.length > 0 && (
                 <p className="text-xs text-destructive">
                   {reviewResult.issues.length}개 문제점 발견
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* 정확도 검증 결과: 참고용이라 승인을 막지 않는다 */}
+          {factCheck && (
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm">정확도 검증</h4>
+                <span className="text-xs text-muted-foreground">
+                  {factCheck.issues.length === 0
+                    ? "자료와 어긋나는 내용 없음"
+                    : `확인 필요 ${factCheck.issues.length}건`}
+                </span>
+              </div>
+              {factCheck.summary && (
+                <p className="text-xs text-muted-foreground mt-1">{factCheck.summary}</p>
+              )}
+              {factCheck.issues.length > 0 && (
+                <ul className="mt-3 space-y-3">
+                  {factCheck.issues.map((issue, i) => (
+                    <li key={i} className="text-sm border-l-2 border-border pl-3">
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className={issue.severity === "high" ? "font-semibold text-destructive" : "text-muted-foreground"}>
+                          {{ high: "높음", medium: "보통", low: "낮음" }[issue.severity]}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {{ contradicted: "자료와 어긋남", unsupported: "근거 없음", code: "코드 오류" }[issue.verdict]}
+                          {issue.source && (
+                            <>
+                              {" · "}
+                              {sources?.[issue.source - 1] ? (
+                                <a
+                                  href={sources[issue.source - 1].url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={sources[issue.source - 1].title}
+                                  className="underline hover:text-foreground"
+                                >
+                                  자료 {issue.source}
+                                </a>
+                              ) : (
+                                `자료 ${issue.source}`
+                              )}
+                            </>
+                          )}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-muted-foreground">“{issue.claim}”</p>
+                      <p className="mt-1">{issue.problem}</p>
+                      {issue.suggestion && <p className="mt-1 text-muted-foreground">→ {issue.suggestion}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {factCheck.issues.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-3">
+                  수정 요청이나 재작성을 보내면 위 항목이 프롬프트에 함께 들어갑니다. AI 판정이라 틀릴 수 있습니다.
                 </p>
               )}
             </div>

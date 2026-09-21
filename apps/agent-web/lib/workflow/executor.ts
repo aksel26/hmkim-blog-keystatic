@@ -7,10 +7,11 @@
  * 2. Write (30%)
  * 3. Review (45%)
  * 4. Create (60%)
- * 5. Thumbnail (65%)
- * 6. Validate (75%)
- * 7. Human Review (85%)
- * 8. Deploy (95%)
+ * 5. Fact Check (62%) - 참고용, 배포를 막지 않음
+ * 6. Thumbnail (68%)
+ * 7. Validate (75%)
+ * 8. Human Review (85%)
+ * 9. Deploy (95%)
  */
 
 import { runBlogWorkflow, type HumanReviewCallback } from "@agent/ai-agents/workflows/blog-workflow";
@@ -52,7 +53,8 @@ export async function executeWorkflow(
         write: 30,
         review: 45,
         create: 60,
-        thumbnail: 65,
+        fact_check: 62,
+        thumbnail: 68,
         validate: 75,
         human_review: 85,
         pending_deploy: 90,
@@ -105,6 +107,7 @@ export async function executeWorkflow(
 
     // Human Review 콜백 (Validate 후에 호출됨)
     const onHumanReview: HumanReviewCallback = async (state) => {
+        fact_check: "review", // 전용 JobStatus를 두지 않고 'AI 검토'로 표시한다
       console.log(`[Workflow] Human review requested for job ${jobId}`);
 
       // 상태를 human_review로 변경

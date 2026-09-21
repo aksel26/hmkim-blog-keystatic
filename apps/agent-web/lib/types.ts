@@ -93,6 +93,21 @@ export interface ValidationResult {
 /**
  * Review result
  */
+/** 정확도 검증(fact_check) 결과. agent의 FactCheckResult와 같은 모양이고 progress_logs.data로 전달된다 */
+export interface FactCheckIssue {
+  claim: string;
+  verdict: "contradicted" | "unsupported" | "code";
+  severity: "high" | "medium" | "low";
+  problem: string;
+  suggestion: string;
+  source?: number;
+}
+
+export interface FactCheckResult {
+  summary: string;
+  issues: FactCheckIssue[];
+}
+
 export interface ReviewResult {
   seoScore: number;
   techAccuracy: number;
