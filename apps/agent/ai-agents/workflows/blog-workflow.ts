@@ -2,15 +2,17 @@
  * Blog Workflow
  * LangGraph StateGraph로 선언한 블로그 생성 워크플로우
  *
- * START → research → write → review → create → thumbnail → validate → humanReview
- *                      ▲                        ▲                             │
- *                      │ rerunFrom='write'      │ rerunFrom='create' (기본)   │ 반려
- *                      └────────────────────────┴─────────────────────────────┤
- *                                                     반려 MAX_REJECTIONS 초과 → END
- *                                                     승인 + 검증 실패      → END
- *                                                                          ▼ 승인 + 검증 통과
- *                                                                        deploy → END
+ * START → research → write → review → create → factCheck → thumbnail → validate → humanReview
+ *                      ▲                        ▲                                         │
+ *                      │ rerunFrom='write'      │ rerunFrom='create' (기본)               │ 반려
+ *                      └────────────────────────┴─────────────────────────────────────────┤
+ *                                                                 반려 MAX_REJECTIONS 초과 → END
+ *                                                                 승인 + 검증 실패      → END
+ *                                                                                      ▼ 승인 + 검증 통과
+ *                                                                                    deploy → END
  *
+ * - factCheck는 최종본을 리서치 자료와 대조한다. 결과는 배포를 막지 않는다. LLM 판정에는 오탐이 있어서
+ *   고칠지는 사람이 humanReview에서 정하고, 반려하면 지적 항목이 create 프롬프트에 함께 들어간다.
  * - 검증 실패 여부와 무관하게 humanReview로 넘어간다. 형식 오류는 사람이 보고 판단한다.
  * - 반려 시 리서치는 항상 재사용한다. 피드백은 create(와 write)가 프롬프트에 반영한다.
  *   기본 재진입점은 create: 사람이 검토한 finalContent를 초안 자리에 놓고 피드백만 반영한다.
@@ -34,6 +36,7 @@ import {
   Category,
   OnProgressCallback,
   PostMetadata,
+  FactCheckResult,
   ResearchData,
   ValidationResult,
 } from '../types/workflow';
@@ -41,6 +44,7 @@ import { geminiResearcher } from '../agents/gemini-researcher';
 import { geminiWriter } from '../agents/gemini-writer';
 import { geminiCreator } from '../agents/gemini-creator';
 import { reviewer, ReviewResult } from '../agents/reviewer';
+import { factChecker } from '../agents/fact-checker';
 import { validator } from '../agents/validator';
 import { gitCommitAndPush, PRResult } from '../tools/git-manager';
 import { generateThumbnail } from '../tools/thumbnail-generator';
@@ -61,6 +65,7 @@ const StateAnnotation = Annotation.Root({
   metadata: Annotation<PostMetadata | undefined>,
   validationResult: Annotation<ValidationResult | undefined>,
   reviewResult: Annotation<ReviewResult | undefined>,
+  factCheckResult: Annotation<FactCheckResult | undefined>,
   thumbnailImage: Annotation<BlogPostState['thumbnailImage']>,
   thumbnailFor: Annotation<string | undefined>, // 썸네일을 만들 때의 제목
   prResult: Annotation<PRResult | undefined>,
@@ -113,6 +118,12 @@ async function create(state: State, config: LangGraphRunnableConfig) {
   return geminiCreator(state, cfg(config).onProgress);
 }
 
+// 최종본을 리서치 자료와 대조한다. 결과는 배포를 막지 않고 humanReview에서 사람이 보고 판단한다
+async function factCheck(state: State, config: LangGraphRunnableConfig) {
+  await announce(config, 'fact_check', '🧪 5단계: 내용 정확도 검증', 62);
+  return factChecker(state, cfg(config).onProgress);
+}
+
 // 썸네일은 실패해도 워크플로우를 멈추지 않는다 (generateThumbnail이 null 반환)
 async function thumbnail(state: State, config: LangGraphRunnableConfig) {
   if (!state.metadata) return {};
@@ -122,7 +133,7 @@ async function thumbnail(state: State, config: LangGraphRunnableConfig) {
   if (prev && state.thumbnailFor === title) {
     return { metadata: { ...state.metadata, thumbnailImage: prev.path } };
   }
-  await announce(config, 'thumbnail', '🖼️ 5단계: 썸네일 이미지 생성', 65);
+  await announce(config, 'thumbnail', '🖼️ 6단계: 썸네일 이미지 생성', 68);
   const result = await generateThumbnail(state.metadata, state.category || 'tech', cfg(config).onProgress);
   // 실패하면 이전 제목의 이미지가 남지 않도록 비운다 (metadata에 경로가 없는데 파일만 커밋되는 것 방지)
   if (!result) return { thumbnailImage: undefined, thumbnailFor: undefined };
@@ -134,7 +145,7 @@ async function thumbnail(state: State, config: LangGraphRunnableConfig) {
 }
 
 async function validate(state: State, config: LangGraphRunnableConfig) {
-  await announce(config, 'validate', '✅ 6단계: 콘텐츠 검증', 75);
+  await announce(config, 'validate', '✅ 7단계: 콘텐츠 검증', 75);
   return validator(state, cfg(config).onProgress);
 }
 
@@ -143,7 +154,7 @@ async function humanReview(state: State, config: LangGraphRunnableConfig) {
   // 콜백이 없으면 자동 승인 (CLI 비대화형 실행용)
   if (!onHumanReview) return { humanApproval: true };
 
-  await announce(config, 'human_review', '👤 7단계: 사용자 검토 대기 중...', 85);
+  await announce(config, 'human_review', '👤 8단계: 사용자 검토 대기 중...', 85);
   const { approved, feedback, rerunFrom = 'create' } = await onHumanReview(state);
   if (approved) {
     if (!state.validationResult?.passed) {
@@ -187,7 +198,7 @@ async function deploy(state: State, config: LangGraphRunnableConfig) {
   // skipDeploy: agent-web은 여기서 멈추고 별도 승인 후 executeDeploy로 PR을 만든다
   if (skipDeploy) return {};
 
-  await announce(config, 'deploy', '🚀 8단계: Git 브랜치 생성 및 PR 생성', 95);
+  await announce(config, 'deploy', '🚀 9단계: Git 브랜치 생성 및 PR 생성', 95);
   return gitCommitAndPush(state, onProgress);
 }
 
@@ -198,6 +209,7 @@ const graph = new StateGraph(StateAnnotation)
   .addNode('write', write)
   .addNode('review', review)
   .addNode('create', create)
+  .addNode('factCheck', factCheck)
   .addNode('thumbnail', thumbnail)
   .addNode('validate', validate)
   .addNode('humanReview', humanReview)
@@ -206,7 +218,8 @@ const graph = new StateGraph(StateAnnotation)
   .addEdge('research', 'write')
   .addEdge('write', 'review')
   .addEdge('review', 'create')
-  .addEdge('create', 'thumbnail')
+  .addEdge('create', 'factCheck')
+  .addEdge('factCheck', 'thumbnail')
   .addEdge('thumbnail', 'validate')
   .addEdge('validate', 'humanReview')
   // 승인 + 검증 통과 → deploy, 승인 + 검증 실패 → 종료(PR 없음),
@@ -228,8 +241,8 @@ const graph = new StateGraph(StateAnnotation)
 //   바꾸려면 재개 API(thread_id로 invoke 재호출)가 함께 필요해 별도 작업으로 미뤘다. docs/ARCHITECTURE.md 참고.
 export const blogWorkflowGraph = graph.compile();
 
-// 최악 경로: 첫 패스 7 step + (MAX_REJECTIONS + 1)번째 반려까지 각 6 step(write~humanReview). 넉넉히 2배.
-const RECURSION_LIMIT = (7 + 6 * (MAX_REJECTIONS + 1)) * 2;
+// 최악 경로: 첫 패스 8 step + (MAX_REJECTIONS + 1)번째 반려까지 각 7 step(write~humanReview). 넉넉히 2배.
+const RECURSION_LIMIT = (8 + 7 * (MAX_REJECTIONS + 1)) * 2;
 
 /**
  * 워크플로우 실행

@@ -47,9 +47,28 @@ export type Category = 'tech' | 'life';
 /**
  * 워크플로우 전체 상태 관리
  */
+/** 정확도 검증(fact_check)이 찾은 문제 한 건 */
+export interface FactCheckIssue {
+  claim: string; // 글에서 옮긴 문장
+  verdict: 'contradicted' | 'unsupported' | 'code'; // 자료와 어긋남 | 자료에 근거 없음 | 코드 예제 오류
+  severity: 'high' | 'medium' | 'low';
+  problem: string;
+  suggestion: string;
+  source?: number; // 근거가 된 참고 자료 번호 (1부터)
+}
+
+export interface FactCheckResult {
+  summary: string;
+  issues: FactCheckIssue[];
+  checkedClaims?: number; // 자료와 대조한 주장 수
+}
+
 export interface BlogPostState {
   // 리뷰 결과 (reviewer → creator 프롬프트에 반영)
   reviewResult?: import('../agents/reviewer').ReviewResult;
+
+  // 정확도 검증 결과 (사람 검토 화면에 표시, 재실행 시 creator 프롬프트에 반영)
+  factCheckResult?: FactCheckResult;
 
   // 기본 정보
   topic: string;

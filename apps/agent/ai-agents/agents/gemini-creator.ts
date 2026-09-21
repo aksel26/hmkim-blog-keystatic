@@ -50,6 +50,14 @@ export async function geminiCreator(
       ? `\n\n리뷰어가 지적한 개선점 (반영하세요):\n${reviewIssues.join('\n')}`
       : '';
 
+    // 정확도 검증 지적은 재실행 때만 있다 (fact_check는 create 다음에 돈다)
+    const factIssues = (state.factCheckResult?.issues ?? []).map(
+      (i) => `- [${i.severity}] "${i.claim}": ${i.problem}${i.suggestion ? ` → ${i.suggestion}` : ''}`
+    );
+    const factInstruction = factIssues.length
+      ? `\n\n정확도 검증에서 지적된 항목 (근거에 맞게 고치고, 확인할 수 없으면 단정 표현을 빼세요):\n${factIssues.join('\n')}`
+      : '';
+
     onProgress?.({
       step: 'create',
       status: 'progress',
@@ -97,7 +105,7 @@ ${toneInstruction}
 ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
-${reviewInstruction}${feedbackInstruction}
+${reviewInstruction}${factInstruction}${feedbackInstruction}
 ${outputRule}
 `;
 
@@ -120,7 +128,7 @@ ${toneInstruction}
 ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
-${reviewInstruction}${feedbackInstruction}
+${reviewInstruction}${factInstruction}${feedbackInstruction}
 ${outputRule}
 `;
 

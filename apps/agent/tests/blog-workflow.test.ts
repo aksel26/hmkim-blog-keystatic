@@ -26,13 +26,14 @@ stub('../ai-agents/agents/reviewer', { reviewer: agent('review', { reviewResult:
 stub('../ai-agents/agents/gemini-creator', {
   geminiCreator: agent('create', () => ({ finalContent: 'final', metadata: { title, slug: 'my-slug', tags: [] } })),
 });
+stub('../ai-agents/agents/fact-checker', { factChecker: agent('factCheck', { factCheckResult: { summary: '', issues: [] } }) });
 stub('../ai-agents/tools/thumbnail-generator', { generateThumbnail: agent('thumbnail', thumb) });
 stub('../ai-agents/agents/validator', { validator: agent('validate', () => ({ validationResult: { passed, errors: passed ? [] : ['bad'] } })) });
 stub('../ai-agents/tools/git-manager', { gitCommitAndPush: agent('deploy', { prResult: { prUrl: 'https://example/pr/1' } }) });
 
 const { runBlogWorkflow, MAX_REJECTIONS } = require('../ai-agents/workflows/blog-workflow');
 
-const FIRST_PASS = ['research', 'write', 'review', 'create', 'thumbnail', 'validate'];
+const FIRST_PASS = ['research', 'write', 'review', 'create', 'factCheck', 'thumbnail', 'validate'];
 const run = (review: (n: number) => unknown, skipDeploy = true) => {
   let n = 0;
   return runBlogWorkflow('topic', undefined, async () => review(++n), 'tech', skipDeploy);
@@ -42,7 +43,7 @@ beforeEach(() => { calls.length = 0; title = 't'; passed = true; for (const k in
 
 test('반려(기본)는 검토본을 초안 삼아 create부터 재실행하고, 제목이 같으면 썸네일을 재생성하지 않는다', async () => {
   const state = await run((n) => (n === 1 ? { approved: false, feedback: '더 짧게' } : { approved: true }));
-  assert.deepEqual(calls, [...FIRST_PASS, 'create', 'validate']);
+  assert.deepEqual(calls, [...FIRST_PASS, 'create', 'factCheck', 'validate']);
   assert.equal((inputs.create[1] as { draftContent: string }).draftContent, 'final');
   assert.equal(state.humanApproval, true);
   assert.equal(state.metadata.thumbnailImage, thumb.path);
@@ -54,12 +55,12 @@ test('제목이 바뀌면 썸네일을 다시 만든다', async () => {
     title = `t${n}`;
     return n === 1 ? { approved: false } : { approved: true };
   });
-  assert.deepEqual(calls, [...FIRST_PASS, 'create', 'thumbnail', 'validate']);
+  assert.deepEqual(calls, [...FIRST_PASS, 'create', 'factCheck', 'thumbnail', 'validate']);
 });
 
 test("rerunFrom='write'면 초안부터 다시 쓴다", async () => {
   await run((n) => (n === 1 ? { approved: false, rerunFrom: 'write' } : { approved: true }));
-  assert.deepEqual(calls, [...FIRST_PASS, 'write', 'review', 'create', 'validate']);
+  assert.deepEqual(calls, [...FIRST_PASS, 'write', 'review', 'create', 'factCheck', 'validate']);
 });
 
 test('반려가 MAX_REJECTIONS를 넘으면 배포 없이 종료한다', async () => {
