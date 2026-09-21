@@ -5,48 +5,61 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* 흑과 백
+     색은 무채색만 쓴다(chroma 0). 회색 면도 깔지 않는다: 카드, 사이드바, 입력창 모두 바탕과 같은 백색이다.
+     영역은 여백과 제목으로 나누고, 회색은 hover에만 얕게 쓴다(accent).
+     의미를 전하는 상태색(destructive, success, warning)만 유채색으로 남긴다 */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.145 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --success: oklch(0.527 0.154 150.069);
+  /* hover에만 쓰는 얕은 회색. secondary와 muted도 같은 값이고 스켈레톤 같은 임시 자리에만 남아 있다 */
+  --accent: oklch(0.96 0 0);
+  --accent-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  /* 강조(링크, 현재 위치, 진행 중)도 먹색이다. 색 대신 굵기, 밑줄, 채움으로 구분한다 */
+  --pencil: oklch(0.145 0 0);
+  --destructive: oklch(0.52 0.2 27);
+  --destructive-foreground: oklch(0.52 0.2 27);
+  --success: oklch(0.47 0.12 155);
   --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.646 0.222 41.116);
+  --warning: oklch(0.55 0.14 55);
   --warning-foreground: oklch(1 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* 목록 구분선에만 쓰는 옅은 선 */
+  --border: oklch(0.9 0 0);
+  /* 입력창의 가는 선 (채움이 아니라 border-input으로 쓴다) */
+  --input: oklch(0.86 0 0);
+  --ring: oklch(0.145 0 0);
+  /* 차트는 명도 단계로 계열을 나눈다 */
+  --chart-1: oklch(0.145 0 0);
+  --chart-2: oklch(0.4 0 0);
+  --chart-3: oklch(0.58 0 0);
+  --chart-4: oklch(0.74 0 0);
+  --chart-5: oklch(0.86 0 0);
   --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
+  --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.145 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* 메뉴 hover의 얕은 회색. 현재 메뉴는 면이 아니라 굵은 글씨로 표시한다 */
+  --sidebar-accent: oklch(0.96 0 0);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+  --sidebar-border: transparent;
+  --sidebar-ring: oklch(0.145 0 0);
 
-  /* DESIGN.md: Shadow levels */
-  --shadow-sm: none;
-  --shadow-md: none;
-  --shadow-lg: none;
+  /* 떠 있는 레이어(popover, dropdown, dialog, sheet)의 그림자.
+     백색 면이 백색 바탕 위에 뜨므로 1px 링 + 가까운 그림자 + 먼 그림자 세 겹으로 경계를 만든다 */
+  /* 채움 없이 형태를 잡아야 하는 부품(톤 버튼, 선택 칩, 배지)의 1px 링 */
+  --elevation-border: 0 0 0 1px rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --elevation-float: 0 0 0 1px rgb(0 0 0 / 0.06), 0 2px 4px -1px rgb(0 0 0 / 0.06), 0 12px 28px -6px rgb(0 0 0 / 0.14);
+  --elevation-modal: 0 0 0 1px rgb(0 0 0 / 0.06), 0 4px 8px -2px rgb(0 0 0 / 0.08), 0 24px 56px -12px rgb(0 0 0 / 0.22);
 
   /* DESIGN.md: Z-index layering */
   --z-sidebar: 30;
@@ -71,38 +84,44 @@
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
+  --popover: oklch(0.22 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.145 0 0);
+  --accent: oklch(0.21 0 0);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --success: oklch(0.448 0.119 151.328);
-  --success-foreground: oklch(0.985 0 0);
-  --warning: oklch(0.532 0.157 50.592);
-  --warning-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
+  --secondary: oklch(0.21 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.21 0 0);
+  --muted-foreground: oklch(0.7 0 0);
+  --pencil: oklch(0.985 0 0);
+  --destructive: oklch(0.7 0.18 25);
+  --destructive-foreground: oklch(0.7 0.18 25);
+  --success: oklch(0.76 0.14 155);
+  --success-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.8 0.13 75);
+  --warning-foreground: oklch(0.145 0 0);
+  --border: oklch(0.28 0 0);
+  --input: oklch(0.34 0 0);
+  --ring: oklch(0.985 0 0);
+  --chart-1: oklch(0.985 0 0);
+  --chart-2: oklch(0.78 0 0);
+  --chart-3: oklch(0.62 0 0);
+  --chart-4: oklch(0.46 0 0);
+  --chart-5: oklch(0.34 0 0);
+  --sidebar: oklch(0.145 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-primary: oklch(0.985 0 0);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.21 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --sidebar-border: transparent;
+  --sidebar-ring: oklch(0.985 0 0);
+
+  /* 어두운 바탕에서는 겹친 그림자가 보이지 않는다. 흰 링 하나와 깊은 그림자 하나로 줄인다 */
+  --elevation-border: 0 0 0 1px rgb(255 255 255 / 0.16);
+  --elevation-float: 0 0 0 1px rgb(255 255 255 / 0.1), 0 12px 28px -6px rgb(0 0 0 / 0.6);
+  --elevation-modal: 0 0 0 1px rgb(255 255 255 / 0.1), 0 24px 56px -12px rgb(0 0 0 / 0.7);
 
   --glass-bg: var(--background);
   --glass-border: var(--border);
@@ -110,6 +129,14 @@
 }
 
 @theme inline {
+  /* 서체는 SUIT 하나다 (app/layout.tsx에서 next/font/local로 로드). 위계는 굵기와 크기로 만든다.
+     font-mono는 코드 편집 textarea와 <code>에만 쓰고 웹폰트 없이 시스템 서체를 쓴다. */
+  --font-sans: var(--font-suit), -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --color-pencil: var(--pencil);
+  --shadow-border: var(--elevation-border);
+  --shadow-float: var(--elevation-float);
+  --shadow-modal: var(--elevation-modal);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -157,11 +184,25 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    /* 텍스트를 Tailwind 한 단계(16px → 14px)만큼 축소. rem 기반 여백·크기도 같은 비율로 줄어든다.
+       미디어쿼리의 rem은 영향받지 않아 breakpoint는 그대로다. */
+    font-size: 87.5%;
+  }
   body {
-    @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    @apply bg-background text-foreground font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* 한글은 어절 단위로 줄바꿈해야 읽기 편하다 */
+    word-break: keep-all;
+  }
+  /* 제목은 줄 길이를 고르게, 짧은 글은 마지막 줄에 한 단어만 남지 않게 한다.
+     미리보기 본문(.prose)처럼 긴 글은 기본 줄바꿈이 낫다 */
+  :where(h1, h2, h3, h4) {
+    text-wrap: balance;
+  }
+  :where(p, li, figcaption):not(:where(.prose *)) {
+    text-wrap: pretty;
   }
 }
 
@@ -197,6 +238,5 @@
 
 /* Selection */
 ::selection {
-  background: var(--foreground);
-  color: var(--background);
+  background: color-mix(in oklch, var(--foreground) 16%, transparent);
 }

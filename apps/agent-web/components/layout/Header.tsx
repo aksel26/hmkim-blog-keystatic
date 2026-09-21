@@ -1,34 +1,35 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { Moon, Sun, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function Header() {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { toggleSidebar } = useSidebar();
 
   return (
-    <header className="h-14 border-b border-border bg-background px-6 flex items-center justify-between">
-      {/* Mobile menu button */}
-      <Button variant="ghost" size="icon" className="md:hidden">
-        <Menu className="h-5 w-5" />
+    <header className="flex h-10 shrink-0 items-center justify-between bg-background px-2">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
+        onClick={toggleSidebar}
+      >
+        메뉴
       </Button>
 
-      {/* Spacer for desktop */}
-      <div className="hidden md:block" />
-
-      {/* Right side actions */}
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          aria-label="테마 전환"
-        >
-          <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        </Button>
-      </div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-muted-foreground"
+        onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        aria-label="테마 전환"
+      >
+        {/* 서버 렌더와 어긋나지 않게 두 라벨을 모두 그리고 CSS로 고른다 */}
+        <span className="dark:hidden">다크</span>
+        <span className="hidden dark:inline">라이트</span>
+      </Button>
     </header>
   );
 }
