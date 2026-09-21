@@ -90,6 +90,7 @@ export interface BlogPostState {
   // 사람 검토
   humanApproval?: boolean;
   humanFeedback?: string;
+  rejections?: number; // 누적 반려 횟수 (MAX_REJECTIONS 초과 시 배포 없이 종료)
 
   // 메타데이터
   metadata?: PostMetadata;

@@ -14,11 +14,40 @@
  * 9. Deploy (95%)
  */
 
-import { runBlogWorkflow, type HumanReviewCallback } from "@agent/ai-agents/workflows/blog-workflow";
+import { runBlogWorkflow, MAX_REJECTIONS, type HumanReviewCallback, type ResumeState } from "@agent/ai-agents/workflows/blog-workflow";
 import { gitCommitAndPush } from "@agent/ai-agents/tools/git-manager";
 import type { StreamEvent, BlogPostState } from "@agent/ai-agents/types/workflow";
 import { jobManager } from "@/lib/queue/job-manager";
 import type { JobStatus } from "@/lib/types";
+
+// 이 프로세스에서 워크플로우가 돌고 있는 job. 서버가 재시작되면 비므로, human-review route가
+// "결정을 읽어 갈 폴링 루프가 살아 있는지" 판단하는 데 쓴다. dev HMR에도 유지되도록 globalThis에 둔다.
+// ponytail: 단일 프로세스 전제. 인스턴스가 여럿이면 DB heartbeat/lease로 바꿔야 한다
+const activeJobs: Set<string> = ((globalThis as { __activeWorkflowJobs?: Set<string> }).__activeWorkflowJobs ??= new Set());
+
+/** 돌고 있는 워크플로우가 없을 때만 선점한다. 연속 클릭으로 재개가 두 번 시작되지 않게 route에서 동기로 호출 */
+export function tryClaimWorkflow(jobId: string): boolean {
+  if (activeJobs.has(jobId)) return false;
+  activeJobs.add(jobId);
+  return true;
+}
+
+/** DB에 저장된 썸네일(base64)을 워크플로우 상태 형태로 되돌린다 */
+function thumbnailFromJob(
+  job: { thumbnail_data: string | null },
+  metadata: BlogPostState["metadata"]
+): BlogPostState["thumbnailImage"] {
+  if (!job.thumbnail_data || !metadata?.thumbnailImage) return undefined;
+  return {
+    buffer: job.thumbnail_data,
+    mimeType: metadata.thumbnailImage.endsWith('.jpg')
+      ? 'image/jpeg'
+      : metadata.thumbnailImage.endsWith('.webp')
+        ? 'image/webp'
+        : 'image/png',
+    path: metadata.thumbnailImage,
+  };
+}
 
 /**
  * 워크플로우 실행 (Deploy 전까지)
@@ -27,13 +56,18 @@ export async function executeWorkflow(
   jobId: string,
   topic: string,
   category: string = "tech",
-  options?: { tone?: string; targetReader?: string; template?: string }
+  options?: { tone?: string; targetReader?: string; template?: string },
+  resume?: ResumeState
 ): Promise<void> {
-  console.log(`[Workflow] Starting workflow for job ${jobId}, topic: ${topic}`);
+  console.log(
+    `[Workflow] ${resume ? "Resuming" : "Starting"} workflow for job ${jobId}, topic: ${topic}, options: ${JSON.stringify(options ?? {})}` +
+      (resume ? `, rerunFrom: ${resume.rerunFrom ?? "research"}, rejections: ${resume.rejections ?? 0}` : "")
+  );
 
+  activeJobs.add(jobId);
   try {
-    // 상태 업데이트: 실행 중
-    await jobManager.updateStatus(jobId, "running", "init", 5);
+    // 상태 업데이트: 실행 중 (재개할 때는 진행률을 되돌리지 않는다)
+    if (!resume) await jobManager.updateStatus(jobId, "running", "init", 5);
 
     // 진행 상황 콜백
     const onProgress = async (event: StreamEvent) => {
@@ -46,6 +80,11 @@ export async function executeWorkflow(
         message: event.message,
         data: event.data as Record<string, unknown>,
       });
+
+      // 그래프 종료 이벤트로는 job 상태를 바꾸지 않는다. 최종 상태(pending_deploy/completed)는 실행이 끝난 뒤 아래에서 정한다.
+      // 여기서 completed를 쓰면 pending_deploy로 고쳐지기 전 잠깐 동안 클라이언트가 끝난 작업으로 보고 SSE와 폴링을 끊어,
+      // 승인 후에도 화면이 검토 패널에 굳는다
+      if (event.step === "completed") return;
 
       // 단계별 진행률 매핑
       const stepProgress: Record<string, number> = {
@@ -68,6 +107,7 @@ export async function executeWorkflow(
         write: "writing",
         review: "review",
         create: "creating",
+        fact_check: "review", // 전용 JobStatus를 두지 않고 'AI 검토'로 표시한다
         thumbnail: "thumbnail",
         validate: "validating",
         human_review: "human_review",
@@ -79,11 +119,6 @@ export async function executeWorkflow(
       // event.progress가 있으면 우선 사용, 없으면 stepProgress 매핑 사용
       const progress = event.progress ?? stepProgress[event.step] ?? 0;
       const currentStep = event.step;
-      // 그래프 종료 이벤트로는 job 상태를 바꾸지 않는다. 최종 상태(pending_deploy/completed)는 실행이 끝난 뒤 아래에서 정한다.
-      // 여기서 completed를 쓰면 pending_deploy로 고쳐지기 전 잠깐 동안 클라이언트가 끝난 작업으로 보고 SSE와 폴링을 끊어,
-      // 승인 후에도 화면이 검토 패널에 굳는다
-      if (event.step === "completed") return;
-
       const stepStatus: JobStatus = stepToStatus[event.step] || "running";
 
       // review step 완료 시 reviewResult 저장
@@ -110,7 +145,6 @@ export async function executeWorkflow(
 
     // Human Review 콜백 (Validate 후에 호출됨)
     const onHumanReview: HumanReviewCallback = async (state) => {
-        fact_check: "review", // 전용 JobStatus를 두지 않고 'AI 검토'로 표시한다
       console.log(`[Workflow] Human review requested for job ${jobId}`);
 
       // 상태를 human_review로 변경
@@ -119,6 +153,7 @@ export async function executeWorkflow(
         status: "human_review",
         human_approval: null,
         human_feedback: null,
+        research_data: state.researchData ?? null,
         draft_content: state.draftContent,
         final_content: state.finalContent,
         metadata: state.metadata as unknown,
@@ -136,6 +171,7 @@ export async function executeWorkflow(
         data: {
           validationPassed: state.validationResult?.passed,
           validationErrors: state.validationResult?.errors,
+          rejections: state.rejections ?? 0, // 서버 재시작 후 재개할 때 여기서 이어 센다
         },
       });
 
@@ -185,7 +221,8 @@ export async function executeWorkflow(
       onProgress,
       onHumanReview,
       category,
-      options
+      options,
+      resume
     );
 
     // 검증 통과 + 사람 승인(반려 상한 초과 시 humanApproval=false)일 때만 배포 대기로
@@ -244,7 +281,85 @@ export async function executeWorkflow(
       message: `워크플로우 실행 중 오류 발생: ${errorMessage}`,
       data: { error: errorMessage },
     });
+  } finally {
+    activeJobs.delete(jobId);
   }
+}
+
+/**
+ * 서버 재시작으로 폴링 루프가 사라진 작업을, 반려 결정(feedback/rewrite)에 맞춰 DB 상태로 이어 돌린다.
+ * 살아 있는 루프가 있으면 그 루프가 결정을 읽어 가므로 호출하지 않는다 (human-review route 참고).
+ */
+export async function resumeAfterReview(
+  jobId: string,
+  action: "feedback" | "rewrite",
+  feedback: string
+): Promise<void> {
+  const job = await jobManager.getJob(jobId).catch(() => null);
+  if (!job) {
+    activeJobs.delete(jobId); // route가 선점한 것을 되돌린다 (이후 경로는 executeWorkflow의 finally가 해제)
+    throw new Error("Job not found");
+  }
+
+  // 작업 옵션과 반려 횟수는 jobs 컬럼이 아니라 로그에 있다.
+  // tone/targetReader: /api/generate의 init 로그, rejections: 마지막 human_review 대기 로그
+  const logs = await jobManager.getProgressLogs(jobId);
+  const initData = logs.find((l) => l.step === "init")?.data;
+  const lastReview = [...logs].reverse().find((l) => l.step === "human_review" && l.status === "started");
+  const rejections = (Number(lastReview?.data?.rejections) || 0) + 1; // 지금 처리하는 반려까지
+  // 정확도 검증 지적도 로그에 있다. create가 재실행 프롬프트에 반영한다
+  const factCheckResult = [...logs].reverse().find((l) => l.step === "fact_check" && l.data?.factCheckResult)
+    ?.data?.factCheckResult as BlogPostState["factCheckResult"];
+
+  // humanReview 노드와 같은 상한. 그래프를 거치지 않는 반려이므로 여기서 끊는다
+  if (rejections > MAX_REJECTIONS) {
+    activeJobs.delete(jobId);
+    await jobManager.updateJob(jobId, { status: "completed", progress: 100, current_step: "completed" });
+    await jobManager.logProgress(jobId, {
+      step: "complete",
+      status: "completed",
+      message: `워크플로우 완료 (반려 ${MAX_REJECTIONS}회 초과, 배포 없이 종료)`,
+    });
+    return;
+  }
+
+  const metadata = (job.metadata ?? undefined) as BlogPostState["metadata"];
+  const researchData = (job.research_data ?? undefined) as BlogPostState["researchData"];
+  const resume: ResumeState = {
+    humanFeedback: feedback,
+    rejections,
+    researchData,
+    metadata, // slug 유지용
+    reviewResult: (job.review_result ?? undefined) as BlogPostState["reviewResult"],
+    factCheckResult,
+    thumbnailImage: thumbnailFromJob(job, metadata),
+    thumbnailFor: metadata?.title,
+    // feedback: 사람이 검토(직접 편집 포함)한 최종본을 초안 자리에 놓고 create부터 (humanReview 노드와 같은 규칙)
+    // rewrite: write부터. 리서치 결과가 저장되지 않은 예전 작업은 rerunFrom 없이 research부터 다시 돈다
+    ...(action === "feedback"
+      ? { rerunFrom: "create" as const, draftContent: job.final_content ?? job.draft_content ?? undefined }
+      : researchData
+        ? { rerunFrom: "write" as const }
+        : {}),
+  };
+
+  await jobManager.logProgress(jobId, {
+    step: "human_review",
+    status: "progress",
+    message: "서버가 재시작되어 저장된 상태에서 워크플로우를 이어서 실행합니다.",
+  });
+
+  await executeWorkflow(
+    jobId,
+    job.topic,
+    job.category,
+    {
+      tone: (initData?.tone as string | undefined) ?? undefined,
+      targetReader: (initData?.targetReader as string | undefined) ?? undefined,
+      template: job.template ?? undefined,
+    },
+    resume
+  );
 }
 
 /**
@@ -287,17 +402,7 @@ export async function executeDeploy(jobId: string): Promise<void> {
       metadata,
       validationResult: job.validation_result as BlogPostState["validationResult"],
       category: job.category as "tech" | "life",
-      thumbnailImage: job.thumbnail_data && metadata?.thumbnailImage
-        ? {
-            buffer: job.thumbnail_data,
-            mimeType: metadata.thumbnailImage.endsWith('.jpg')
-              ? 'image/jpeg'
-              : metadata.thumbnailImage.endsWith('.webp')
-                ? 'image/webp'
-                : 'image/png',
-            path: metadata.thumbnailImage,
-          }
-        : undefined,
+      thumbnailImage: thumbnailFromJob(job, metadata),
     };
 
     // 진행 상황 콜백
@@ -397,7 +502,8 @@ async function runBlogWorkflowWithoutDeploy(
   onProgress: (event: StreamEvent) => void | Promise<void>,
   onHumanReview: HumanReviewCallback,
   category: string = "tech",
-  options?: { tone?: string; targetReader?: string; template?: string }
+  options?: { tone?: string; targetReader?: string; template?: string },
+  resume?: ResumeState
 ): Promise<BlogPostState> {
   // skipDeploy: true를 전달하여 deploy 단계를 건너뜀
   // 사용자가 배포를 승인하면 executeDeploy에서 별도로 처리
@@ -407,7 +513,8 @@ async function runBlogWorkflowWithoutDeploy(
     onHumanReview,
     category as "tech" | "life",
     true, // skipDeploy
-    options
+    options,
+    resume
   );
   return result;
 }

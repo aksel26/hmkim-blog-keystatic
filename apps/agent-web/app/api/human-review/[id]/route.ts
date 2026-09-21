@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { jobManager } from "@/lib/queue/job-manager";
+import { tryClaimWorkflow, resumeAfterReview } from "@/lib/workflow/executor";
 import type { HumanReviewRequest, HumanReviewResponse } from "@/lib/types";
 
 interface RouteContext {
@@ -106,6 +107,17 @@ export async function POST(
           message: `Human review: ${body.action}`,
           data: { feedback: body.feedback, action: body.action },
         });
+
+        // 결정을 읽어 갈 폴링 루프가 이 프로세스에 없으면(서버 재시작 등) 여기서 직접 이어 돌린다.
+        // 없으면 DB에만 기록되고 아무 일도 일어나지 않는다
+        if (tryClaimWorkflow(jobId)) {
+          const { action, feedback } = body;
+          after(() =>
+            resumeAfterReview(jobId, action as "feedback" | "rewrite", feedback!.trim()).catch((error) =>
+              console.error(`Resume after review failed for job ${jobId}:`, error)
+            )
+          );
+        }
 
         nextStep = body.action === "rewrite" ? "writing" : "creating";
         break;

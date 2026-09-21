@@ -84,3 +84,35 @@ test('승인했어도 검증 실패면 deploy를 건너뛴다', async () => {
   assert.ok(!calls.includes('deploy'));
   assert.equal(state.prResult, undefined);
 });
+
+// 서버 재시작 뒤 agent-web이 DB 상태로 이어 돌리는 경로 (resume 인자)
+const resumeRun = (resume: Record<string, unknown>, review: () => unknown = () => ({ approved: true })) =>
+  runBlogWorkflow('topic', undefined, async () => review(), 'tech', true, { tone: 'friendly', targetReader: '입문자' }, resume);
+
+test("resume.rerunFrom='create'면 검토본과 피드백을 들고 create부터 들어간다", async () => {
+  await resumeRun({ rerunFrom: 'create', draftContent: '검토본', humanFeedback: '더 짧게', thumbnailImage: thumb, thumbnailFor: 't' });
+  assert.deepEqual(calls, ['create', 'factCheck', 'validate']); // 제목이 같아 썸네일 재사용
+  assert.deepEqual(
+    { draft: (inputs.create[0] as { draftContent: string }).draftContent, fb: (inputs.create[0] as { humanFeedback: string }).humanFeedback },
+    { draft: '검토본', fb: '더 짧게' }
+  );
+  // 재개해도 작성 옵션이 에이전트까지 전달된다
+  const { tone, targetReader } = inputs.create[0] as { tone: string; targetReader: string };
+  assert.deepEqual({ tone, targetReader }, { tone: 'friendly', targetReader: '입문자' });
+});
+
+test('재개 전 반려 횟수를 이어 세어 상한을 넘으면 배포 없이 종료한다', async () => {
+  const state = await resumeRun({ rerunFrom: 'create', draftContent: '검토본', rejections: MAX_REJECTIONS }, () => ({ approved: false }));
+  assert.equal(calls.filter((c) => c === 'create').length, 1); // 재개분 한 번 돌고, 다음 반려에서 끝
+  assert.equal(state.rejections, MAX_REJECTIONS + 1);
+  assert.equal(state.humanApproval, false);
+});
+
+test("resume.rerunFrom='write'면 write부터, rerunFrom이 없으면 research부터 돈다", async () => {
+  await resumeRun({ rerunFrom: 'write', humanFeedback: 'f' });
+  assert.deepEqual(calls, FIRST_PASS.slice(1));
+  calls.length = 0;
+  await resumeRun({ humanFeedback: 'f' });
+  assert.deepEqual(calls, FIRST_PASS);
+  assert.equal((inputs.write[1] as { humanFeedback: string }).humanFeedback, 'f');
+});

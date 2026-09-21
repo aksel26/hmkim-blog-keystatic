@@ -214,7 +214,8 @@ const graph = new StateGraph(StateAnnotation)
   .addNode('validate', validate)
   .addNode('humanReview', humanReview)
   .addNode('deploy', deploy)
-  .addEdge(START, 'research')
+  // 재개 실행(초기 상태에 rerunFrom이 있을 때)은 해당 노드로 바로 들어간다. 일반 실행은 research부터
+  .addConditionalEdges(START, (s) => s.rerunFrom ?? 'research', ['research', 'write', 'create'])
   .addEdge('research', 'write')
   .addEdge('write', 'review')
   .addEdge('review', 'create')
@@ -244,6 +245,9 @@ export const blogWorkflowGraph = graph.compile();
 // 최악 경로: 첫 패스 8 step + (MAX_REJECTIONS + 1)번째 반려까지 각 7 step(write~humanReview). 넉넉히 2배.
 const RECURSION_LIMIT = (8 + 7 * (MAX_REJECTIONS + 1)) * 2;
 
+/** 프로세스가 죽은 뒤 반려된 작업을 이어 돌릴 때 넘기는 상태. rerunFrom이 없으면 research부터 다시 돈다 */
+export type ResumeState = Partial<BlogPostState> & { rerunFrom?: RerunFrom; thumbnailFor?: string };
+
 /**
  * 워크플로우 실행
  */
@@ -253,10 +257,12 @@ export async function runBlogWorkflow(
   onHumanReview?: HumanReviewCallback,
   category: Category = 'tech',
   skipDeploy: boolean = false,
-  options?: { tone?: string; targetReader?: string; template?: string }
+  options?: { tone?: string; targetReader?: string; template?: string },
+  resume?: ResumeState
 ): Promise<BlogPostState & { prResult?: PRResult }> {
   const state = await blogWorkflowGraph.invoke(
     {
+      ...resume,
       topic,
       category,
       tone: options?.tone,
