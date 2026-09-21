@@ -12,7 +12,8 @@ import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components
 import { Progress } from "@/components/ui/progress";
 import { formatRelativeTime, truncate } from "@/lib/utils";
 import type { JobsListResponse } from "@/lib/types";
-import { Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { LoadingText } from "@/components/shared/LoadingText";
 
 const statusOptions = [
   { value: "", label: "전체 상태" },
@@ -57,42 +58,31 @@ function JobsContent() {
   });
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">작업 목록</h1>
-        <p className="text-muted-foreground">
-          블로그 생성 작업을 조회하고 관리합니다
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader title="작업 목록" description="블로그 생성 작업을 조회하고 관리합니다" />
 
       {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="주제로 검색..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="pl-9"
-              />
-            </div>
-            <NativeSelect
-              options={statusOptions}
-              value={status}
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              className="sm:w-48"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Input
+          type="search"
+          placeholder="주제로 검색..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="flex-1"
+        />
+        <NativeSelect
+          options={statusOptions}
+          value={status}
+          onChange={(e) => {
+            setStatus(e.target.value);
+            setPage(1);
+          }}
+          className="sm:w-48"
+        />
+      </div>
 
       {/* Jobs List */}
       <Card>
@@ -112,46 +102,42 @@ function JobsContent() {
               ))}
             </div>
           ) : error ? (
-            <div className="text-center py-8 text-destructive">
+            <div className="text-center py-6 text-destructive">
               작업 목록을 불러오는데 실패했습니다. 다시 시도해주세요.
             </div>
           ) : data?.jobs && data.jobs.length > 0 ? (
-            <div className="space-y-4">
+            <div className="-mx-2 divide-y divide-border/70">
               {data.jobs.map((job) => (
                 <Link
                   key={job.id}
                   href={`/jobs/${job.id}`}
-                  className="block p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                  className="block rounded-md px-2 py-3 transition-colors hover:bg-accent"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">
+                  <div className="flex items-center justify-between gap-3 mb-1">
+                    <span className="text-base font-semibold">
                       {truncate(job.topic, 60)}
                     </span>
                     <Badge variant={getStatusBadgeVariant(job.status)}>
                       {getStatusDisplayText(job.status)}
                     </Badge>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
-                    <div className="flex items-center gap-4">
-                      <span className="capitalize">{job.category}</span>
-                      {job.template && (
-                        <span className="text-xs bg-muted px-2 py-0.5 rounded">
-                          {job.template}
-                        </span>
-                      )}
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex items-center gap-3 uppercase tracking-wide">
+                      <span>{job.category}</span>
+                      {job.template && <span className="text-muted-foreground/70">{job.template}</span>}
                     </div>
                     <span>{formatRelativeTime(job.createdAt)}</span>
                   </div>
                   {job.status !== "completed" && job.status !== "failed" && (
-                    <Progress value={job.progress} className="mt-3" />
+                    <Progress value={job.progress} className="mt-2 h-1" />
                   )}
                 </Link>
               ))}
 
               {/* Pagination */}
               {data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between pt-4 border-t border-border">
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex items-center justify-between px-2 pt-4">
+                  <p className="text-xs text-muted-foreground">
                     {data.pagination.page} / {data.pagination.totalPages} 페이지
                   </p>
                   <div className="flex items-center gap-2">
@@ -161,8 +147,7 @@ function JobsContent() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      이전
+                      ← 이전
                     </Button>
                     <Button
                       variant="outline"
@@ -174,17 +159,16 @@ function JobsContent() {
                       }
                       disabled={page === data.pagination.totalPages}
                     >
-                      다음
-                      <ChevronRight className="h-4 w-4" />
+                      다음 →
                     </Button>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-8 text-muted-foreground">
+            <div className="text-center py-6 text-muted-foreground">
               <p>작업이 없습니다.</p>
-              <Link href="/generate" className="text-primary hover:underline">
+              <Link href="/generate" className="font-medium text-pencil hover:underline">
                 첫 번째 포스트 생성하기
               </Link>
             </div>
@@ -198,7 +182,7 @@ function JobsContent() {
 function JobsLoading() {
   return (
     <div className="flex items-center justify-center min-h-[400px]">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <LoadingText />
     </div>
   );
 }

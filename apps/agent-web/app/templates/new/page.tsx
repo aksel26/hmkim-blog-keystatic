@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import TemplateForm from "@/components/templates/TemplateForm";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 interface CreateTemplateRequest {
   name: string;
@@ -41,16 +42,11 @@ export default function NewTemplatePage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">새 템플릿</h1>
-        <p className="text-muted-foreground">
-          새로운 이메일 템플릿을 만듭니다
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader title="새 템플릿" description="새로운 이메일 템플릿을 만듭니다" />
 
       {error && (
-        <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md text-sm">
+        <div className="p-4 bg-destructive/10 text-destructive font-medium rounded-md text-sm">
           {error}
         </div>
       )}

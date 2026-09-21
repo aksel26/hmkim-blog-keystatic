@@ -14,14 +14,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CategorySelector, TechLifeFields, CommonFields } from "./fields";
-import {
-  FolderOpen,
-  FileText,
-  MessageSquare,
-  Users,
-  Sparkles,
-  Send,
-} from "lucide-react";
 
 interface DynamicBlogFormProps {
   onSuccess?: (jobId: string) => void;
@@ -39,32 +31,26 @@ function RequestSummary() {
     templateOptions.find((o) => o.value === values.template)?.label ?? undefined;
 
   const items: Array<{
-    icon: React.ReactNode;
     label: string;
     value: string | undefined;
   }> = [
     {
-      icon: <FolderOpen className="h-4 w-4" />,
       label: "카테고리",
       value: categoryLabel,
     },
     {
-      icon: <Sparkles className="h-4 w-4" />,
       label: "주제",
       value: values.topic || undefined,
     },
     {
-      icon: <FileText className="h-4 w-4" />,
       label: "템플릿",
       value: templateLabel,
     },
     {
-      icon: <MessageSquare className="h-4 w-4" />,
       label: "말투",
       value: toneLabel,
     },
     {
-      icon: <Users className="h-4 w-4" />,
       label: "타겟 독자",
       value: values.targetReader || undefined,
     },
@@ -76,64 +62,42 @@ function RequestSummary() {
     <Card className="sticky top-6">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Send className="h-4 w-4" />
-            요청 사항 요약
-          </CardTitle>
-          <span className="text-xs text-muted-foreground">
-            {filledCount}/{items.length} 설정됨
+          <CardTitle>요청 사항 요약</CardTitle>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {filledCount}/{items.length}
           </span>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
+        {/* 채워진 항목은 먹색 굵은 글씨, 빈 항목은 옅게. 색과 굵기만으로 진행 상태를 보여준다 */}
+        <dl className="divide-y divide-border/70">
           {items.map((item) => (
-              <div
-                key={item.label}
-                className={`flex items-start gap-3 p-2.5 rounded-lg transition-colors ${
-                  item.value
-                    ? "bg-primary/5 border border-primary/10"
-                    : "bg-muted/30 border border-transparent"
+            <div key={item.label} className="flex items-baseline gap-4 py-2.5">
+              <dt
+                className={`w-20 shrink-0 text-xs font-semibold ${
+                  item.value ? "text-pencil" : "text-muted-foreground/60"
                 }`}
               >
-                <div
-                  className={`mt-0.5 ${
-                    item.value ? "text-primary" : "text-muted-foreground/50"
-                  }`}
-                >
-                  {item.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-xs font-medium ${
-                      item.value
-                        ? "text-muted-foreground"
-                        : "text-muted-foreground/50"
-                    }`}
-                  >
-                    {item.label}
-                  </p>
-                  {item.value ? (
-                    <p className="text-sm font-medium mt-0.5 truncate">
-                      {item.value}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground/40 mt-0.5">
-                      미설정
-                    </p>
-                  )}
-                </div>
-              </div>
+                {item.label}
+              </dt>
+              <dd
+                className={`min-w-0 flex-1 truncate text-sm ${
+                  item.value ? "font-semibold" : "text-muted-foreground/50"
+                }`}
+              >
+                {item.value ?? "미설정"}
+              </dd>
+            </div>
           ))}
-        </div>
+        </dl>
 
         {/* AI 프롬프트 미리보기 */}
         {values.topic && (
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-xs font-medium text-muted-foreground mb-2">
+          <div className="mt-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">
               AI에게 전달될 내용
             </p>
-            <div className="p-3 rounded-lg bg-muted/50 text-xs text-muted-foreground leading-relaxed space-y-1">
+            <div className="p-3 rounded-md bg-background text-xs text-muted-foreground leading-relaxed space-y-1">
               <p>{values.topic}</p>
               {templateLabel && values.template !== "default" && (
                 <p>글 형식: {templateLabel}</p>
@@ -204,9 +168,9 @@ export function DynamicBlogForm({ onSuccess }: DynamicBlogFormProps) {
   return (
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* 왼쪽: 입력 폼 (3/5) */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {/* 카테고리 선택 */}
             <CategorySelector />
 
@@ -218,8 +182,8 @@ export function DynamicBlogForm({ onSuccess }: DynamicBlogFormProps) {
 
             {/* 에러 메시지 */}
             {error && (
-              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
-                <p className="text-sm text-destructive">{error}</p>
+              <div className="p-4 rounded-md bg-destructive/10">
+                <p className="text-sm font-medium text-destructive">{error}</p>
               </div>
             )}
 
@@ -230,14 +194,7 @@ export function DynamicBlogForm({ onSuccess }: DynamicBlogFormProps) {
                 disabled={isSubmitting}
                 className="flex-1"
               >
-                {isSubmitting ? (
-                  <>
-                    <span className="mr-2">생성 중...</span>
-                    <span className="animate-spin">&#8987;</span>
-                  </>
-                ) : (
-                  "블로그 포스트 생성"
-                )}
+                {isSubmitting ? "생성 중…" : "블로그 포스트 생성"}
               </Button>
               <Button
                 type="button"

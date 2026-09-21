@@ -7,7 +7,6 @@ import { Badge, getStatusBadgeVariant, getStatusDisplayText } from "@/components
 import { Progress } from "@/components/ui/progress";
 import { formatRelativeTime, truncate } from "@/lib/utils";
 import type { Job, JobStatus } from "@/lib/types";
-import { ArrowRight } from "lucide-react";
 
 async function fetchRecentJobs(): Promise<Job[]> {
   const res = await fetch("/api/jobs?limit=5");
@@ -29,10 +28,9 @@ export function RecentJobs() {
         <CardTitle>최근 작업</CardTitle>
         <Link
           href="/jobs"
-          className="text-sm text-primary hover:underline flex items-center gap-1"
+          className="text-sm font-medium text-pencil hover:underline"
         >
-          전체 보기
-          <ArrowRight className="h-4 w-4" />
+          전체 보기 →
         </Link>
       </CardHeader>
       <CardContent>
@@ -46,35 +44,35 @@ export function RecentJobs() {
             ))}
           </div>
         ) : jobs && jobs.length > 0 ? (
-          <div className="space-y-4">
+          <div className="-mx-2 divide-y divide-border/70">
             {jobs.map((job) => (
               <Link
                 key={job.id}
                 href={`/jobs/${job.id}`}
-                className="block p-4 rounded-lg border border-border hover:bg-muted transition-colors"
+                className="block rounded-md px-2 py-3 transition-colors hover:bg-accent"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium">
+                <div className="flex items-center justify-between gap-3 mb-1">
+                  <span className="text-base font-semibold">
                     {truncate(job.topic, 40)}
                   </span>
                   <Badge variant={getStatusBadgeVariant(job.status as JobStatus)}>
                     {getStatusDisplayText(job.status as JobStatus)}
                   </Badge>
                 </div>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span className="capitalize">{job.category}</span>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="uppercase tracking-wide">{job.category}</span>
                   <span>{formatRelativeTime(job.createdAt)}</span>
                 </div>
                 {job.status !== "completed" && job.status !== "failed" && (
-                  <Progress value={job.progress} className="mt-2" />
+                  <Progress value={job.progress} className="mt-2 h-1" />
                 )}
               </Link>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-6 text-muted-foreground">
             <p>작업이 없습니다.</p>
-            <Link href="/generate" className="text-primary hover:underline">
+            <Link href="/generate" className="font-medium text-pencil hover:underline">
               첫 번째 포스트 생성하기
             </Link>
           </div>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TemplateForm from "@/components/templates/TemplateForm";
 import type { EmailTemplate } from "@/lib/templates/types";
-import { Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { LoadingText } from "@/components/shared/LoadingText";
 
 async function fetchTemplate(id: string): Promise<EmailTemplate> {
   const res = await fetch(`/api/templates/${id}`);
@@ -68,22 +69,17 @@ export default function EditTemplatePage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <LoadingText />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">템플릿 수정</h1>
-        <p className="text-muted-foreground">
-          이메일 템플릿을 수정합니다
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader title="템플릿 수정" description="이메일 템플릿을 수정합니다" />
 
       {error && (
-        <div className="p-4 border border-destructive/50 bg-destructive/10 text-destructive rounded-md text-sm">
+        <div className="p-4 bg-destructive/10 text-destructive font-medium rounded-md text-sm">
           {error}
         </div>
       )}

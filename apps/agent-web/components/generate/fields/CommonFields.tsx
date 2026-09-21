@@ -17,8 +17,8 @@ export function CommonFields() {
   const isPreset = tonePresets.some((p) => p.value === currentTone);
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-      <h3 className="font-semibold text-sm text-muted-foreground">공통 설정</h3>
+    <div className="space-y-4 pt-2">
+      <h3 className="text-lg font-bold tracking-tight">공통 설정</h3>
 
       {/* 말투 선택 */}
       <div className="space-y-2">
@@ -29,10 +29,10 @@ export function CommonFields() {
               key={preset.value}
               type="button"
               onClick={() => setValue("tone", preset.value, { shouldValidate: true })}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
                 currentTone === preset.value
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background border-border hover:bg-muted"
+                  ? "bg-primary text-primary-foreground font-semibold"
+                  : "shadow-border text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
               {preset.label}
@@ -43,10 +43,10 @@ export function CommonFields() {
             onClick={() => {
               if (isPreset) setValue("tone", "", { shouldValidate: true });
             }}
-            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+            className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
               !isPreset && currentTone !== undefined
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background border-border hover:bg-muted"
+                ? "bg-primary text-primary-foreground font-semibold"
+                : "shadow-border text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
             직접 입력

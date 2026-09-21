@@ -19,10 +19,10 @@ export function CategorySelector() {
             type="button"
             onClick={() => setValue("category", opt.value)}
             className={cn(
-              "rounded-lg px-5 py-2 text-sm font-medium transition-colors duration-150",
+              "rounded-md px-5 py-2 text-sm transition-colors duration-150",
               category === opt.value
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground"
+                ? "bg-primary text-primary-foreground font-semibold"
+                : "shadow-border text-muted-foreground hover:bg-accent hover:text-foreground"
             )}
           >
             {opt.label}

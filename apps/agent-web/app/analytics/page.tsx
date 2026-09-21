@@ -18,7 +18,8 @@ import {
   Line,
 } from "recharts";
 import { formatRelativeTime, truncate } from "@/lib/utils";
-import { FileText, CheckCircle, XCircle, TrendingUp } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { KPIStatCard } from "@/components/shared/KPIStatCard";
 import Link from "next/link";
 
 interface AnalyticsData {
@@ -50,7 +51,15 @@ interface AnalyticsData {
   }>;
 }
 
-const COLORS = ["#0984e3", "#00b894", "#fdcb6e", "#e17055", "#6c5ce7", "#74b9ff"];
+// 차트 색은 globals.css의 --chart-* 토큰을 따른다 (라이트/다크 자동 대응)
+const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const tooltipStyle = {
+  backgroundColor: "var(--popover)",
+  border: "none",
+  borderRadius: "6px",
+  boxShadow: "0 4px 16px rgb(0 0 0 / 0.12)",
+  fontSize: 12,
+};
 
 async function fetchAnalytics(): Promise<AnalyticsData> {
   const res = await fetch("/api/analytics");
@@ -67,18 +76,11 @@ export default function AnalyticsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
-          <p className="text-muted-foreground">분석 데이터를 불러오는 중...</p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="pt-6">
-                <div className="animate-pulse bg-muted rounded h-20" />
-              </CardContent>
-            </Card>
+      <div className="space-y-4">
+        <PageHeader title="분석" description="분석 데이터를 불러오는 중…" />
+        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          {["전체 작업", "완료", "실패", "성공률"].map((title) => (
+            <KPIStatCard key={title} title={title} value="-" isLoading />
           ))}
         </div>
       </div>
@@ -87,69 +89,32 @@ export default function AnalyticsPage() {
 
   if (error || !data) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
-          <p className="text-destructive">분석 데이터를 불러오는데 실패했습니다</p>
-        </div>
+      <div className="space-y-4">
+        <PageHeader title="분석" />
+        <p className="font-medium text-destructive">분석 데이터를 불러오는데 실패했습니다</p>
       </div>
     );
   }
 
-  const statCards = [
-    {
-      title: "전체 작업",
-      value: data.overview.totalJobs,
-      icon: FileText,
-      description: "누적 전체",
-    },
-    {
-      title: "완료",
-      value: data.overview.completedJobs,
-      icon: CheckCircle,
-      description: "성공적으로 생성됨",
-    },
-    {
-      title: "실패",
-      value: data.overview.failedJobs,
-      icon: XCircle,
-      description: "생성 실패",
-    },
-    {
-      title: "성공률",
-      value: `${data.overview.successRate}%`,
-      icon: TrendingUp,
-      description: "완료 비율",
-    },
-  ];
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">분석</h1>
-        <p className="text-muted-foreground">
-          성과 지표와 트렌드를 확인합니다
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader title="분석" description="성과 지표와 트렌드를 확인합니다" />
 
-      {/* Overview Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <Card key={card.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-              <card.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{card.value}</div>
-              <p className="text-xs text-muted-foreground">{card.description}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Overview */}
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+        <KPIStatCard title="전체 작업" value={data.overview.totalJobs} description="누적 전체" />
+        <KPIStatCard title="완료" value={data.overview.completedJobs} description="성공적으로 생성됨" tone="success" />
+        <KPIStatCard
+          title="실패"
+          value={data.overview.failedJobs}
+          description="생성 실패"
+          tone={data.overview.failedJobs > 0 ? "destructive" : "default"}
+        />
+        <KPIStatCard title="성공률" value={`${data.overview.successRate}%`} description="완료 비율" tone="pencil" />
       </div>
 
       {/* Charts Row */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Daily Generation Chart */}
         <Card>
           <CardHeader>
@@ -161,7 +126,7 @@ export default function AnalyticsPage() {
               {data.dailyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <CartesianGrid vertical={false} strokeDasharray="2 4" className="stroke-border" />
                     <XAxis
                       dataKey="date"
                       tick={{ fontSize: 12 }}
@@ -169,23 +134,19 @@ export default function AnalyticsPage() {
                     />
                     <YAxis tick={{ fontSize: 12 }} />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                      }}
+                      contentStyle={tooltipStyle}
                     />
                     <Line
                       type="monotone"
                       dataKey="completed"
-                      stroke="#22c55e"
+                      stroke="var(--success)"
                       strokeWidth={2}
                       name="완료"
                     />
                     <Line
                       type="monotone"
                       dataKey="failed"
-                      stroke="#ef4444"
+                      stroke="var(--destructive)"
                       strokeWidth={2}
                       name="실패"
                     />
@@ -221,7 +182,8 @@ export default function AnalyticsPage() {
                         `${name} (${(percent * 100).toFixed(0)}%)`
                       }
                       outerRadius={100}
-                      fill="#8884d8"
+                      fill="var(--chart-1)"
+                      stroke="var(--card)"
                       dataKey="value"
                     >
                       {data.categoryData.map((_, index) => (
@@ -231,7 +193,7 @@ export default function AnalyticsPage() {
                         />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip contentStyle={tooltipStyle} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -245,7 +207,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Status Distribution & Recent Errors */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Status Distribution */}
         <Card>
           <CardHeader>
@@ -257,7 +219,7 @@ export default function AnalyticsPage() {
               {data.statusData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.statusData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                    <CartesianGrid horizontal={false} strokeDasharray="2 4" className="stroke-border" />
                     <XAxis type="number" tick={{ fontSize: 12 }} />
                     <YAxis
                       dataKey="name"
@@ -266,13 +228,9 @@ export default function AnalyticsPage() {
                       width={100}
                     />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "8px",
-                      }}
+                      contentStyle={tooltipStyle}
                     />
-                    <Bar dataKey="value" fill="#0984e3" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="value" fill="var(--pencil)" radius={[0, 3, 3, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -292,18 +250,18 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             {data.recentErrors.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {data.recentErrors.map((error) => (
                   <Link
                     key={error.id}
                     href={`/jobs/${error.id}`}
-                    className="block p-3 rounded-lg border border-destructive/30 bg-destructive/5 hover:bg-destructive/10 transition-colors"
+                    className="block p-3 rounded-md bg-destructive/8 hover:bg-destructive/15 transition-colors"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">
+                    <div className="flex items-center justify-between gap-3 mb-1">
+                      <span className="font-semibold text-sm">
                         {truncate(error.topic, 40)}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="shrink-0 text-xs text-muted-foreground">
                         {formatRelativeTime(error.created_at)}
                       </span>
                     </div>

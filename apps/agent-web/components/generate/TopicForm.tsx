@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Loader2 } from "lucide-react";
 import type { Category, Template } from "@/lib/types";
 
 const categoryOptions = [
@@ -76,7 +75,7 @@ export function TopicForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Topic Input */}
           <div className="space-y-2">
             <label htmlFor="topic" className="text-sm font-medium">
@@ -140,14 +139,7 @@ export function TopicForm() {
             size="lg"
             disabled={isSubmitting || !topic.trim()}
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                작업 생성 중...
-              </>
-            ) : (
-              "포스트 생성"
-            )}
+            {isSubmitting ? "작업 생성 중…" : "포스트 생성"}
           </Button>
         </form>
       </CardContent>

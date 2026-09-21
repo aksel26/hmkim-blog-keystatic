@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeTime } from "@/lib/utils";
 import type { TemplatesListResponse } from "@/lib/templates/types";
-import { ChevronDown, ChevronUp, Plus, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { LoadingText } from "@/components/shared/LoadingText";
 
 async function fetchTemplates(): Promise<TemplatesListResponse> {
   const res = await fetch("/api/templates");
@@ -70,21 +71,16 @@ export default function TemplatesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">이메일 템플릿</h1>
-          <p className="text-muted-foreground">
-            뉴스레터 이메일 템플릿을 관리합니다
-          </p>
-        </div>
-        <Link href="/templates/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            새 템플릿
+    <div className="space-y-4">
+      <PageHeader
+        title="이메일 템플릿"
+        description="뉴스레터 이메일 템플릿을 관리합니다"
+        actions={
+          <Button asChild>
+            <Link href="/templates/new">새 템플릿</Link>
           </Button>
-        </Link>
-      </div>
+        }
+      />
 
       <Card>
         <CardHeader>
@@ -92,21 +88,21 @@ export default function TemplatesPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-8">
+              <LoadingText />
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-destructive">
+            <div className="text-center py-8 text-destructive">
               템플릿을 불러오는데 실패했습니다. 다시 시도해주세요.
             </div>
           ) : data?.templates && data.templates.length > 0 ? (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/70">
               {data.templates.map((template) => (
                 <div key={template.id}>
-                  <div className="group py-4 flex items-center justify-between">
+                  <div className="group py-3 flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">{template.name}</span>
+                        <span className="text-base font-semibold">{template.name}</span>
                         {template.is_default && (
                           <Badge variant="secondary">기본</Badge>
                         )}
@@ -124,12 +120,7 @@ export default function TemplatesPage() {
                         size="sm"
                         onClick={() => setExpandedId(expandedId === template.id ? null : template.id)}
                       >
-                        미리보기
-                        {expandedId === template.id ? (
-                          <ChevronUp className="h-3 w-3 ml-1" />
-                        ) : (
-                          <ChevronDown className="h-3 w-3 ml-1" />
-                        )}
+                        {expandedId === template.id ? "미리보기 닫기" : "미리보기"}
                       </Button>
                       <Link href={`/templates/${template.id}/edit`}>
                         <Button variant="ghost" size="sm">
@@ -162,9 +153,9 @@ export default function TemplatesPage() {
 
                   {expandedId === template.id && (
                     <div className="pb-4">
-                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">미리보기</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">미리보기</p>
                       <div
-                        className="border border-border rounded-md p-4 text-sm max-h-64 overflow-auto prose prose-sm dark:prose-invert max-w-none"
+                        className="bg-background rounded-md p-4 text-sm max-h-64 overflow-auto prose prose-sm prose-neutral prose-code:before:content-none prose-code:after:content-none dark:prose-invert max-w-none"
                         dangerouslySetInnerHTML={{ __html: template.body }}
                       />
                     </div>
@@ -173,9 +164,9 @@ export default function TemplatesPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground">
               <p className="mb-2">템플릿이 없습니다.</p>
-              <Link href="/templates/new" className="text-foreground hover:underline">
+              <Link href="/templates/new" className="font-medium text-pencil hover:underline">
                 첫 번째 템플릿 만들기
               </Link>
             </div>

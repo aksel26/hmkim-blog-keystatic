@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { formatRelativeTime } from "@/lib/utils";
 import type { SubscribersListResponse, SubscriberStats } from "@/lib/subscribers/types";
-import { ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { KPIStatCard } from "@/components/shared/KPIStatCard";
+import { LoadingText } from "@/components/shared/LoadingText";
 
 const statusOptions = [
   { value: "", label: "전체" },
@@ -102,44 +104,31 @@ export default function SubscribersPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">구독자</h1>
-        <p className="text-muted-foreground">
-          뉴스레터 구독자를 관리합니다
-        </p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader title="구독자" description="뉴스레터 구독자를 관리합니다" />
 
       {/* Stats */}
       {stats && (
-        <div className="flex gap-6 text-sm">
-          <span className="text-muted-foreground">
-            전체 <span className="text-foreground font-medium ml-1">{stats.total}</span>
-          </span>
-          <span className="text-muted-foreground">
-            활성 <span className="text-success font-medium ml-1">{stats.active}</span>
-          </span>
-          <span className="text-muted-foreground">
-            구독 취소 <span className="text-muted-foreground font-medium ml-1">{stats.unsubscribed}</span>
-          </span>
+        <div className="grid grid-cols-3 gap-3">
+          <KPIStatCard title="전체" value={stats.total} />
+          <KPIStatCard title="활성" value={stats.active} tone="success" />
+          <KPIStatCard title="구독 취소" value={stats.unsubscribed} className="text-muted-foreground" />
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="이메일 또는 이름으로 검색..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="pl-9"
-          />
-        </div>
-        <div className="flex gap-4 border-b border-border sm:border-0">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <Input
+          type="search"
+          placeholder="이메일 또는 이름으로 검색..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
+          className="flex-1"
+        />
+        <div className="flex gap-1">
           {statusOptions.map((opt) => (
             <button
               key={opt.value}
@@ -147,16 +136,13 @@ export default function SubscribersPage() {
                 setStatus(opt.value);
                 setPage(1);
               }}
-              className={`pb-2 sm:pb-0 text-sm transition-colors relative ${
+              className={`rounded-md px-2.5 py-1.5 text-sm transition-colors ${
                 status === opt.value
-                  ? "text-foreground font-medium"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-foreground font-semibold underline decoration-2 underline-offset-[6px]"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
               {opt.label}
-              {status === opt.value && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground sm:hidden" />
-              )}
             </button>
           ))}
         </div>
@@ -168,28 +154,28 @@ export default function SubscribersPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-8">
+              <LoadingText />
             </div>
           ) : error ? (
-            <div className="text-center py-12 text-destructive">
+            <div className="text-center py-8 text-destructive">
               구독자를 불러오는데 실패했습니다. 다시 시도해주세요.
             </div>
           ) : data?.subscribers && data.subscribers.length > 0 ? (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-border/70">
               {data.subscribers.map((subscriber) => (
                 <div
                   key={subscriber.id}
-                  className="group py-4 flex items-center justify-between"
+                  className="group py-3 flex items-center justify-between"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium truncate">{subscriber.email}</span>
+                      <span className="text-sm font-medium truncate">{subscriber.email}</span>
                       <Badge variant={subscriber.status === "active" ? "success" : "secondary"}>
                         {subscriber.status === "active" ? "활성" : "구독 취소"}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span>{subscriber.name || "-"}</span>
                       <span>구독일 {formatRelativeTime(subscriber.subscribed_at)}</span>
                     </div>
@@ -219,7 +205,7 @@ export default function SubscribersPage() {
               {/* Pagination */}
               {data.pagination.totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs text-muted-foreground">
                     {data.pagination.page} / {data.pagination.totalPages} 페이지
                   </p>
                   <div className="flex items-center gap-2">
@@ -229,8 +215,7 @@ export default function SubscribersPage() {
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
                     >
-                      <ChevronLeft className="h-4 w-4" />
-                      이전
+                      ← 이전
                     </Button>
                     <Button
                       variant="outline"
@@ -240,15 +225,14 @@ export default function SubscribersPage() {
                       }
                       disabled={page === data.pagination.totalPages}
                     >
-                      다음
-                      <ChevronRight className="h-4 w-4" />
+                      다음 →
                     </Button>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-12 text-muted-foreground">
+            <div className="text-center py-8 text-muted-foreground">
               구독자가 없습니다.
             </div>
           )}

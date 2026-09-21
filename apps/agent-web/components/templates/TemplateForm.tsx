@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { TEMPLATE_VARIABLES } from "@/lib/templates/types";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface TemplateFormData {
   name: string;
@@ -96,9 +95,9 @@ export default function TemplateForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Main Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>템플릿 상세</CardTitle>
@@ -154,17 +153,13 @@ export default function TemplateForm({
                 className="flex items-center justify-between w-full"
               >
                 <CardTitle>미리보기</CardTitle>
-                {showPreview ? (
-                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                )}
+                <span className="text-xs font-medium text-muted-foreground">{showPreview ? "접기" : "펼치기"}</span>
               </button>
             </CardHeader>
             {showPreview && (
               <CardContent>
                 <div
-                  className="bg-white border border-border rounded-md p-4 text-sm max-h-80 overflow-auto prose prose-sm max-w-none"
+                  className="bg-white text-black rounded-md p-4 text-sm max-h-80 overflow-auto prose prose-sm prose-neutral prose-code:before:content-none prose-code:after:content-none max-w-none"
                   dangerouslySetInnerHTML={{ __html: form.body }}
                 />
               </CardContent>
@@ -174,7 +169,7 @@ export default function TemplateForm({
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-6">
+          <div className="sticky top-6 space-y-4">
             <Card>
               <CardHeader>
                 <button
@@ -183,18 +178,14 @@ export default function TemplateForm({
                   className="flex items-center justify-between w-full"
                 >
                   <CardTitle>사용 가능한 변수</CardTitle>
-                  {showVariables ? (
-                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  <span className="text-xs font-medium text-muted-foreground">{showVariables ? "접기" : "펼치기"}</span>
                 </button>
               </CardHeader>
               {showVariables && (
                 <CardContent className="space-y-3">
                   {TEMPLATE_VARIABLES.map((variable) => (
                     <div key={variable.key}>
-                      <code className="text-xs px-1.5 py-0.5 bg-muted rounded font-mono">
+                      <code className="text-xs font-mono font-semibold">
                         {variable.key}
                       </code>
                       <p className="text-xs text-muted-foreground mt-1">{variable.description}</p>

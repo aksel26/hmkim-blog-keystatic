@@ -108,17 +108,17 @@ export function SEOChecklistContent({
 
   // 점수에 따른 색상
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-500";
-    if (score >= 60) return "text-yellow-500";
-    return "text-red-500";
+    if (score >= 80) return "text-success";
+    if (score >= 60) return "text-warning";
+    return "text-destructive";
   };
 
   return (
     <div className="space-y-4">
       {/* 점수 요약 */}
-      <div className="flex items-center justify-between border-b border-border pb-3">
-        <span className="text-sm font-medium">SEO 점수</span>
-        <span className={`text-lg font-bold ${getScoreColor(percentage)}`}>
+      <div className="flex items-baseline justify-between">
+        <span className="text-xs font-semibold text-muted-foreground">SEO 점수</span>
+        <span className={`text-3xl leading-none font-bold tabular-nums ${getScoreColor(percentage)}`}>
           {percentage}%
         </span>
       </div>
@@ -147,15 +147,16 @@ export function SEOChecklistContent({
 
       {/* 체크리스트 */}
       <div className="space-y-2">
-        <h4 className="text-sm font-medium text-muted-foreground">체크리스트</h4>
+        <h4 className="text-xs font-semibold text-muted-foreground">체크리스트</h4>
         <ul className="space-y-1.5">
           {seoItems.map((item) => (
             <li
               key={item.id}
               className="flex items-start gap-2 text-sm"
             >
-              <span className={item.passed ? "text-green-500" : "text-red-500"}>
-                {item.passed ? "✓" : "✗"}
+              {/* 기호 대신 색을 입힌 낱말로 통과 여부를 알린다 */}
+              <span className={`w-8 shrink-0 text-xs font-semibold leading-5 ${item.passed ? "text-success" : "text-destructive"}`}>
+                {item.passed ? "통과" : "미흡"}
               </span>
               <div className="flex-1">
                 <span className={item.passed ? "text-foreground" : "text-muted-foreground"}>
@@ -174,8 +175,8 @@ export function SEOChecklistContent({
 
       {/* 개선 제안 (있는 경우) */}
       {reviewResult?.suggestions && reviewResult.suggestions.length > 0 && (
-        <div className="space-y-2 border-t border-border pt-3">
-          <h4 className="text-sm font-medium text-muted-foreground">개선 제안</h4>
+        <div className="space-y-2 pt-1">
+          <h4 className="text-xs font-semibold text-muted-foreground">개선 제안</h4>
           <ul className="space-y-1 text-xs text-muted-foreground">
             {reviewResult.suggestions.slice(0, 3).map((suggestion, index) => (
               <li key={index} className="flex items-start gap-1">
@@ -189,9 +190,9 @@ export function SEOChecklistContent({
 
       {/* 이슈 (있는 경우) */}
       {reviewResult?.issues && reviewResult.issues.length > 0 && (
-        <div className="space-y-2 border-t border-border pt-3">
-          <h4 className="text-sm font-medium text-red-500">주의 사항</h4>
-          <ul className="space-y-1 text-xs text-red-400">
+        <div className="space-y-2 pt-1">
+          <h4 className="text-xs font-semibold text-destructive">주의 사항</h4>
+          <ul className="space-y-1 text-xs text-destructive">
             {reviewResult.issues.slice(0, 3).map((issue, index) => (
               <li key={index} className="flex items-start gap-1">
                 <span>!</span>
