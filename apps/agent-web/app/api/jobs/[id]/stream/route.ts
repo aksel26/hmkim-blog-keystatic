@@ -36,6 +36,16 @@ export async function GET(
         }
       };
 
+      // abort 핸들러와 폴링이 동시에 닫으려 해도 한 번만 닫는다
+      const close = () => {
+        isClosed = true;
+        try {
+          controller.close();
+        } catch {
+          // Already closed
+        }
+      };
+
       // Send initial status
       sendEvent({
         type: "progress",
@@ -54,7 +64,7 @@ export async function GET(
           prResult: job.pr_result,
           metadata: job.metadata,
         });
-        controller.close();
+        close();
         return;
       }
 
@@ -64,7 +74,7 @@ export async function GET(
           message: job.error || "Job failed",
           step: job.current_step || "unknown",
         });
-        controller.close();
+        close();
         return;
       }
 
@@ -99,8 +109,7 @@ export async function GET(
               message: "Job not found",
               step: "unknown",
             });
-            isClosed = true;
-            controller.close();
+            close();
             return;
           }
 
@@ -152,8 +161,7 @@ export async function GET(
               prResult: currentJob.pr_result,
               metadata: currentJob.metadata,
             });
-            isClosed = true;
-            controller.close();
+            close();
             return;
           }
 
@@ -164,8 +172,7 @@ export async function GET(
               message: currentJob.error || "Job failed",
               step: currentJob.current_step || "unknown",
             });
-            isClosed = true;
-            controller.close();
+            close();
             return;
           }
 
@@ -185,14 +192,7 @@ export async function GET(
       pollForUpdates();
 
       // Handle client disconnect
-      request.signal.addEventListener("abort", () => {
-        isClosed = true;
-        try {
-          controller.close();
-        } catch {
-          // Already closed
-        }
-      });
+      request.signal.addEventListener("abort", close);
     },
   });
 

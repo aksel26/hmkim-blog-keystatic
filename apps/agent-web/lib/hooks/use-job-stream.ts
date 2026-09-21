@@ -38,7 +38,12 @@ export function useJobStream(
   const reconnectAttemptsRef = useRef(0);
   const connectRef = useRef<() => void>(() => {});
 
-  const { onProgress, onComplete, onError, onReviewRequired, onPendingDeploy } = options;
+  // 콜백은 ref로 최신값만 들고 있는다. connect 의존성에 넣으면 호출부가 인라인 함수를 넘길 때
+  // 렌더마다 connect가 바뀌어 SSE가 끊겼다 붙기를 반복한다
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    optionsRef.current = options;
+  });
 
   const disconnect = useCallback(() => {
     if (reconnectTimeoutRef.current) {
@@ -68,6 +73,7 @@ export function useJobStream(
     };
 
     eventSource.onmessage = (event) => {
+      const { onProgress, onComplete, onError, onReviewRequired, onPendingDeploy } = optionsRef.current;
       try {
         const data: SSEEvent = JSON.parse(event.data);
         setEvents((prev) => [...prev, data]);
@@ -154,7 +160,7 @@ export function useJobStream(
         }
       }, delay);
     };
-  }, [jobId, disconnect, onProgress, onComplete, onError, onReviewRequired, onPendingDeploy]);
+  }, [jobId, disconnect]);
 
   useEffect(() => {
     connectRef.current = connect;

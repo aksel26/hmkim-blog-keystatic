@@ -62,9 +62,10 @@ export function ContentPreview({
   onContentSave,
   onThumbnailRegenerated,
 }: ContentPreviewProps) {
-  const [activeTab, setActiveTab] = useState<Tab>(
-    finalContent ? "content" : "metadata"
-  );
+  // 탭을 직접 고르기 전에는 콘텐츠 도착 여부를 따라간다
+  // (초기값으로만 두면 작업 시작부터 지켜본 경우 human_review에서도 메타데이터 탭에 머문다)
+  const [selectedTab, setSelectedTab] = useState<Tab | null>(null);
+  const activeTab: Tab = selectedTab ?? (finalContent ? "content" : "metadata");
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -600,7 +601,7 @@ export function ContentPreview({
                   variant={activeTab === tab.id ? "default" : "ghost"}
                   size="sm"
                   onClick={() => {
-                    setActiveTab(tab.id);
+                    setSelectedTab(tab.id);
                     if (tab.id !== "content") setIsEditing(false);
                   }}
                   disabled={tab.disabled}

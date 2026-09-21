@@ -55,13 +55,17 @@ export default function JobDetailPage() {
     job.status !== "completed" &&
     job.status !== "failed";
 
+  // SSE는 human_review/pending_deploy 동안 2초마다 이벤트를 보낸다. 기본값(cancelRefetch: true)이면
+  // 그때마다 진행 중인 요청이 취소돼, 응답이 2초보다 느릴 때 데이터가 영영 갱신되지 않는다
+  const refetchIfIdle = () => { refetch({ cancelRefetch: false }); };
+
   const { isConnected, progress: streamProgress, currentStep: streamStep, status: streamStatus } = useJobStream(
     shouldConnect ? jobId : null,
     {
-      onComplete: () => { refetch(); },
-      onError: () => { refetch(); },
-      onReviewRequired: () => { refetch(); },
-      onPendingDeploy: () => { refetch(); },
+      onComplete: refetchIfIdle,
+      onError: refetchIfIdle,
+      onReviewRequired: refetchIfIdle,
+      onPendingDeploy: refetchIfIdle,
     }
   );
 
