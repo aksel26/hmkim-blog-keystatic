@@ -1,0 +1,577 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T06:03:59Z",
+  "title": "Design System: AI Agent",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "백",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "백 (카드)",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "입력창의 선",
+        "canonical": "oklch(0.86 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "popover": {
+        "role": "neutral",
+        "displayName": "떠 있는 백",
+        "canonical": "oklch(1 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "foreground": {
+        "role": "neutral",
+        "displayName": "먹",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "옅은 먹",
+        "canonical": "oklch(0.44 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "구분선",
+        "canonical": "oklch(0.9 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "pencil": {
+        "role": "primary",
+        "displayName": "강조의 먹",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "ring": {
+        "role": "primary",
+        "displayName": "포커스 링",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "success": {
+        "role": "secondary",
+        "displayName": "완료의 초록",
+        "canonical": "oklch(0.47 0.12 155)",
+        "tonalRamp": [
+          "oklch(0.15 0.12 155.0)",
+          "oklch(0.27 0.12 155.0)",
+          "oklch(0.38 0.12 155.0)",
+          "oklch(0.5 0.12 155.0)",
+          "oklch(0.62 0.12 155.0)",
+          "oklch(0.74 0.12 155.0)",
+          "oklch(0.85 0.12 155.0)",
+          "oklch(0.95 0.12 155.0)"
+        ]
+      },
+      "warning": {
+        "role": "secondary",
+        "displayName": "대기의 호박색",
+        "canonical": "oklch(0.55 0.14 55)",
+        "tonalRamp": [
+          "oklch(0.15 0.14 55.0)",
+          "oklch(0.27 0.14 55.0)",
+          "oklch(0.38 0.14 55.0)",
+          "oklch(0.5 0.14 55.0)",
+          "oklch(0.62 0.14 55.0)",
+          "oklch(0.74 0.14 55.0)",
+          "oklch(0.85 0.14 55.0)",
+          "oklch(0.95 0.14 55.0)"
+        ]
+      },
+      "destructive": {
+        "role": "secondary",
+        "displayName": "실패의 빨강",
+        "canonical": "oklch(0.52 0.2 27)",
+        "tonalRamp": [
+          "oklch(0.15 0.2 27.0)",
+          "oklch(0.27 0.2 27.0)",
+          "oklch(0.38 0.2 27.0)",
+          "oklch(0.5 0.2 27.0)",
+          "oklch(0.62 0.2 27.0)",
+          "oklch(0.74 0.2 27.0)",
+          "oklch(0.85 0.2 27.0)",
+          "oklch(0.95 0.2 27.0)"
+        ]
+      },
+      "background-dark": {
+        "role": "neutral",
+        "displayName": "백 (다크)",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "card-dark": {
+        "role": "neutral",
+        "displayName": "백 (카드, 다크)",
+        "canonical": "oklch(0.145 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "input-dark": {
+        "role": "neutral",
+        "displayName": "입력창의 선 (다크)",
+        "canonical": "oklch(0.34 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "popover-dark": {
+        "role": "neutral",
+        "displayName": "떠 있는 백 (다크)",
+        "canonical": "oklch(0.22 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "foreground-dark": {
+        "role": "neutral",
+        "displayName": "먹 (다크)",
+        "canonical": "oklch(0.985 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "muted-foreground-dark": {
+        "role": "neutral",
+        "displayName": "옅은 먹 (다크)",
+        "canonical": "oklch(0.7 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "구분선 (다크)",
+        "canonical": "oklch(0.28 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "pencil-dark": {
+        "role": "primary",
+        "displayName": "강조의 먹 (다크)",
+        "canonical": "oklch(0.985 0 0)",
+        "tonalRamp": [
+          "oklch(0.15 0.0 0.0)",
+          "oklch(0.27 0.0 0.0)",
+          "oklch(0.38 0.0 0.0)",
+          "oklch(0.5 0.0 0.0)",
+          "oklch(0.62 0.0 0.0)",
+          "oklch(0.74 0.0 0.0)",
+          "oklch(0.85 0.0 0.0)",
+          "oklch(0.95 0.0 0.0)"
+        ]
+      },
+      "success-dark": {
+        "role": "secondary",
+        "displayName": "완료의 초록 (다크)",
+        "canonical": "oklch(0.76 0.14 155)",
+        "tonalRamp": [
+          "oklch(0.15 0.14 155.0)",
+          "oklch(0.27 0.14 155.0)",
+          "oklch(0.38 0.14 155.0)",
+          "oklch(0.5 0.14 155.0)",
+          "oklch(0.62 0.14 155.0)",
+          "oklch(0.74 0.14 155.0)",
+          "oklch(0.85 0.14 155.0)",
+          "oklch(0.95 0.14 155.0)"
+        ]
+      },
+      "warning-dark": {
+        "role": "secondary",
+        "displayName": "대기의 호박색 (다크)",
+        "canonical": "oklch(0.8 0.13 75)",
+        "tonalRamp": [
+          "oklch(0.15 0.13 75.0)",
+          "oklch(0.27 0.13 75.0)",
+          "oklch(0.38 0.13 75.0)",
+          "oklch(0.5 0.13 75.0)",
+          "oklch(0.62 0.13 75.0)",
+          "oklch(0.74 0.13 75.0)",
+          "oklch(0.85 0.13 75.0)",
+          "oklch(0.95 0.13 75.0)"
+        ]
+      },
+      "destructive-dark": {
+        "role": "secondary",
+        "displayName": "실패의 빨강 (다크)",
+        "canonical": "oklch(0.7 0.18 25)",
+        "tonalRamp": [
+          "oklch(0.15 0.18 25.0)",
+          "oklch(0.27 0.18 25.0)",
+          "oklch(0.38 0.18 25.0)",
+          "oklch(0.5 0.18 25.0)",
+          "oklch(0.62 0.18 25.0)",
+          "oklch(0.74 0.18 25.0)",
+          "oklch(0.85 0.18 25.0)",
+          "oklch(0.95 0.18 25.0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "KPI 숫자. 색으로 의미를 입힌다."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "페이지 제목. PageHeader가 그린다."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "카드 제목과 블록 제목. CardTitle의 기본값."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "본문. 목록 행 제목은 같은 크기에 600."
+      },
+      "body-small": {
+        "displayName": "Body small",
+        "purpose": "설명과 폼 입력."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "버튼 라벨."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "KPI 제목, 섹션 라벨, 배지, 표 머리글."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "대문자 카테고리, 메뉴와 단계의 번호, 퍼센트. tabular-nums를 쓴다."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "HTML과 마크다운 편집 textarea, 파일 경로, 커밋 해시, slug. 시스템 monospace."
+      }
+    },
+    "shadows": [
+      {
+        "name": "overlay",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "팝오버, 드롭다운, select 목록처럼 떠 있는 레이어."
+      },
+      {
+        "name": "modal",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.15), 0 8px 10px -6px rgb(0 0 0 / 0.15)",
+        "purpose": "다이얼로그, 확인 창, 모바일 사이드바 Sheet처럼 화면을 덮는 레이어."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-change",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "hover와 포커스의 배경색·링 전환."
+      },
+      {
+        "name": "pulse",
+        "value": "2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "purpose": "로딩 문구와 진행 중인 단계 번호의 맥박. prefers-reduced-motion에서는 꺼진다."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "화면의 주된 행동 하나. 유일하게 색을 꽉 채운 면이다.",
+      "html": "<button class=\"ds-btn-primary\">새 포스트 생성</button>",
+      "css": ".ds-btn-primary { font: 500 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; height: 2.25rem; padding: 0 1rem; border: 1px solid transparent; border-radius: calc(0.5rem - 2px); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); outline: none; background: var(--primary); color: var(--primary-foreground); } .ds-btn-primary:hover { background: color-mix(in oklch, var(--primary) 90%, transparent); } .ds-btn-primary:focus-visible { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Tonal Button",
+      "kind": "button",
+      "refersTo": "button-tonal",
+      "description": "두 번째 행동. 코드의 outline variant이고 테두리가 없다.",
+      "html": "<button class=\"ds-btn-tonal\">대기 중인 포스트 검토</button>",
+      "css": ".ds-btn-tonal { font: 500 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; height: 2.25rem; padding: 0 1rem; border: 1px solid transparent; border-radius: calc(0.5rem - 2px); cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); outline: none; background: var(--input); color: var(--foreground); } .ds-btn-tonal:hover { background: color-mix(in oklch, var(--input) 60%, transparent); } .ds-btn-tonal:focus-visible { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "다른 화면으로 가는 글자 링크. 글자 화살표를 붙여 쓴다.",
+      "html": "<a class=\"ds-btn-link\" href=\"#\">전체 보기 →</a>",
+      "css": ".ds-btn-link { font: 500 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: var(--pencil); text-decoration: underline; text-decoration-color: color-mix(in oklch, var(--foreground) 30%, transparent); text-underline-offset: 4px; } .ds-btn-link:hover, .ds-btn-link:focus-visible { text-decoration: underline; outline: none; }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-progress",
+      "description": "작업 상태. 색 10% 면에 같은 색 글자, 각진 모서리.",
+      "html": "<span class=\"ds-badge ds-badge-progress\">작성 중</span> <span class=\"ds-badge ds-badge-success\">완료</span> <span class=\"ds-badge ds-badge-warning\">PR 승인 대기</span> <span class=\"ds-badge ds-badge-destructive\">실패</span> <span class=\"ds-badge ds-badge-neutral\">대기중</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; font: 600 0.75rem/1.33 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; padding: 0.125rem 0.375rem; border-radius: calc(0.5rem - 4px); white-space: nowrap; } .ds-badge-progress { background: color-mix(in oklch, var(--pencil) 10%, transparent); color: var(--pencil); } .ds-badge-success { background: color-mix(in oklch, var(--success) 10%, transparent); color: var(--success); } .ds-badge-warning { background: color-mix(in oklch, var(--warning) 10%, transparent); color: var(--warning); } .ds-badge-destructive { background: color-mix(in oklch, var(--destructive) 10%, transparent); color: var(--destructive); } .ds-badge-neutral { background: var(--secondary); color: var(--secondary-foreground); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "채움 바탕에 테두리 없는 입력창. 검색도 아이콘 없이 placeholder로 알린다.",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"주제로 검색...\" />",
+      "css": ".ds-input { font: 400 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; width: 100%; height: 2.25rem; padding: 0.25rem 0.75rem; background: var(--input); color: var(--foreground); border: 1px solid transparent; border-radius: calc(0.5rem - 2px); outline: none; transition: box-shadow 150ms; } .ds-input::placeholder { color: var(--muted-foreground); } .ds-input:focus-visible { border-color: var(--ring); box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 50%, transparent); }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "면 없이 굵은 제목과 여백으로 영역을 만든다. 테두리도 그림자도 없다.",
+      "html": "<section class=\"ds-card\"><h3 class=\"ds-card-title\">최근 작업</h3><p class=\"ds-card-body\">면을 깔지 않고 여백과 제목으로 영역을 나눈다.</p></section>",
+      "css": ".ds-card { background: var(--card); color: var(--card-foreground); border-radius: 0.5rem; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; } .ds-card-title { margin: 0; font: 700 1.125rem/1.25 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; letter-spacing: -0.025em; } .ds-card-body { margin: 0; font: 400 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: var(--muted-foreground); }"
+    },
+    {
+      "name": "KPI 숫자 블록",
+      "kind": "custom",
+      "refersTo": "kpi-card",
+      "description": "작은 라벨, 크고 굵은 숫자, 설명 한 줄. 숫자의 색이 의미를 전한다.",
+      "html": "<div class=\"ds-kpi\"><p class=\"ds-kpi-label\">성공률</p><p class=\"ds-kpi-value\">94%</p><p class=\"ds-kpi-desc\">완료 비율</p></div>",
+      "css": ".ds-kpi { background: var(--card); border-radius: 0.5rem; padding: 0.875rem 1rem; } .ds-kpi-label { margin: 0; font: 600 0.75rem/1.33 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: var(--muted-foreground); } .ds-kpi-value { margin: 0.375rem 0 0; font: 700 2.25rem/1 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; color: var(--pencil); } .ds-kpi-desc { margin: 0.5rem 0 0; font: 400 0.75rem/1.33 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: var(--muted-foreground); }"
+    },
+    {
+      "name": "번호 매긴 메뉴",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "아이콘 대신 번호. 현재 메뉴는 면 없이 굵은 먹색 이름과 번호로 표시하고, hover에서만 얕은 회색이 깔린다.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\"><span class=\"ds-nav-num\">01</span>대시보드</a><a class=\"ds-nav-item ds-nav-item-active\" href=\"#\" aria-current=\"page\"><span class=\"ds-nav-num\">02</span>포스트 생성</a><a class=\"ds-nav-item\" href=\"#\"><span class=\"ds-nav-num\">03</span>작업 목록</a></nav>",
+      "css": ".ds-nav { background: var(--sidebar); padding: 0.5rem; border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; width: 14rem; } .ds-nav-item { display: flex; align-items: center; gap: 0.75rem; height: 2.25rem; padding: 0 0.5rem; border-radius: calc(0.5rem - 2px); font: 400 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: var(--muted-foreground); text-decoration: none; outline: none; transition: background-color 150ms; } .ds-nav-num { font: 400 0.75rem/1 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; color: color-mix(in oklch, var(--muted-foreground) 60%, transparent); } .ds-nav-item:hover, .ds-nav-item:focus-visible { background: var(--sidebar-accent); color: var(--foreground); } .ds-nav-item-active { background: var(--sidebar-accent); color: var(--foreground); font-weight: 600; } .ds-nav-item-active .ds-nav-num { color: var(--pencil); }"
+    },
+    {
+      "name": "목록 행",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "박스가 아니라 구분선으로 나뉜 행. hover에서 얕은 회색으로 짙어진다.",
+      "html": "<div class=\"ds-rows\"><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-top\"><span class=\"ds-row-title\">React Query refetch의 cancelRefetch 옵션</span><span class=\"ds-row-badge\">PR 승인 대기</span></span><span class=\"ds-row-meta\"><span class=\"ds-row-cat\">TECH</span><span>2시간 전</span></span><span class=\"ds-row-bar\"><span style=\"width:90%\"></span></span></a><a class=\"ds-row\" href=\"#\"><span class=\"ds-row-top\"><span class=\"ds-row-title\">주토피아2 영화 리뷰</span></span><span class=\"ds-row-meta\"><span class=\"ds-row-cat\">LIFE</span><span>2026년 2월 13일</span></span></a></div>",
+      "css": ".ds-rows { background: var(--card); border-radius: 0.5rem; padding: 0.5rem; } .ds-row { display: block; padding: 0.75rem 0.5rem; border-radius: calc(0.5rem - 2px); color: var(--foreground); text-decoration: none; outline: none; transition: background-color 150ms; } .ds-row + .ds-row { box-shadow: 0 -1px 0 color-mix(in oklch, var(--border) 70%, transparent); } .ds-row:hover, .ds-row:focus-visible { background: var(--background); } .ds-row-top { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem; } .ds-row-title { font: 600 1rem/1.5 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; } .ds-row-badge { font: 600 0.75rem/1.33 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; padding: 0.125rem 0.375rem; border-radius: calc(0.5rem - 4px); background: color-mix(in oklch, var(--warning) 10%, transparent); color: var(--warning); white-space: nowrap; } .ds-row-meta { display: flex; justify-content: space-between; font: 400 0.75rem/1.33 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; font-variant-numeric: tabular-nums; color: var(--muted-foreground); } .ds-row-cat { font-family: var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; letter-spacing: 0.025em; } .ds-row-bar { display: block; height: 0.25rem; margin-top: 0.5rem; border-radius: 9999px; background: color-mix(in oklch, var(--pencil) 15%, transparent); overflow: hidden; } .ds-row-bar > span { display: block; height: 100%; background: var(--pencil); }"
+    },
+    {
+      "name": "번호 매긴 단계 목록",
+      "kind": "custom",
+      "refersTo": "list-row",
+      "description": "작업 상세 화면 맨 위의 가로 노드 9개. 번호가 든 원을 선으로 잇는다. 완료는 먹색 채움, 진행 중은 먹색 링에 맥박, 오류는 빨간 링, 대기는 가는 링. 끝난 노드를 누르면 아래 줄에 그 단계의 로그가 나온다. (이 샘플의 css는 예전 세로 목록 기준이다. 구현은 components/job/JobProgress.tsx)",
+      "html": "<ol class=\"ds-steps\"><li class=\"ds-step ds-step-done\"><span class=\"ds-step-num\">01</span><span>리서치</span></li><li class=\"ds-step ds-step-current\"><span class=\"ds-step-num\">02</span><span>초안 작성 <em>진행 중</em></span></li><li class=\"ds-step ds-step-pending\"><span class=\"ds-step-num\">03</span><span>AI 검토</span></li><li class=\"ds-step ds-step-error\"><span class=\"ds-step-num\">04</span><span>콘텐츠 개선</span></li></ol>",
+      "css": ".ds-steps { list-style: none; margin: 0; padding: 1rem; background: var(--card); border-radius: 0.5rem; display: flex; flex-direction: column; gap: 0.875rem; width: 16rem; } .ds-step { display: flex; gap: 0.75rem; font: 500 0.875rem/1.43 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; } .ds-step-num { width: 1.25rem; font: 400 0.75rem/1.67 var(--font-suit), -apple-system, 'Apple SD Gothic Neo', sans-serif; font-variant-numeric: tabular-nums; } .ds-step em { font-style: normal; font-size: 0.75rem; margin-left: 0.5rem; } .ds-step-done { color: var(--foreground); } .ds-step-current { color: var(--pencil); font-weight: 600; } .ds-step-current .ds-step-num { animation: ds-pulse 2s cubic-bezier(0.4,0,0.6,1) infinite; } .ds-step-pending { color: color-mix(in oklch, var(--muted-foreground) 60%, transparent); } .ds-step-error { color: var(--destructive); font-weight: 600; } @keyframes ds-pulse { 50% { opacity: 0.5; } } @media (prefers-reduced-motion: reduce) { .ds-step-current .ds-step-num { animation: none; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "흑과 백",
+    "overview": "AI Agent는 AI가 쓴 초안을 사람이 읽고 고쳐서 내보내는 편집 도구다. 화면도 그 일을 닮았다. 흰 면 위에 먹색 글자가 놓인다. 색은 무채색만 쓰고, 사람의 눈이 가야 할 자리는 색이 아니라 굵기, 밑줄, 먹색으로 채운 면이 짚는다. 유채색은 상태를 알리는 세 가지뿐이다.\n\n영역은 선으로 가두지 않는다. 카드, 사이드바, 입력창 모두 바탕과 같은 백색이고, 영역은 여백과 굵은 제목이 나눈다. 회색은 hover에서만 얕게 나타난다. 아이콘도 쓰지 않는다. 위계와 의미는 굵기, 크기, 색이 맡는다. 부품은 인쇄물처럼 단정하고 절제되어 있다. 눈에 들어오는 것은 부품이 아니라 내용이다.\n\n밀도는 높다. 자리를 비웠다 돌아온 사람이 한 화면에서 여러 작업의 상태를 훑어야 하기 때문이다. 기본 shadcn 대시보드(회색 테두리 카드에 lucide 아이콘)와 여백 넓은 마케팅형 화면은 이 체계가 피하는 모습이다.",
+    "keyCharacteristics": [
+      "바깥 박스 테두리가 없다. 면의 톤 차이로 영역을 나눈다.",
+      "아이콘이 없다. 텍스트 라벨, 번호, 글자 기호(→ ←)가 대신한다.",
+      "팔레트는 무채색이다. 강조도 먹색이고, 유채색은 상태색 세 가지뿐이다.",
+      "서체는 SUIT 하나다. 위계는 굵기와 크기로 만든다.",
+      "루트 글자 크기 87.5%의 높은 밀도를 쓴다.",
+      "라이트와 다크가 같은 규칙으로 동작한다."
+    ],
+    "rules": [
+      {
+        "name": "무채색 규칙",
+        "body": "면과 글자에는 chroma 0인 값만 쓴다. 색 기가 도는 회색을 섞지 않는다. `pencil`은 링크, 현재 위치, 진행 중에만 쓰고, 본문과 같은 먹색이므로 밑줄이나 굵은 글씨를 함께 쓴다. 차트는 명도 단계로 계열을 나눈다.",
+        "section": "colors"
+      },
+      {
+        "name": "옅은 면 규칙",
+        "body": "상태는 그 색을 10% 농도로 깐 면 위에 같은 색 글자로 표시한다. 색을 꽉 채운 배지나 버튼은 만들지 않는다. 꽉 채운 면은 먹색 주요 버튼 하나뿐이다.",
+        "section": "colors"
+      },
+      {
+        "name": "토큰만 쓰는 규칙",
+        "body": "`text-red-500` 같은 Tailwind 기본 팔레트를 직접 쓰지 않는다. 차트도 `--chart-1`부터 `--chart-5`까지의 변수를 쓴다. 그래야 다크 모드가 따라온다.",
+        "section": "colors"
+      },
+      {
+        "name": "서체는 하나 규칙",
+        "body": "제목, 숫자, 본문, 라벨을 모두 SUIT로 쓴다. 위계는 굵기(400, 500, 600, 700)와 크기로 만든다. 두 번째 서체를 들이지 않는다. 코드 편집 영역과 `<code>`의 시스템 monospace만 예외다.",
+        "section": "typography"
+      },
+      {
+        "name": "고정폭 숫자는 정렬이 필요한 곳에만 규칙",
+        "body": "`tabular-nums`는 번호, 퍼센트, KPI, 점수처럼 자릿수가 맞아야 하거나 값이 바뀌는 숫자에 쓴다. \"오후 11:11\" 같은 문장 속 시각에는 쓰지 않는다. SUIT의 고정폭 1은 간격이 벌어져 보인다.",
+        "section": "typography"
+      },
+      {
+        "name": "떠 있는 것만 그림자 규칙",
+        "body": "페이지에 붙어 있는 면에는 그림자를 주지 않는다. 그림자는 페이지 위에 떠서 다른 내용을 가리는 레이어에만 쓴다. 이 레이어들은 테두리 대신 그림자로 구분된다.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 영역을 여백과 굵은 제목으로 나눈다. 목록은 행 사이 구분선으로 나눈다.",
+      "Do 아이콘이 필요해 보이는 자리에 텍스트 라벨, 번호(`01`), 글자 기호(→ ←)를 쓴다.",
+      "Do 상태를 색 10% 면과 같은 색 글자로 표시한다.",
+      "Do 페이지 제목은 `PageHeader`, 큰 숫자는 `KPIStatCard`, 빈 화면은 `EmptyState`, 로딩은 `LoadingText`를 쓴다.",
+      "Do 색은 CSS 변수 토큰으로만 쓴다. 차트는 `--chart-1`부터 `--chart-5`까지를 쓴다.",
+      "Do 위계는 SUIT의 굵기와 크기로 만든다. 제목과 큰 숫자는 700, 목록 행 제목과 라벨은 600, 버튼은 500, 본문은 400이다.",
+      "Do 새 화면도 라이트와 다크 양쪽에서 확인한다."
+    ],
+    "donts": [
+      "Don't 카드, 패널, 입력창, 알림에 바깥 테두리를 두지 않는다. 선은 목록 행 사이의 구분선뿐이다.",
+      "Don't 아이콘을 쓰지 않는다. 체크박스의 체크 표시와 select의 화살표 같은 폼 컨트롤 글리프만 예외다.",
+      "Don't 기본 shadcn 대시보드(회색 테두리 카드에 lucide 아이콘)로 돌아가지 않는다.",
+      "Don't 여백 넓은 마케팅형 화면을 만들지 않는다. 큰 여백과 큰 글자로 한 화면의 정보를 줄이지 않는다.",
+      "Don't 면과 글자에 유채색이나 색 기가 도는 회색을 쓰지 않는다. 유채색은 상태색 세 가지뿐이다.",
+      "Don't 페이지에 붙어 있는 면에 그림자를 주지 않는다.",
+      "Don't 두 번째 서체를 들이지 않는다. 코드 편집 영역과 `<code>`의 시스템 monospace만 예외다.",
+      "Don't 문장 속 시각에 `tabular-nums`를 걸지 않는다.",
+      "Don't `text-${tone}`처럼 Tailwind 클래스 이름을 조립하지 않는다. 완성된 이름을 그대로 써야 빌드에 포함된다.",
+      "Don't 회색 면을 깔지 않는다. 회색은 hover(`hover:bg-accent`)와 진행 막대의 트랙에만 쓴다."
+    ]
+  }
+}
