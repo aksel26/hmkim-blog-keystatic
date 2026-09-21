@@ -102,7 +102,7 @@ export default function JobDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-sm text-muted-foreground">불러오는 중...</p>
+        <p role="status" className="animate-pulse text-sm text-muted-foreground">불러오는 중…</p>
       </div>
     );
   }
@@ -116,8 +116,8 @@ export default function JobDetailPage() {
         >
           ← 목록
         </Link>
-        <div className="py-12 text-center">
-          <p className="text-destructive">
+        <div className="py-8 text-center">
+          <p className="font-medium text-destructive">
             {error?.message || "작업을 찾을 수 없습니다"}
           </p>
           <Link href="/jobs" className="text-sm text-muted-foreground hover:text-foreground mt-2 block">
@@ -161,12 +161,12 @@ export default function JobDetailPage() {
           >
             ← 목록
           </Link>
-          <h1 className="text-2xl font-semibold tracking-tight mt-2 truncate">
+          <h1 className="text-3xl font-bold tracking-tight mt-2 truncate">
             {job.topic}
           </h1>
-          <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
-            <span className="capitalize">{job.category}</span>
-            {job.template && <span className="capitalize">{job.template}</span>}
+          <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
+            <span className="uppercase tracking-wide text-pencil">{job.category}</span>
+            {job.template && <span className="uppercase tracking-wide">{job.template}</span>}
             <span>{formatDate(job.createdAt)}</span>
           </div>
         </div>
@@ -177,13 +177,7 @@ export default function JobDetailPage() {
               {getStatusDisplayText(displayStatus)}
             </Badge>
             {isConnected && (
-              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-foreground opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-foreground" />
-                </span>
-                실시간
-              </span>
+              <span className="animate-pulse text-xs font-medium text-pencil">실시간</span>
             )}
           </div>
           {job.prResult?.prUrl && (
@@ -212,34 +206,27 @@ export default function JobDetailPage() {
         </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        {/* Progress - 좌측 (2/5) */}
-        <div className="lg:col-span-2">
-          <JobProgress
-            progress={displayProgress}
-            logs={job.progressLogs}
-            isLive={isConnected}
-            currentStep={displayStep}
-            jobId={jobId}
-            jobStatus={displayStatus}
-            onActionComplete={() => refetch()}
-          />
-        </div>
+      {/* 진행 상황: 가로 노드 */}
+      <JobProgress
+        progress={displayProgress}
+        logs={job.progressLogs}
+        isLive={isConnected}
+        currentStep={displayStep}
+        jobId={jobId}
+        jobStatus={displayStatus}
+        onActionComplete={() => refetch()}
+      />
 
-        {/* Content Preview - 우측 (3/5) */}
-        <div className="lg:col-span-3">
-          <ContentPreview
-            jobId={jobId}
-            finalContent={job.finalContent}
-            metadata={job.metadata}
-            thumbnailData={job.thumbnailData}
-            editable={displayStatus === "human_review" || displayStatus === "pending_deploy"}
-            onContentSave={handleContentSave}
-            onThumbnailRegenerated={() => refetch()}
-          />
-        </div>
-      </div>
+      {/* 미리보기(7) + 메타데이터(3). 나누는 그리드는 ContentPreview 안에 있다 */}
+      <ContentPreview
+        jobId={jobId}
+        finalContent={job.finalContent}
+        metadata={job.metadata}
+        thumbnailData={job.thumbnailData}
+        editable={displayStatus === "human_review" || displayStatus === "pending_deploy"}
+        onContentSave={handleContentSave}
+        onThumbnailRegenerated={() => refetch()}
+      />
 
       {/* Human Review Panel */}
       {displayStatus === "human_review" && (
@@ -263,41 +250,9 @@ export default function JobDetailPage() {
 
       {/* Error Display */}
       {displayStatus === "failed" && job.error && (
-        <div className="border-t border-border pt-5">
-          <p className="text-sm font-medium text-destructive mb-1">오류가 발생했습니다</p>
-          <p className="text-sm text-muted-foreground">{job.error}</p>
-        </div>
-      )}
-
-      {/* Completion Info */}
-      {displayStatus === "completed" && (
-        <div className="border-t border-border pt-5">
-          <p className="text-sm font-medium mb-2">작업 완료</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
-            {job.filepath && (
-              <span>
-                파일 <code className="bg-muted px-1.5 py-0.5 rounded text-xs ml-1">{job.filepath}</code>
-              </span>
-            )}
-            {job.commitHash && (
-              <span>
-                커밋 <code className="bg-muted px-1.5 py-0.5 rounded text-xs ml-1">{job.commitHash.slice(0, 7)}</code>
-              </span>
-            )}
-            {job.prResult && (
-              <span>
-                PR{" "}
-                <a
-                  href={job.prResult.prUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-foreground hover:underline font-medium ml-1"
-                >
-                  #{job.prResult.prNumber}
-                </a>
-              </span>
-            )}
-          </div>
+        <div className="rounded-lg bg-destructive/10 p-4">
+          <p className="text-lg font-bold tracking-tight text-destructive mb-1">오류가 발생했습니다</p>
+          <p className="text-sm">{job.error}</p>
         </div>
       )}
     </div>

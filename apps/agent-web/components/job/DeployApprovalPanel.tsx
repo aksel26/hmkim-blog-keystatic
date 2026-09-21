@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, GitPullRequest, CheckCircle, XCircle, FileText } from "lucide-react";
 
 interface DeployApprovalPanelProps {
   jobId: string;
@@ -48,12 +47,9 @@ export function DeployApprovalPanel({
   };
 
   return (
-    <Card className="border-warning">
+    <Card className="bg-warning/10 px-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <GitPullRequest className="h-5 w-5 text-warning" />
-          PR 생성 승인
-        </CardTitle>
+        <CardTitle className="text-warning">PR 생성 승인</CardTitle>
         <CardDescription>
           콘텐츠 검증이 완료되었습니다. PR을 생성하시겠습니까?
         </CardDescription>
@@ -61,24 +57,21 @@ export function DeployApprovalPanel({
       <CardContent className="space-y-4">
         {/* File Info */}
         {filepath && (
-          <div className="p-4 bg-muted rounded-lg">
-            <div className="flex items-center gap-2 text-sm">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">생성된 파일:</span>
-            </div>
-            <code className="text-sm mt-1 block">{filepath}</code>
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground">생성된 파일</p>
+            <code className="font-mono text-sm mt-1 block">{filepath}</code>
           </div>
         )}
 
         {/* Info Text */}
         <div className="text-sm text-muted-foreground space-y-1">
-          <p>• <strong>승인</strong>: 새 브랜치를 생성하고 PR을 요청합니다.</p>
-          <p>• <strong>반려</strong>: PR 생성을 건너뛰고 완료합니다. 파일은 로컬에 유지됩니다.</p>
+          <p><strong className="text-foreground">승인</strong> 새 브랜치를 생성하고 PR을 요청합니다.</p>
+          <p><strong className="text-foreground">반려</strong> PR 생성을 건너뛰고 완료합니다. 파일은 로컬에 유지됩니다.</p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+          <div className="p-3 text-sm font-medium text-destructive bg-destructive/10 rounded-md">
             {error}
           </div>
         )}
@@ -90,12 +83,7 @@ export function DeployApprovalPanel({
             disabled={isSubmitting}
             className="flex-1"
           >
-            {isSubmitting && action === "approve" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            )}
-            승인 - PR 생성
+            {isSubmitting && action === "approve" ? "PR 생성 중…" : "승인 · PR 생성"}
           </Button>
 
           <Button
@@ -104,12 +92,7 @@ export function DeployApprovalPanel({
             disabled={isSubmitting}
             className="flex-1"
           >
-            {isSubmitting && action === "reject" ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <XCircle className="mr-2 h-4 w-4" />
-            )}
-            반려 - PR 생성 안함
+            {isSubmitting && action === "reject" ? "처리 중…" : "반려 · PR 생성 안 함"}
           </Button>
         </div>
       </CardContent>

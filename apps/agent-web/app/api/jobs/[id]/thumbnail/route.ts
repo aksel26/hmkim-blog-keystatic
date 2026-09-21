@@ -38,13 +38,14 @@ export async function POST(
     }
 
     const body = await request.json().catch(() => ({}));
-    const customPrompt = body.prompt as string | undefined;
+    // body.prompt는 화풍(style)이다. 그릴 내용과 요구사항은 생성기가 메타데이터로 붙인다
+    const style = typeof body.prompt === "string" ? body.prompt : undefined;
 
     const result = await generateThumbnail(
       metadata,
       (job.category || "tech") as Category,
       undefined,
-      customPrompt,
+      style,
     );
 
     if (!result) {
@@ -66,9 +67,8 @@ export async function POST(
     await jobManager.logProgress(jobId, {
       step: "thumbnail",
       status: "completed",
-      message: customPrompt
-        ? "커스텀 프롬프트로 썸네일을 재생성했습니다."
-        : "썸네일을 재생성했습니다.",
+      message: "썸네일을 재생성했습니다.",
+      data: { style: style?.trim() || DEFAULT_THUMBNAIL_STYLE },
     });
 
     return NextResponse.json({
@@ -76,7 +76,7 @@ export async function POST(
       thumbnailData: result.buffer,
       mimeType: result.mimeType,
       path: result.path,
-      prompt: customPrompt || DEFAULT_THUMBNAIL_STYLE,
+      prompt: style?.trim() || DEFAULT_THUMBNAIL_STYLE,
     });
   } catch (error) {
     console.error("Failed to regenerate thumbnail:", error);

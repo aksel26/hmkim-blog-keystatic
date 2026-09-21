@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, AlertCircle, XCircle, FileText, Eye, Edit, Save, Loader2, RefreshCw, Upload } from "lucide-react";
 import type { PostMetadata } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { ResizableSplit } from "@/components/shared/ResizableSplit";
+import { DEFAULT_THUMBNAIL_STYLE, THUMBNAIL_PRESETS } from "@agent/ai-agents/config/thumbnail-presets";
 
 interface ContentPreviewProps {
   jobId: string;
@@ -21,8 +23,6 @@ interface ContentPreviewProps {
   onThumbnailRegenerated?: (thumbnailData: string) => void;
 }
 
-const DEFAULT_THUMBNAIL_STYLE =
-  "clay morphism style, isometric, pastel tone gradient background";
 
 type Tab = "content" | "metadata" | "seo";
 
@@ -62,10 +62,8 @@ export function ContentPreview({
   onContentSave,
   onThumbnailRegenerated,
 }: ContentPreviewProps) {
-  // 탭을 직접 고르기 전에는 콘텐츠 도착 여부를 따라간다
-  // (초기값으로만 두면 작업 시작부터 지켜본 경우 human_review에서도 메타데이터 탭에 머문다)
-  const [selectedTab, setSelectedTab] = useState<Tab | null>(null);
-  const activeTab: Tab = selectedTab ?? (finalContent ? "content" : "metadata");
+  // 본문은 왼쪽(7)에 늘 보이고, 오른쪽(3) 패널만 메타데이터와 SEO를 오간다
+  const [sideTab, setSideTab] = useState<Exclude<Tab, "content">>("metadata");
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -265,22 +263,17 @@ export function ContentPreview({
     return items;
   }, [cleanContent, metadata]);
 
-  const getIcon = (status: CheckItem["status"]) => {
-    switch (status) {
-      case "pass":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "warn":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "fail":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-    }
-  };
+  // 아이콘 대신 색을 입힌 낱말로 결과를 알린다
+  const statusText = { pass: "통과", warn: "주의", fail: "미흡" } as const;
+  const statusColor = { pass: "text-success", warn: "text-warning", fail: "text-destructive" } as const;
+  // Tailwind는 조립한 클래스 이름을 감지하지 못하므로 완성된 이름을 그대로 둔다
+  const scoreText = (score: number) => (score >= 80 ? "text-success" : score >= 60 ? "text-warning" : "text-destructive");
+  const scoreBg = (score: number) => (score >= 80 ? "bg-success" : score >= 60 ? "bg-warning" : "bg-destructive");
 
   const passCount = seoChecks.filter((c) => c.status === "pass").length;
   const seoScore = Math.round((passCount / seoChecks.length) * 100);
 
-  const tabs: Array<{ id: Tab; label: string; disabled: boolean }> = [
-    { id: "content", label: "콘텐츠", disabled: !finalContent },
+  const sideTabs: Array<{ id: Exclude<Tab, "content">; label: string; disabled: boolean }> = [
     { id: "metadata", label: "메타데이터", disabled: !metadata },
     { id: "seo", label: `SEO ${finalContent ? `${seoScore}%` : ""}`, disabled: !finalContent },
   ];
@@ -306,8 +299,8 @@ export function ContentPreview({
     }
   };
 
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderContent = (tab: Tab) => {
+    switch (tab) {
       case "content":
         if (isEditing) {
           return (
@@ -332,19 +325,14 @@ export function ContentPreview({
                   onClick={handleSave}
                   disabled={isSaving}
                 >
-                  {isSaving ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Save className="mr-2 h-4 w-4" />
-                  )}
-                  저장
+                  {isSaving ? "저장 중…" : "저장"}
                 </Button>
               </div>
             </div>
           );
         }
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="prose prose-sm prose-neutral prose-code:before:content-none prose-code:after:content-none dark:prose-invert max-w-none">
             <ReactMarkdown>{cleanContent}</ReactMarkdown>
           </div>
         );
@@ -358,19 +346,19 @@ export function ContentPreview({
                 썸네일
               </label>
               {currentThumbnailData ? (
-                <div className="mt-1 rounded-lg overflow-hidden border bg-muted">
+                <div className="mt-1">
                   <Image
                     src={`data:image/png;base64,${currentThumbnailData}`}
                     alt="썸네일 미리보기"
                     width={1280}
                     height={720}
                     unoptimized
-                    className="h-auto w-full object-cover"
+                    className="h-auto w-full rounded-md object-cover outline outline-1 -outline-offset-1 outline-black/10 dark:outline-white/10"
                   />
                 </div>
               ) : (
                 <div
-                  className="mt-1 rounded-lg border bg-muted flex items-center justify-center text-muted-foreground text-sm"
+                  className="mt-1 rounded-md border border-dashed border-input flex items-center justify-center text-muted-foreground text-sm"
                   style={{ aspectRatio: '16/9' }}
                 >
                   썸네일 없음
@@ -383,11 +371,34 @@ export function ContentPreview({
               )}
               {editable && (
                 <div className="mt-2 space-y-2">
+                  {/* 화풍 프리셋. 누르면 아래 입력창에 채워지고, 입력창에서 고쳐 쓸 수도 있다 */}
+                  <div className="flex flex-wrap gap-1" role="group" aria-label="썸네일 화풍 프리셋">
+                    {THUMBNAIL_PRESETS.map((preset) => {
+                      const selected = thumbnailPrompt.trim() === preset.style;
+                      return (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => setThumbnailPrompt(preset.style)}
+                          disabled={isRegeneratingThumbnail}
+                          className={cn(
+                            "rounded-md px-2 py-1 text-xs transition-[color,background-color,box-shadow,scale] duration-150 ease-out active:scale-[0.96] disabled:opacity-50",
+                            selected
+                              ? "bg-primary text-primary-foreground font-semibold"
+                              : "shadow-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                          )}
+                        >
+                          {preset.name}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <div className="flex gap-2">
                     <Input
                       value={thumbnailPrompt}
                       onChange={(e) => setThumbnailPrompt(e.target.value)}
-                      placeholder="스타일 프롬프트를 입력하세요"
+                      placeholder="화풍을 직접 입력하세요 (영문 권장)"
                       className="text-sm"
                       disabled={isRegeneratingThumbnail}
                     />
@@ -398,12 +409,7 @@ export function ContentPreview({
                       disabled={isRegeneratingThumbnail}
                       className="shrink-0"
                     >
-                      {isRegeneratingThumbnail ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-4 w-4" />
-                      )}
-                      <span className="ml-1.5">재생성</span>
+                      {isRegeneratingThumbnail ? "생성 중…" : "재생성"}
                     </Button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -421,12 +427,7 @@ export function ContentPreview({
                       disabled={isUploadingThumbnail}
                       className="shrink-0"
                     >
-                      {isUploadingThumbnail ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Upload className="h-4 w-4" />
-                      )}
-                      <span className="ml-1.5">이미지 업로드</span>
+                      {isUploadingThumbnail ? "업로드 중…" : "이미지 업로드"}
                     </Button>
                     <span className="text-xs text-muted-foreground">
                       PNG, JPEG, WebP (최대 5MB)
@@ -463,11 +464,8 @@ export function ContentPreview({
               </label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {metadata.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-2 py-1 bg-muted rounded-md text-sm"
-                  >
-                    {tag}
+                  <span key={tag} className="text-sm text-muted-foreground">
+                    #{tag}
                   </span>
                 ))}
               </div>
@@ -501,30 +499,16 @@ export function ContentPreview({
         return (
           <div className="space-y-4">
             {/* 점수 헤더 */}
-            <div className="flex items-center justify-between pb-3 border-b">
-              <span className="text-sm font-medium">SEO 체크리스트</span>
-              <span
-                className={`text-lg font-bold ${
-                  seoScore >= 80
-                    ? "text-green-500"
-                    : seoScore >= 60
-                      ? "text-yellow-500"
-                      : "text-red-500"
-                }`}
-              >
+            <div className="flex items-baseline justify-between">
+              <span className="text-xs font-semibold text-muted-foreground">SEO 체크리스트</span>
+              <span className={`text-3xl leading-none font-bold tabular-nums ${scoreText(seoScore)}`}>
                 {seoScore}점
               </span>
             </div>
             {/* 프로그레스 바 */}
-            <div className="w-full bg-muted rounded-full h-2">
+            <div className="w-full bg-foreground/10 rounded-full h-1.5">
               <div
-                className={`h-2 rounded-full transition-all ${
-                  seoScore >= 80
-                    ? "bg-green-500"
-                    : seoScore >= 60
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
-                }`}
+                className={`h-1.5 rounded-full transition-[width] duration-300 ease-out ${scoreBg(seoScore)}`}
                 style={{ width: `${seoScore}%` }}
               />
             </div>
@@ -533,21 +517,15 @@ export function ContentPreview({
               {seoChecks.map((check, i) => (
                 <div
                   key={i}
-                  className="flex items-start gap-2 text-sm border-b border-border/50 pb-2 last:border-0 last:pb-0"
+                  className="flex items-start gap-3 text-sm"
                 >
-                  <div className="mt-0.5">{getIcon(check.status)}</div>
+                  <span className={`w-8 shrink-0 text-xs font-semibold leading-5 ${statusColor[check.status]}`}>
+                    {statusText[check.status]}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-medium">{check.label}</span>
-                      <span
-                        className={`text-xs ${
-                          check.status === "pass"
-                            ? "text-green-600"
-                            : check.status === "warn"
-                              ? "text-yellow-600"
-                              : "text-red-600"
-                        }`}
-                      >
+                      <span className={`text-xs ${statusColor[check.status]}`}>
                         {check.message}
                       </span>
                     </div>
@@ -566,65 +544,70 @@ export function ContentPreview({
     }
   };
 
+  const emptyState = (title: string) => (
+    <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
+      <p className="text-xl font-bold tracking-tight text-foreground">{title}</p>
+      <p className="text-xs mt-1">작업이 진행되면 여기에 표시됩니다</p>
+    </div>
+  );
+  // SEO는 본문이 있어야 계산된다. 고른 탭을 쓸 수 없으면 메타데이터로 돌아간다
+  const activeSideTab = sideTabs.find((t) => t.id === sideTab && !t.disabled)?.id ?? "metadata";
+
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">콘텐츠 미리보기</CardTitle>
-          <div className="flex items-center gap-2">
-            {editable && activeTab === "content" && !isEditing && finalContent && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleStartEdit}
-                className="text-xs h-7 px-3 gap-1.5"
-              >
-                <Edit className="h-3.5 w-3.5" />
-                편집
-              </Button>
-            )}
-            {isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { handleCancelEdit(); }}
-                className="text-xs h-7 px-3 gap-1.5"
-              >
-                <Eye className="h-3.5 w-3.5" />
-                미리보기
-              </Button>
-            )}
-            <div className="flex gap-1 bg-muted p-1 rounded-lg">
-              {tabs.map((tab) => (
-                <Button
-                  key={tab.id}
-                  variant={activeTab === tab.id ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => {
-                    setSelectedTab(tab.id);
-                    if (tab.id !== "content") setIsEditing(false);
-                  }}
-                  disabled={tab.disabled}
-                  className={`text-xs h-7 px-3 ${activeTab === tab.id ? "" : "hover:bg-background/50"}`}
-                >
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 overflow-hidden">
-        <div className="h-full min-h-[400px] max-h-[600px] overflow-y-auto pr-2">
-          {renderContent() || (
-            <div className="flex flex-col items-center justify-center h-[400px] text-muted-foreground">
-              <FileText className="h-12 w-12 mb-3 opacity-30" />
-              <p>아직 콘텐츠가 없습니다</p>
-              <p className="text-xs mt-1">작업이 진행되면 여기에 표시됩니다</p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    // 기본은 미리보기 7 : 메타데이터 3. 가운데 손잡이를 끌어 너비를 바꾸고, 놓은 위치는 브라우저에 기억된다
+    <ResizableSplit
+      storageKey="agent-web:job-preview-split"
+      defaultLeft={70}
+      left={
+          <Card className="flex flex-col">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle>콘텐츠 미리보기</CardTitle>
+                {editable && finalContent && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={isEditing ? handleCancelEdit : handleStartEdit}
+                    className="text-xs h-7 px-3"
+                  >
+                    {isEditing ? "미리보기" : "편집"}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden">
+              <div className="h-full min-h-[400px] max-h-[600px] overflow-y-auto pr-2">
+                {finalContent ? renderContent("content") : emptyState("아직 콘텐츠가 없습니다")}
+              </div>
+            </CardContent>
+          </Card>
+      }
+      right={
+        // SEO 체크리스트도 이 패널의 탭이다
+          <Card className="flex flex-col">
+            <CardHeader className="pb-3">
+              <div className="flex gap-1">
+                {sideTabs.map((tab) => (
+                  <Button
+                    key={tab.id}
+                    variant={activeSideTab === tab.id && !tab.disabled ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setSideTab(tab.id)}
+                    disabled={tab.disabled}
+                    className="text-xs h-7 px-3"
+                  >
+                    {tab.label}
+                  </Button>
+                ))}
+              </div>
+            </CardHeader>
+            <CardContent className="flex-1 overflow-hidden">
+              <div className="h-full min-h-[400px] max-h-[600px] overflow-y-auto pr-2">
+                {renderContent(activeSideTab) || emptyState("아직 메타데이터가 없습니다")}
+              </div>
+            </CardContent>
+          </Card>
+      }
+    />
   );
 }

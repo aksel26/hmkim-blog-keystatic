@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { ConfirmModal } from "@/components/ui/confirm-dialog";
 import { SEOChecklistContent } from "@/components/editor/SEOChecklistContent";
-import { Loader2, CheckCircle, MessageSquare, RotateCcw, Pause, Info } from "lucide-react";
 import type { ReviewResult, HumanReviewAction, ValidationResult, FactCheckResult } from "@/lib/types";
 
 interface HumanReviewPanelProps {
@@ -122,21 +121,18 @@ export function HumanReviewPanel({
 
   const seoScore = calculateSEOScore();
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-500";
-    if (score >= 60) return "text-yellow-500";
-    return "text-red-500";
+    if (score >= 80) return "text-success";
+    if (score >= 60) return "text-warning";
+    return "text-destructive";
   };
 
   return (
     <>
-      <Card className="border-warning">
+      <Card className="bg-warning/10 px-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ease-out">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-warning" />
-                사용자 검토 필요
-              </CardTitle>
+              <CardTitle className="text-warning">사용자 검토 필요</CardTitle>
               <CardDescription>
                 생성된 콘텐츠를 검토하고 피드백을 제공해주세요.
               </CardDescription>
@@ -145,8 +141,7 @@ export function HumanReviewPanel({
             {/* SEO 점수 Popover */}
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Info className="h-4 w-4" />
+                <Button variant="outline" size="sm">
                   <span className={`font-semibold ${getScoreColor(seoScore)}`}>
                     SEO {seoScore}%
                   </span>
@@ -170,8 +165,8 @@ export function HumanReviewPanel({
         <CardContent className="space-y-4">
           {/* 검증 결과 표시 (있는 경우) */}
           {validationResult && !validationResult.passed && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <h4 className="text-sm font-medium text-destructive mb-2">검증 오류</h4>
+            <div className="p-3 bg-destructive/10 rounded-md">
+              <h4 className="text-sm font-semibold text-destructive mb-2">검증 오류</h4>
               <ul className="list-disc list-inside text-sm text-destructive/80">
                 {validationResult.errors?.map((error, i) => (
                   <li key={i}>{error}</li>
@@ -182,7 +177,7 @@ export function HumanReviewPanel({
 
           {/* AI 검토 요약 (축약) */}
           {reviewResult && (
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="border-t border-border/70 pt-4">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium text-sm">AI 검토 요약</h4>
                 <div className="flex gap-4 text-sm">
@@ -209,7 +204,7 @@ export function HumanReviewPanel({
 
           {/* 정확도 검증 결과: 참고용이라 승인을 막지 않는다 */}
           {factCheck && (
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="border-t border-border/70 pt-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm">정확도 검증</h4>
                 <span className="text-xs text-muted-foreground">
@@ -224,7 +219,7 @@ export function HumanReviewPanel({
               {factCheck.issues.length > 0 && (
                 <ul className="mt-3 space-y-3">
                   {factCheck.issues.map((issue, i) => (
-                    <li key={i} className="text-sm border-l-2 border-border pl-3">
+                    <li key={i} className="text-sm">
                       <div className="flex items-center gap-2 text-xs">
                         <span className={issue.severity === "high" ? "font-semibold text-destructive" : "text-muted-foreground"}>
                           {{ high: "높음", medium: "보통", low: "낮음" }[issue.severity]}
@@ -267,7 +262,7 @@ export function HumanReviewPanel({
           )}
 
           {/* 직접 편집 안내 */}
-          <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+          <div className="text-sm text-muted-foreground">
             오탈자 등 간단한 수정은 위 미리보기에서 <strong>편집</strong> 버튼을 눌러 직접 수정할 수 있습니다.
           </div>
 
@@ -287,7 +282,7 @@ export function HumanReviewPanel({
 
           {/* Error Message */}
           {error && (
-            <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+            <div className="p-3 text-sm font-medium text-destructive bg-destructive/10 rounded-md">
               {error}
             </div>
           )}
@@ -299,7 +294,6 @@ export function HumanReviewPanel({
               disabled={isSubmitting}
               className="flex-1"
             >
-              <CheckCircle className="mr-2 h-4 w-4" />
               승인
             </Button>
 
@@ -315,12 +309,7 @@ export function HumanReviewPanel({
               disabled={isSubmitting || !feedback.trim()}
               className="flex-1"
             >
-              {isSubmitting && action === "feedback" ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <MessageSquare className="mr-2 h-4 w-4" />
-              )}
-              수정 요청
+              {isSubmitting && action === "feedback" ? "요청 중…" : "수정 요청"}
             </Button>
 
             <Button
@@ -335,7 +324,6 @@ export function HumanReviewPanel({
               disabled={isSubmitting || !feedback.trim()}
               className="flex-1"
             >
-              <RotateCcw className="mr-2 h-4 w-4" />
               재작성
             </Button>
 
@@ -345,7 +333,6 @@ export function HumanReviewPanel({
               disabled={isSubmitting}
               className="flex-1"
             >
-              <Pause className="mr-2 h-4 w-4" />
               보류
             </Button>
           </div>
@@ -377,7 +364,7 @@ export function HumanReviewPanel({
         variant="destructive"
         isLoading={isSubmitting && action === "rewrite"}
       >
-        <div className="p-3 bg-muted rounded-lg text-sm">
+        <div className="border-l-2 border-border pl-3 text-sm">
           <strong>피드백:</strong>
           <p className="mt-1 text-muted-foreground">{feedback}</p>
         </div>
