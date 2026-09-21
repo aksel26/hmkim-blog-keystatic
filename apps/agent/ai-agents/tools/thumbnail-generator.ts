@@ -5,6 +5,7 @@
 
 import { GoogleGenAI, Modality } from '@google/genai';
 import type { PostMetadata, Category, OnProgressCallback } from '../types/workflow';
+import { DEFAULT_THUMBNAIL_STYLE } from '../config/thumbnail-presets';
 
 /**
  * 썸네일 생성 결과
@@ -15,25 +16,24 @@ export interface ThumbnailResult {
   path: string; // e.g. "/images/thumbnails/{slug}/thumbnailImage.png"
 }
 
-/**
- * 기본 썸네일 스타일 프롬프트
- */
-export const DEFAULT_THUMBNAIL_STYLE =
-  'clay morphism style, isometric, pastel tone gradient background';
+// 프리셋 목록과 기본 화풍은 config/thumbnail-presets.ts에 있다 (화면에서도 함께 쓴다)
+export { DEFAULT_THUMBNAIL_STYLE };
 
 /**
  * 포스트 메타데이터 기반으로 썸네일 생성 프롬프트 구성
  */
-function buildPrompt(metadata: PostMetadata, _category: Category): string {
+export function buildPrompt(metadata: PostMetadata, _category: Category, style: string = DEFAULT_THUMBNAIL_STYLE): string {
   const keywords = metadata.keywords?.slice(0, 3).join(', ') || '';
 
-  return `Create a blog thumbnail image for an article titled "${metadata.title}".
-The image should visually represent: ${metadata.summary}
-Key concepts: ${keywords}
-Style: ${DEFAULT_THUMBNAIL_STYLE}
+  // 제목을 따옴표로 감싸 넘기면 이미지 모델이 "이 글자를 그려라"로 읽는다 (철자가 틀린 라벨이 그림에 들어갔다).
+  // 제목과 키워드는 이해를 돕는 참고로만 넘기고, 글자 금지를 맨 앞에 둔다
+  return `Create a text-free blog thumbnail illustration. The image must contain no letters, words, numbers, labels, captions, logos or UI text of any kind.
+Topic of the article (for your understanding only, never write it in the image): ${metadata.title}
+What the article explains: ${metadata.summary}
+Key concepts to express through shapes and objects only: ${keywords}
+Style: ${style}
 Requirements:
 - Aspect ratio: 16:9
-- No text or typography in the image
 - Professional quality suitable for a tech blog
 - Simple composition with clear focal point
 - Abstract or conceptual representation preferred over literal imagery`;
@@ -55,7 +55,7 @@ export async function generateThumbnail(
   metadata: PostMetadata,
   category: Category,
   onProgress?: OnProgressCallback,
-  customPrompt?: string,
+  style?: string,
 ): Promise<ThumbnailResult | null> {
   try {
     const apiKey = process.env.GOOGLE_API_KEY;
@@ -72,13 +72,16 @@ export async function generateThumbnail(
     });
 
     const ai = new GoogleGenAI({ apiKey });
-    const prompt = customPrompt || buildPrompt(metadata, category);
+    // 화풍은 Style 줄에만 들어간다. 예전에는 이 값이 프롬프트 전체를 대체해 제목, 요약, 요구사항이 모두 빠졌다
+    const prompt = buildPrompt(metadata, category, style?.trim() || DEFAULT_THUMBNAIL_STYLE);
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: prompt,
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
+        // 비율은 프롬프트 문장으로는 지켜지지 않는다 (정사각형에 가깝게 나왔다). API 옵션으로 지정한다
+        imageConfig: { aspectRatio: '16:9' },
       },
     });
 
