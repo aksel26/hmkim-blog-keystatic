@@ -89,20 +89,36 @@ ${contentToReview}
 
 다음 항목들을 검토하고 JSON 형식으로 결과를 반환해주세요:
 
-**SEO 검토**
+**코드 검토** (codeIssues, 코드 블록이 없으면 빈 배열)
+   - 코드 블록이 올바르게 열리고 닫혔는지, 언어 표시가 있는지
+   - 문법 오류, 존재하지 않는 API, 설명과 다르게 동작하는 코드
+   - 주제와 무관한 억지 예제나 가상의 시뮬레이션 코드
+
+**내용 정확도 검토** (techIssues)
+   - 사실과 다른 설명, 오래된 정보, 근거 없는 단정
+   - 용어를 잘못 썼거나 개념을 혼동한 부분
+   - 독자가 그대로 따라 하면 문제가 생길 절차
+
+**SEO 검토** (seoIssues)
    - 주제 관련 키워드가 자연스럽게 포함되어 있는지
    - 제목, 소제목에 키워드가 포함되어 있는지
    - 콘텐츠 길이가 SEO에 적합한지 (최소 1000자)
    - 내부/외부 링크 활용 여부
 
-다음 JSON 형식으로 반환해주세요 (점수와 요약만 반환, 개선된 콘텐츠는 반환하지 마세요):
+**문장 검토** (seoIssues에 함께 넣는다)
+   - 번역투: "~에 대해", "~을 통해", "~에 의해", "~함으로써", "~의 경우", "~하는 것이 가능하다"
+   - AI가 쓴 티가 나는 표현: 상투적인 도입·맺음, "완벽 정리"·"획기적" 같은 과장, 정보가 없는 문장, "서론/본론/결론" 소제목, 굵은 글씨·구분선 남발
+   - 해당 문장을 issue에 그대로 옮기고 suggestion에 고친 문장을 적는다
+
+다음 JSON 형식으로 반환해주세요 (점수와 지적 사항만 반환, 개선된 콘텐츠는 반환하지 마세요).
+각 배열의 항목은 반드시 issue와 suggestion을 가진 객체여야 합니다. 문자열로 쓰지 마세요.
 
 {
   "seoScore": 85,
   "techAccuracy": 90,
-  "codeIssues": [],
-  "techIssues": [],
-  "seoIssues": [],
+  "codeIssues": [{ "issue": "무엇이 문제인지", "suggestion": "어떻게 고칠지" }],
+  "techIssues": [{ "issue": "무엇이 문제인지", "suggestion": "어떻게 고칠지" }],
+  "seoIssues": [{ "issue": "무엇이 문제인지", "suggestion": "어떻게 고칠지" }],
   "summary": "전체 검토 요약"
 }
 
@@ -125,6 +141,13 @@ JSON만 반환해주세요.
     }
 
     const parsedReview = JSON.parse(jsonMatch[0]);
+
+    // 모델이 항목을 문자열로 돌려주기도 한다. 그대로 두면 creator 프롬프트에 "undefined → undefined"가 들어간다
+    for (const key of ['codeIssues', 'techIssues', 'seoIssues'] as const) {
+      parsedReview[key] = (Array.isArray(parsedReview[key]) ? parsedReview[key] : [])
+        .map((i: unknown) => (typeof i === 'string' ? { issue: i, suggestion: '' } : i) as { issue?: unknown } | null)
+        .filter((i: { issue?: unknown } | null) => i && typeof i.issue === 'string');
+    }
 
     // 개별 점수에서 평균 점수 계산
     const seoScore = parsedReview.seoScore || 0;

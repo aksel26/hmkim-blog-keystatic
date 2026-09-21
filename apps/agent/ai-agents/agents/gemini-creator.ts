@@ -4,6 +4,7 @@
  */
 
 import { gemini } from '../config/models';
+import { ACCURACY_RULES_FOR_EDITING, KOREAN_STYLE_RULES, TITLE_RULES } from '../config/style-guide';
 import { BlogPostState, OnProgressCallback, PostMetadata } from '../types/workflow';
 
 /**
@@ -43,7 +44,7 @@ export async function geminiCreator(
     // 리뷰어가 지적한 개선점 반영 (이게 없으면 review 단계가 결과물에 아무 영향을 못 준다)
     const r = state.reviewResult;
     const reviewIssues = r
-      ? [...r.codeIssues, ...r.techIssues, ...r.seoIssues].map((i) => `- ${i.issue} → ${i.suggestion}`)
+      ? [...r.codeIssues, ...r.techIssues, ...r.seoIssues].map((i) => `- ${i.issue}${i.suggestion ? ` → ${i.suggestion}` : ''}`)
       : [];
     const reviewInstruction = reviewIssues.length
       ? `\n\n리뷰어가 지적한 개선점 (반영하세요):\n${reviewIssues.join('\n')}`
@@ -74,6 +75,8 @@ export async function geminiCreator(
 
     // 본문만 받기 위한 출력 규칙. 없으면 모델이 머리말과 "수정 사항 리포트"를 본문에 섞어 돌려준다
     const outputRule = `
+${KOREAN_STYLE_RULES}
+${ACCURACY_RULES_FOR_EDITING}
 **출력 형식**: 개선된 포스트 본문(마크다운)만 <blog_post>와 </blog_post> 사이에 작성하세요.
 머리말, 인사말, 수정 내역, 개선 사항 리포트, 작업 설명은 태그 안팎 어디에도 쓰지 마세요.`;
 
@@ -86,9 +89,9 @@ ${state.draftContent}
 이 초안을 다음과 같이 개선해주세요:
 
 1. 문법과 맞춤법 검토
-2. 문장을 더 명확하고 읽기 쉽게 개선
-3. 코드 예제가 정확하고 실용적인지 확인
-4. 전체적인 흐름과 논리 개선
+2. 아래 문장 규칙에 어긋나는 문장을 모두 고쳐 쓰기 (번역투, AI가 쓴 티가 나는 표현)
+3. 코드 예제가 정확한지 확인. 주제와 무관한 억지 예제나 가상의 시뮬레이션 코드는 삭제
+4. 전체적인 흐름과 논리 개선. 정보가 없는 문장은 지우되 초안이 다루는 절, 해결 방법, 코드 예제는 빠뜨리지 않기 (문장을 고치는 작업이지 내용을 줄이는 작업이 아님)
 5. SEO를 고려한 키워드 자연스럽게 포함
 ${toneInstruction}
 ${targetReaderInstruction}
@@ -107,9 +110,9 @@ ${state.draftContent}
 이 초안을 다음과 같이 개선해주세요:
 
 1. 문법과 맞춤법 검토
-2. 문장을 더 명확하고 읽기 쉽게 개선
+2. 아래 문장 규칙에 어긋나는 문장을 모두 고쳐 쓰기 (번역투, AI가 쓴 티가 나는 표현)
 3. 개인적이고 진정성 있는 톤 유지
-4. 전체적인 흐름과 논리 개선
+4. 전체적인 흐름과 논리 개선. 초안이 다루는 내용은 빠뜨리지 않기 (문장을 고치는 작업이지 내용을 줄이는 작업이 아님)
 5. 자연스럽고 공감가는 표현으로 개선
 6. 개발 또는 코드에 관한 내용 제거
 7. SEO를 고려한 키워드 자연스럽게 포함
@@ -168,7 +171,7 @@ ${finalContent.substring(0, 1000)}...
 - title과 summary 텍스트 안에 콜론(:) 뒤에 공백이 오면 YAML 파싱 오류가 발생합니다.
 - 콜론 대신 하이픈(-)이나 쉼표(,)를 사용하세요.
 - 잘못된 예: "주식 분석: 미래 전망" → 올바른 예: "주식 분석 - 미래 전망"
-
+${TITLE_RULES}
 JSON만 반환해주세요.
 `;
 
@@ -203,7 +206,7 @@ ${finalContent.substring(0, 1000)}...
 - title과 summary 텍스트 안에 콜론(:) 뒤에 공백이 오면 YAML 파싱 오류가 발생합니다.
 - 콜론 대신 하이픈(-)이나 쉼표(,)를 사용하세요.
 - 잘못된 예: "주식 분석: 미래 전망" → 올바른 예: "주식 분석 - 미래 전망"
-
+${TITLE_RULES}
 JSON만 반환해주세요.
 `;
 
