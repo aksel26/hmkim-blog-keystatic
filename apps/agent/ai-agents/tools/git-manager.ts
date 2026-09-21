@@ -82,7 +82,7 @@ export async function gitCommitAndPush(
     // 브랜치명 생성
     const slug = state.metadata.slug || 'new-post';
     const dateStr = getDateForBranch();
-    const branchName = `post/${dateStr}-${slug}`;
+    let branchName = `post/${dateStr}-${slug}`;
 
     onProgress?.({
       step: 'deploy',
@@ -137,18 +137,19 @@ ${thumbnailLine}---
     } catch (error: unknown) {
       // 브랜치가 이미 존재하는 경우 타임스탬프 추가
       if (error instanceof Error && error.message.includes('Reference already exists')) {
-        const timestamp = Date.now();
-        const newBranchName = `${branchName}-${timestamp}`;
+        // 이후 커밋과 PR이 새 브랜치를 쓰도록 branchName 자체를 바꾼다.
+        // 지역 변수에만 담아 두면 파일이 기존 브랜치(다른 PR)로 커밋된다
+        branchName = `${branchName}-${Date.now()}`;
         await octokit.git.createRef({
           owner,
           repo,
-          ref: `refs/heads/${newBranchName}`,
+          ref: `refs/heads/${branchName}`,
           sha: baseSha,
         });
         onProgress?.({
           step: 'deploy',
           status: 'progress',
-          message: `브랜치 이름 변경: ${newBranchName}`,
+          message: `브랜치 이름 변경: ${branchName}`,
         });
       } else {
         throw error;
@@ -161,6 +162,18 @@ ${thumbnailLine}---
       message: '파일 커밋 중...',
     });
 
+    // 같은 slug의 글이 base에 이미 병합돼 있으면 파일이 존재한다. 이때 sha 없이 쓰면 GitHub가
+    // '"sha" wasn't supplied'로 거절하므로 기존 sha를 찾아 수정 커밋으로 올린다 (PR diff에 변경으로 보인다)
+    const existingSha = async (path: string): Promise<string | undefined> => {
+      try {
+        const { data } = await octokit.repos.getContent({ owner, repo, path, ref: branchName });
+        return Array.isArray(data) ? undefined : data.sha;
+      } catch (error: unknown) {
+        if ((error as { status?: number }).status === 404) return undefined;
+        throw error;
+      }
+    };
+
     // 3-1. 썸네일 이미지 업로드 (있는 경우)
     if (state.thumbnailImage?.buffer && state.thumbnailImage.path) {
       const thumbnailPath = `apps/blog/public${state.thumbnailImage.path}`;
@@ -172,6 +185,7 @@ ${thumbnailLine}---
           message: `feat(content): Add thumbnail for ${title}`,
           content: state.thumbnailImage.buffer,
           branch: branchName,
+          sha: await existingSha(thumbnailPath),
         });
         onProgress?.({
           step: 'deploy',
@@ -196,6 +210,7 @@ ${thumbnailLine}---
       message: `feat(content): Add new post - ${title}`,
       content: Buffer.from(fullContent).toString('base64'),
       branch: branchName,
+      sha: await existingSha(filePath),
     });
 
     onProgress?.({
