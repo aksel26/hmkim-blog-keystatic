@@ -87,13 +87,13 @@ Keystatic CMS 기반 기술 블로그. Markdoc(`.mdoc`) 형식으로 콘텐츠�
 
 ### agent
 
-LangGraph `StateGraph`로 선언한 8노드 워크플로우. 모든 노드는 Gemini 3.6 Flash 하나를 사용한다 (`ai-agents/config/models.ts`).
+LangGraph `StateGraph`로 선언한 9노드 워크플로우. 모든 노드는 Gemini 3.6 Flash 하나를 사용한다 (`ai-agents/config/models.ts`).
 
 ```
-research → write → review → create → thumbnail → validate → humanReview → deploy(PR)
-             ▲                  ▲                                 │
-             │ 다시 작성         │ 수정 요청 (기본)                  │ 반려
-             └──────────────────┴─────────────────────────────────┘
+research → write → review → create → factCheck → thumbnail → validate → humanReview → deploy(PR)
+             ▲                  ▲                                             │
+             │ 다시 작성         │ 수정 요청 (기본)                              │ 반려
+             └──────────────────┴─────────────────────────────────────────────┘
 ```
 
 사람이 개입하는 지점이 두 곳이다.
