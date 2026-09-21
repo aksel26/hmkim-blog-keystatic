@@ -244,8 +244,8 @@ export default function JobDetailPage() {
         />
       )}
 
-      {/* Deploy Approval Panel */}
-      {displayStatus === "pending_deploy" && (
+      {/* Deploy Approval Panel: 배포 단계에서 실패한 작업도 본문을 다시 생성하지 않고 재시도할 수 있게 같은 패널을 보여준다 */}
+      {(displayStatus === "pending_deploy" || (displayStatus === "failed" && job.currentStep === "deploy")) && (
         <DeployApprovalPanel
           jobId={jobId}
           filepath={job.filepath}
