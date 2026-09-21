@@ -72,6 +72,11 @@ export async function geminiCreator(
       ? `\n**타겟 독자**: ${state.targetReader}에 맞는 수준과 어휘를 유지하세요.`
       : '';
 
+    // 본문만 받기 위한 출력 규칙. 없으면 모델이 머리말과 "수정 사항 리포트"를 본문에 섞어 돌려준다
+    const outputRule = `
+**출력 형식**: 개선된 포스트 본문(마크다운)만 <blog_post>와 </blog_post> 사이에 작성하세요.
+머리말, 인사말, 수정 내역, 개선 사항 리포트, 작업 설명은 태그 안팎 어디에도 쓰지 마세요.`;
+
     const techContentPrompt = `
 다음은 "${state.topic}" 주제에 대한 기술 블로그 포스트 초안입니다.
 
@@ -90,7 +95,7 @@ ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
 ${reviewInstruction}${feedbackInstruction}
-
+${outputRule}
 `;
 
     const lifeContentPrompt = `
@@ -113,13 +118,15 @@ ${targetReaderInstruction}
 
 추가로 아래의 피드백도 자연스럽게 반영해주세요.
 ${reviewInstruction}${feedbackInstruction}
-
+${outputRule}
 `;
 
     const contentPrompt = isLifeCategory ? lifeContentPrompt : techContentPrompt;
 
     const contentResponse = await gemini.invoke(contentPrompt);
-    const finalContent = contentResponse.content.toString();
+    const rawContent = contentResponse.content.toString();
+    // 태그 밖에 붙은 머리말·리포트는 버린다. 태그가 없으면 응답 전체를 그대로 쓴다
+    const finalContent = (rawContent.match(/<blog_post>([\s\S]*)<\/blog_post>/)?.[1] ?? rawContent).trim();
 
     onProgress?.({
       step: 'create',
