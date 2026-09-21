@@ -3,7 +3,6 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { NativeSelect } from "@/components/ui/native-select"
-import { Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface FilterOption {
@@ -43,15 +42,13 @@ export function FilterBar({
   return (
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
       {search && (
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={search.placeholder ?? "검색..."}
-            value={search.value}
-            onChange={(e) => search.onChange(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <Input
+          type="search"
+          placeholder={search.placeholder ?? "검색..."}
+          value={search.value}
+          onChange={(e) => search.onChange(e.target.value)}
+          className="flex-1 min-w-48"
+        />
       )}
 
       {filters?.map((filter) => (
@@ -66,7 +63,6 @@ export function FilterBar({
 
       {hasActiveFilters && onReset && (
         <Button variant="ghost" size="sm" onClick={onReset}>
-          <X className="mr-1 size-4" />
           초기화
         </Button>
       )}

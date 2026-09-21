@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { Loader2 } from "lucide-react"
 
 interface ConfirmDialogProps {
   open: boolean
@@ -64,14 +63,7 @@ function ConfirmDialog({
                 "bg-warning text-warning-foreground hover:bg-warning/90"
             )}
           >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="size-4 animate-spin" />
-                처리 중...
-              </span>
-            ) : (
-              confirmText
-            )}
+            {isLoading ? "처리 중…" : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

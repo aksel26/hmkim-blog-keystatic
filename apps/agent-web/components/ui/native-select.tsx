@@ -19,7 +19,7 @@ function NativeSelect({
   return (
     <div className={cn("relative", className)}>
       <select
-        className="border-input focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full appearance-none rounded-md border bg-transparent px-3 py-2 pr-10 text-sm transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
+        className="border-input bg-transparent focus-visible:border-ring focus-visible:ring-ring/50 flex h-9 w-full appearance-none rounded-md border px-3 py-2 pr-10 text-sm transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
         {...props}
       >
         {placeholder && (
