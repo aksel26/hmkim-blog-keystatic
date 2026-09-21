@@ -21,6 +21,22 @@ interface TavilySearchResponse {
 }
 
 /**
+ * 관련도(score)가 낮은 검색 결과를 버린다.
+ * 주제와 무관한 결과가 섞이면 writer가 엉뚱한 내용을 끌어오고 fact_check가 대조할 근거도 흐려진다.
+ * Tavily 문서는 score로 거르라고 권하고 임계값 0.5를 제시한다. 이 워크플로우는 긴 한국어 주제를 그대로
+ * 검색어로 써서 관련 글도 0.25~0.6에 몰린다 (무관한 결과는 0.02 이하). 그래서 0.2로 낮춰 잡았다.
+ * ponytail: 임계값 하나로 자른다. 주제에 따라 관련 글이 0.2 아래로 깔리면 MIN_RELEVANCE를 조정
+ */
+const MIN_RELEVANCE = 0.2;
+const MIN_KEPT = 3; // 전부 걸러지면 쓸 자료가 없으니 상위 몇 개는 남긴다
+
+export function dropIrrelevant<T extends { score: number }>(results: T[]): T[] {
+  const sorted = [...results].sort((a, b) => b.score - a.score);
+  const kept = sorted.filter((r) => r.score >= MIN_RELEVANCE);
+  return kept.length >= MIN_KEPT ? kept : sorted.slice(0, MIN_KEPT);
+}
+
+/**
  * Tavily Search API 호출
  */
 async function searchWithTavily(query: string): Promise<TavilySearchResult[]> {
@@ -52,7 +68,7 @@ async function searchWithTavily(query: string): Promise<TavilySearchResult[]> {
     }
 
     const data = await response.json() as TavilySearchResponse;
-    return data.results || [];
+    return dropIrrelevant(data.results || []);
   } catch (error) {
     console.error('Tavily 검색 실패:', error);
     return [];
