@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-labelledby="t d">
+  <title id="t">블로그 생성 워크플로우</title>
+  <desc id="d">리서치부터 PR 생성까지 9단계. 사용자 검토에서 반려하면 기본은 04 콘텐츠 개선부터, 재작성이면 02 초안 작성부터 다시 돈다. 반려는 3회까지이고 PR 머지는 사람이 한다.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#1D1713"/></marker>
+    <marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#0052B4"/></marker>
+  </defs>
+  <rect width="1200" height="440" rx="24" fill="#FBFAF6"/>
+  <text x="77" y="62" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#605954" letter-spacing="1.5">LANGGRAPH STATEGRAPH · apps/agent/ai-agents/workflows/blog-workflow.ts</text>
+  <g transform="translate(77 110)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">01</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">리서치</text>
+  </g>
+  <g transform="translate(291 110)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">02</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">초안 작성</text>
+  </g>
+  <g transform="translate(505 110)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">03</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">AI 검토</text>
+  </g>
+  <g transform="translate(719 110)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">04</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">콘텐츠 개선</text>
+  </g>
+  <g transform="translate(933 110)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">05</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">정확도 검증</text>
+  </g>
+  <g transform="translate(77 300)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">06</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">썸네일</text>
+  </g>
+  <g transform="translate(291 300)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#F3F0EA"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#605954" font-weight="600">07</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="500" fill="#1D1713">검증</text>
+  </g>
+  <g transform="translate(505 300)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#FBFAF6" stroke="#0052B4" stroke-width="2.5"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#0052B4" font-weight="600">08</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="700" fill="#1D1713">사용자 검토</text>
+  </g>
+  <g transform="translate(719 300)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="#FBFAF6" stroke="#0052B4" stroke-width="2.5"/>
+    <text x="18" y="35" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#0052B4" font-weight="600">09</text>
+    <text x="58" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="21" font-weight="700" fill="#1D1713">PR 생성</text>
+  </g>
+  <g transform="translate(933 300)">
+    <rect x="0" y="0" width="190" height="56" rx="10" fill="none" stroke="#0052B4" stroke-width="2.5" stroke-dasharray="6 5"/>
+    <text x="18" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="19" font-weight="700" fill="#0052B4">GitHub PR</text>
+    <text x="18" y="47" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="16" fill="#0052B4">머지는 사람이</text>
+  </g>
+    <path d="M267 138.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M481 138.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M695 138.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M909 138.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M267 328.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M481 328.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M695 328.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M909 328.0 h 21" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M1028.0 166 V 233.0 H 172.0 V 297" fill="none" stroke="#1D1713" stroke-width="1.8" marker-end="url(#a)"/>
+  <path d="M570.0 300 V 251.0 H 844.0 V 169" fill="none" stroke="#0052B4" stroke-width="2" marker-end="url(#ap)"/>
+  <path d="M544.0 300 V 215.0 H 386.0 V 169" fill="none" stroke="#0052B4" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#ap)"/>
+  <rect x="866.0" y="237.0" width="222" height="28" rx="6" fill="#FBFAF6"/>
+  <text x="876.0" y="257.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="18" font-weight="600" fill="#0052B4">반려 · 수정 요청 → 04부터 (기본)</text>
+  <rect x="408.0" y="201.0" width="176" height="28" rx="6" fill="#FBFAF6"/>
+  <text x="418.0" y="221.0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="18" font-weight="600" fill="#0052B4">반려 · 재작성 → 02부터</text>
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'PingFang SC', sans-serif" font-size="18" fill="#605954">
+    <text x="386.0" y="386" text-anchor="middle">LLM 없이 규칙만 검사</text>
+    <text x="600.0" y="386" text-anchor="middle" fill="#0052B4" font-weight="600">승인 · 수정 · 재작성 · 보류</text>
+    <text x="814.0" y="386" text-anchor="middle">자동 발행 없음</text>
+  </g>
+  <text x="77" y="428" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#605954" letter-spacing="1">반려는 3회까지 · 리서치는 재사용 · 썸네일은 제목이 바뀔 때만 재생성</text>
+</svg>
