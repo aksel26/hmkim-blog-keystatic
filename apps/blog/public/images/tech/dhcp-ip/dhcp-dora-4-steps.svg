@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <style>
+    text { font-family: Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', sans-serif; fill: #34373d; }
+    .title { font-size: 30px; font-weight: 700; }
+    .sub { font-size: 17px; fill: #9aa0a8; }
+    .node { font-size: 21px; font-weight: 600; }
+    .nodesub { font-size: 15px; fill: #9aa0a8; }
+    .step { font-size: 15px; font-weight: 600; letter-spacing: 0.5px; }
+    .msg { font-size: 19px; }
+    .note { font-size: 14px; fill: #9aa0a8; }
+    .o { fill: #d49a82; }
+    .b { fill: #7f9cc9; }
+  </style>
+  <defs>
+    <marker id="aO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#e3b4a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="aB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#a9bfe0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1200" height="800" fill="#ffffff"/>
+
+  <text x="600" y="62" text-anchor="middle" class="title">DHCP DORA 4단계</text>
+  <text x="600" y="94" text-anchor="middle" class="sub">IP 주소가 없는 기기가 주소를 받기까지</text>
+
+  <rect x="190" y="136" width="180" height="72" rx="36" fill="#f2f3f5"/>
+  <text x="280" y="167" text-anchor="middle" class="node">내 기기</text>
+  <text x="280" y="191" text-anchor="middle" class="nodesub">IP 없음</text>
+  <rect x="830" y="136" width="180" height="72" rx="36" fill="#f2f3f5"/>
+  <text x="920" y="167" text-anchor="middle" class="node">DHCP 서버</text>
+  <text x="920" y="191" text-anchor="middle" class="nodesub">보통 공유기</text>
+
+  <line x1="280" y1="222" x2="280" y2="672" stroke="#eceef1" stroke-width="2"/>
+  <line x1="920" y1="222" x2="920" y2="672" stroke="#eceef1" stroke-width="2"/>
+
+  <!-- 1 -->
+  <text x="600" y="262" text-anchor="middle" class="step o">1  DISCOVER</text>
+  <line x1="290" y1="280" x2="908" y2="280" stroke="#e3b4a1" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" marker-end="url(#aO)"/>
+  <text x="600" y="314" text-anchor="middle" class="msg">DHCP 서버 있나요?</text>
+
+  <!-- 2 -->
+  <text x="600" y="372" text-anchor="middle" class="step b">2  OFFER</text>
+  <line x1="910" y1="390" x2="292" y2="390" stroke="#a9bfe0" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aB)"/>
+  <text x="600" y="424" text-anchor="middle" class="msg">이 주소 쓰실래요?</text>
+  <text x="600" y="450" text-anchor="middle" class="note">IP · 게이트웨이 · DNS · 임대 기간</text>
+
+  <!-- 3 -->
+  <text x="600" y="508" text-anchor="middle" class="step o">3  REQUEST</text>
+  <line x1="290" y1="526" x2="908" y2="526" stroke="#e3b4a1" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round" marker-end="url(#aO)"/>
+  <text x="600" y="560" text-anchor="middle" class="msg">그 주소로 할게요</text>
+
+  <!-- 4 -->
+  <text x="600" y="618" text-anchor="middle" class="step b">4  ACK</text>
+  <line x1="910" y1="636" x2="292" y2="636" stroke="#a9bfe0" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aB)"/>
+  <text x="600" y="670" text-anchor="middle" class="msg">확정됐습니다</text>
+
+  <!-- legend -->
+  <line x1="364" y1="740" x2="410" y2="740" stroke="#e3b4a1" stroke-width="2.5" stroke-dasharray="2 9" stroke-linecap="round"/>
+  <text x="422" y="745" class="note">모두에게 외침</text>
+  <line x1="640" y1="740" x2="686" y2="740" stroke="#a9bfe0" stroke-width="2.5" stroke-linecap="round"/>
+  <text x="698" y="745" class="note">기기에게 직접</text>
+</svg>

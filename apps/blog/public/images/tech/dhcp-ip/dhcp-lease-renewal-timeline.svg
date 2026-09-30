@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 560" width="1200" height="560">
+  <style>
+    text { font-family: Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', sans-serif; fill: #34373d; }
+    .title { font-size: 30px; font-weight: 700; }
+    .sub { font-size: 17px; fill: #9aa0a8; }
+    .tick { font-size: 17px; font-weight: 600; }
+    .ticksub { font-size: 14px; fill: #9aa0a8; }
+    .ch { font-size: 18px; font-weight: 600; }
+    .cb { font-size: 16px; fill: #5c6068; }
+    .note { font-size: 14px; fill: #9aa0a8; }
+  </style>
+  <defs>
+    <clipPath id="bar"><rect x="100" y="150" width="1000" height="14" rx="7"/></clipPath>
+  </defs>
+  <rect width="1200" height="560" fill="#ffffff"/>
+
+  <text x="600" y="62" text-anchor="middle" class="title">DHCP lease 갱신 타이밍</text>
+  <text x="600" y="94" text-anchor="middle" class="sub">예시: 임대 기간 8시간</text>
+
+  <g clip-path="url(#bar)">
+    <rect x="100" y="150" width="500" height="14" fill="#cfe6d4"/>
+    <rect x="600" y="150" width="375" height="14" fill="#f3dfb8"/>
+    <rect x="975" y="150" width="125" height="14" fill="#f0cabd"/>
+  </g>
+  <circle cx="100" cy="157" r="6" fill="#9cc7a6"/>
+  <circle cx="600" cy="157" r="6" fill="#dcb772"/>
+  <circle cx="975" cy="157" r="6" fill="#dd9a86"/>
+  <circle cx="1100" cy="157" r="6" fill="#c9a0a0"/>
+
+  <text x="100" y="206" text-anchor="middle" class="tick">0%</text>
+  <text x="100" y="228" text-anchor="middle" class="ticksub">주소 받음</text>
+  <text x="600" y="206" text-anchor="middle" class="tick">50%</text>
+  <text x="600" y="228" text-anchor="middle" class="ticksub">4시간 · T1</text>
+  <text x="975" y="206" text-anchor="middle" class="tick">87.5%</text>
+  <text x="975" y="228" text-anchor="middle" class="ticksub">7시간 · T2</text>
+  <text x="1100" y="206" text-anchor="middle" class="tick">100%</text>
+  <text x="1100" y="228" text-anchor="middle" class="ticksub">만료</text>
+
+  <rect x="90" y="290" width="320" height="170" rx="18" fill="#fbf4e6"/>
+  <text x="120" y="332" class="ch">T1 · 50%</text>
+  <text x="120" y="372" class="cb">처음 주소를 준 서버에게</text>
+  <text x="120" y="398" class="cb">조용히 연장을 요청한다.</text>
+
+  <rect x="440" y="290" width="320" height="170" rx="18" fill="#fbede7"/>
+  <text x="470" y="332" class="ch">T2 · 87.5%</text>
+  <text x="470" y="372" class="cb">답이 없으면 전체에게 외쳐</text>
+  <text x="470" y="398" class="cb">아무 서버에게나 요청한다.</text>
+
+  <rect x="790" y="290" width="320" height="170" rx="18" fill="#f5eeee"/>
+  <text x="820" y="332" class="ch">만료 · 100%</text>
+  <text x="820" y="372" class="cb">주소를 바로 내려놓고</text>
+  <text x="820" y="398" class="cb">DORA를 처음부터 다시 한다.</text>
+
+  <text x="600" y="516" text-anchor="middle" class="note">50% · 87.5%는 표준 기본값이며 서버가 다르게 정할 수 있다</text>
+</svg>

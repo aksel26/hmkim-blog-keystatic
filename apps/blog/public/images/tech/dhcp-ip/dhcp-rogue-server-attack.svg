@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640">
+  <style>
+    text { font-family: Pretendard, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', sans-serif; fill: #34373d; }
+    .title { font-size: 30px; font-weight: 700; }
+    .sub { font-size: 17px; fill: #9aa0a8; }
+    .ph { font-size: 19px; font-weight: 600; }
+    .node { font-size: 18px; font-weight: 600; }
+    .lbl { font-size: 14px; fill: #9aa0a8; }
+    .cb { font-size: 16px; fill: #5c6068; }
+    .g { fill: #6f9c7a; }
+    .r { fill: #c47f72; }
+  </style>
+  <defs>
+    <marker id="aG" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#9cc7a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="aR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#e0a595" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="aX" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1,1 L9,5 L1,9" fill="none" stroke="#d6d9de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect width="1200" height="640" fill="#ffffff"/>
+
+  <text x="600" y="62" text-anchor="middle" class="title">가짜 DHCP 서버가 먼저 답하면</text>
+  <text x="600" y="94" text-anchor="middle" class="sub">기기는 처음 답한 서버의 설정을 그대로 믿는다</text>
+
+  <rect x="40" y="128" width="545" height="460" rx="24" fill="#f3f8f4"/>
+  <rect x="615" y="128" width="545" height="460" rx="24" fill="#fbf2f0"/>
+  <text x="312" y="176" text-anchor="middle" class="ph g">정상</text>
+  <text x="887" y="176" text-anchor="middle" class="ph r">가짜 서버 개입</text>
+
+  <!-- LEFT -->
+  <rect x="80" y="208" width="150" height="56" rx="28" fill="#ffffff"/>
+  <text x="155" y="242" text-anchor="middle" class="node">내 기기</text>
+  <rect x="395" y="208" width="150" height="56" rx="28" fill="#ffffff"/>
+  <text x="470" y="242" text-anchor="middle" class="node">진짜 공유기</text>
+  <line x1="385" y1="236" x2="242" y2="236" stroke="#9cc7a6" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aG)"/>
+  <text x="312" y="222" text-anchor="middle" class="lbl">설정 전달</text>
+
+  <text x="312" y="318" text-anchor="middle" class="lbl">받은 설정</text>
+  <text x="312" y="346" text-anchor="middle" class="cb">게이트웨이 · DNS = 진짜 공유기 쪽</text>
+
+  <rect x="70" y="400" width="130" height="52" rx="26" fill="#ffffff"/>
+  <text x="135" y="432" text-anchor="middle" class="node">내 기기</text>
+  <rect x="247" y="400" width="130" height="52" rx="26" fill="#dcece0"/>
+  <text x="312" y="432" text-anchor="middle" class="node">공유기</text>
+  <rect x="425" y="400" width="130" height="52" rx="26" fill="#ffffff"/>
+  <text x="490" y="432" text-anchor="middle" class="node">인터넷</text>
+  <line x1="208" y1="426" x2="237" y2="426" stroke="#9cc7a6" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aG)"/>
+  <line x1="385" y1="426" x2="415" y2="426" stroke="#9cc7a6" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aG)"/>
+  <text x="312" y="520" text-anchor="middle" class="cb">진짜 사이트로 연결</text>
+
+  <!-- RIGHT -->
+  <rect x="655" y="208" width="150" height="56" rx="28" fill="#ffffff"/>
+  <text x="730" y="242" text-anchor="middle" class="node">내 기기</text>
+  <rect x="970" y="196" width="150" height="56" rx="28" fill="#f3d7cf"/>
+  <text x="1045" y="230" text-anchor="middle" class="node">공격자</text>
+  <text x="1045" y="280" text-anchor="middle" class="lbl">진짜 공유기는 한발 늦음</text>
+  <line x1="960" y1="226" x2="817" y2="232" stroke="#e0a595" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aR)"/>
+  <text x="887" y="212" text-anchor="middle" class="lbl">먼저 답함</text>
+
+  <text x="887" y="318" text-anchor="middle" class="lbl">받은 설정</text>
+  <text x="887" y="346" text-anchor="middle" class="cb">게이트웨이 · DNS = 공격자 쪽</text>
+
+  <rect x="645" y="400" width="130" height="52" rx="26" fill="#ffffff"/>
+  <text x="710" y="432" text-anchor="middle" class="node">내 기기</text>
+  <rect x="822" y="400" width="130" height="52" rx="26" fill="#f3d7cf"/>
+  <text x="887" y="432" text-anchor="middle" class="node">공격자</text>
+  <rect x="1000" y="400" width="130" height="52" rx="26" fill="#ffffff"/>
+  <text x="1065" y="432" text-anchor="middle" class="node">인터넷</text>
+  <line x1="783" y1="426" x2="812" y2="426" stroke="#e0a595" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aR)"/>
+  <line x1="960" y1="426" x2="990" y2="426" stroke="#e0a595" stroke-width="2.5" stroke-linecap="round" marker-end="url(#aR)"/>
+  <text x="887" y="506" text-anchor="middle" class="cb">트래픽이 공격자를 거치고</text>
+  <text x="887" y="532" text-anchor="middle" class="cb">가짜 사이트로 갈 수 있음</text>
+</svg>
