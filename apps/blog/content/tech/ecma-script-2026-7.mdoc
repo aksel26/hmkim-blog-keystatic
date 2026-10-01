@@ -1,0 +1,655 @@
+---
+title: ECMAScript 2026에 추가된 자바스크립트 기능 7가지
+summary: >-
+  ES2026은 Map.getOrInsert, Array.fromAsync, Iterator.concat, JSON.rawJSON,
+  Uint8Array Base64 변환, Error.isError, Math.sumPrecise로 직접 짜던 도우미 코드를 대신한다.
+keywords:
+  - ECMAScript 2026
+  - ES2026 새 기능
+  - Array.fromAsync Promise
+  - 자바스크립트 새 기능
+status: published
+tags:
+  - 자바스크립트
+  - JavaScript
+  - ECMAScript
+  - ES2026
+createdAt: 2026-10-01
+updatedAt: 2026-10-01
+thumbnailImage: /images/thumbnails/ecma-script-2026-7/thumbnailImage.png
+---
+> 이 글은 JavaScript Development Space에 2026년 9월 30일 게시된 [7 Useful JavaScript Features Added in ECMAScript 2026](https://jsdev.space/ecmascript-2026-features/)을 한국어로 옮긴 것임.
+
+자바스크립트에는 해마다 새 ECMAScript 판이 나온다. 코드 쓰는 방식을 단번에 바꾸는 문법이 들어오는 해도 있고 그보다 조용히 지나가는 해도 있다.
+
+ECMAScript 2026은 대체로 뒤쪽에 속한다.
+
+이번 판에는 자바스크립트를 다시 생각하게 만드는 기능이 따로 없다. 대신 ES2026에서는 표준 라이브러리에서 거슬리던 빈틈 몇 군데가 메워진다. 개발자들이 셀 수 없이 직접 짜 왔던 작은 도우미 코드를 이제 내장 API로 바꿀 수 있다.
+
+`Map`에 없는 값 만들기, 비동기 이터레이터 모으기, JSON 속 큰 정수 다루기, 바이너리 데이터를 Base64로 바꾸기, 렐름(realm)을 넘나드는 오류 확인하기, 부동소수점 합계를 더 믿을 만하게 계산하기가 여기에 들어간다.
+
+실제 프로젝트에서 쓸 일이 가장 많을 만한 추가 기능부터 살펴보자.
+
+## 1. `getOrInsert()`로 Map에 없는 값 만들기
+
+`Map`으로 데이터를 묶다 보면 작은 패턴 하나가 자꾸 반복된다.
+
+직원 정보가 비동기 스트림으로 들어오고 이를 부서별로 묶고 싶다고 해 보자.
+
+보통은 이렇게 구현한다.
+
+```js
+const employeesByDepartment = new Map();
+ 
+for await (const employee of employeeStream) {
+  const { department } = employee;
+ 
+  if (!employeesByDepartment.has(department)) {
+    employeesByDepartment.set(department, []);
+  }
+ 
+  employeesByDepartment.get(department).push(employee);
+}
+```
+
+이 코드에 딱히 잘못된 데는 없다. 번거로운 건 간단한 작업 하나에 동작이 세 개나 필요하다는 점이다.
+
+키가 있는지 확인하고 없으면 값을 만든 다음 그 값을 꺼낸다.
+
+ECMAScript 2026에서는 `Map`에 이를 더 직접 표현하는 방법이 생겼다.
+
+### `Map.prototype.getOrInsert()`
+
+기본값이 이미 정해져 있다면 `getOrInsert()`로 충분하다.
+
+```js
+const preferences = new Map();
+ 
+const theme = preferences.getOrInsert("theme", "system");
+ 
+console.log(theme);
+// "system"
+ 
+console.log(preferences.get("theme"));
+// "system"
+```
+
+`"theme"`이 이미 있으면 현재 값을 돌려준다. 없으면 `"system"`을 넣은 뒤 그 값을 반환한다.
+
+배열이나 객체처럼 변경 가능한 값이라면 보통 `getOrInsertComputed()`가 더 쓸모 있다.
+
+```js
+const employeesByDepartment = new Map();
+ 
+for await (const employee of employeeStream) {
+  employeesByDepartment
+    .getOrInsertComputed(employee.department, () => [])
+    .push(employee);
+}
+```
+
+콜백은 키에 값이 필요할 때만 실행된다.
+
+이 차이가 꽤 크다. `Map`에 이미 값이 있는데도 새 배열이나 객체, 캐시 항목, 혹은 만드는 데 비용이 드는 다른 값을 괜히 만들고 싶지는 않을 것이다.
+
+카운터, 캐시, 묶어 둔 API 결과, 인덱스 같은 자료 구조에도 같은 방식이 잘 맞는다.
+
+```js
+const wordsByLength = new Map();
+ 
+for (const word of ["cat", "house", "dog", "window"]) {
+  wordsByLength
+    .getOrInsertComputed(word.length, () => [])
+    .push(word);
+}
+ 
+console.log(wordsByLength.get(3));
+// ["cat", "dog"]
+```
+
+작은 API 변화 하나로 꽤 많은 반복 작업이 사라진다.
+
+## 2. `Array.fromAsync()`로 비동기 이터레이터를 배열로 바꾸기
+
+비동기 제너레이터를 쓰면 페이지 나눔(pagination)을 편하게 감출 수 있다.
+
+이슈 목록과 함께 다음 페이지 URL을 돌려주는 API가 있다고 해 보자.
+
+```js
+async function* fetchAllIssues(url) {
+  while (url) {
+    const response = await fetch(url);
+ 
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+ 
+    const page = await response.json();
+ 
+    yield* page.items;
+ 
+    url = page.next;
+  }
+}
+```
+
+호출하는 쪽은 페이지가 몇 개인지 알 필요가 없다. 그저 이슈를 하나씩 받아 쓰기만 한다.
+
+이전에는 전부 모아 배열로 만들려면 보통 반복문을 하나 더 써야 했다.
+
+```js
+const issues = [];
+ 
+for await (const issue of fetchAllIssues("/api/issues")) {
+  issues.push(issue);
+}
+```
+
+`Array.fromAsync()`를 쓰면 이렇게 줄어든다.
+
+```js
+const issues = await Array.fromAsync(
+  fetchAllIssues("/api/issues"),
+);
+```
+
+의도가 훨씬 분명하다. 비동기 소스에서 값을 받아 배열에 담고 싶다는 뜻이 그대로 드러난다.
+
+모으면서 값을 변환할 수도 있다.
+
+```js
+const titles = await Array.fromAsync(
+  fetchAllIssues("/api/issues"),
+  (issue) => issue.title,
+);
+```
+
+기억해 둘 만한 세부 사항이 하나 있다.
+
+### `Array.fromAsync()`는 `Promise.all()`이 아니다
+
+이런 코드를 생각해 보자.
+
+```js
+const responses = await Array.fromAsync(
+  urls,
+  async (url) => fetch(url),
+);
+```
+
+모든 요청이 한꺼번에 시작될 것 같지만 `Array.fromAsync()`는 매핑 작업을 그렇게 처리하지 않는다. 매핑 결과를 하나 기다린 다음에야 다음 항목을 꺼낸다.
+
+작업들이 서로 독립적이고 동시에 실행돼야 한다면 여전히 `Promise.all()`이 더 알맞다.
+
+```js
+const responses = await Promise.all(
+  urls.map((url) => fetch(url)),
+);
+```
+
+그림으로 그리면 차이가 이렇다.
+
+```text
+Array.fromAsync()
+source → await → source → await → source → await
+ 
+Promise.all()
+request ↘
+request → wait for all
+request ↗
+```
+
+비동기 시퀀스를 순서대로 소비할 때는 `Array.fromAsync()`를 쓴다.
+
+`Promise.all()`은 독립적인 작업을 동시에 돌려야 할 때 쓴다.
+
+그리고 아주 크거나 끝이 없을 수도 있는 스트림을 다룬다면 아예 모으지 말자. 평범한 `for await...of` 반복문으로 값을 하나씩 처리하는 편이 낫다.
+
+## 3. `Iterator.concat()`으로 이터러블을 지연 방식으로 잇기
+
+여러 컬렉션이 논리적으로는 하나의 시퀀스를 이룰 때가 있다.
+
+예를 들어 라우터가 내장 라우트를 먼저, 플러그인 라우트를 두 번째로, 마지막으로 대체(fallback) 라우트를 처리할 수 있다.
+
+제너레이터로 표현하는 방법이 있다.
+
+```js
+function* allRoutes() {
+  yield* builtInRoutes;
+  yield* pluginRoutes;
+  yield fallbackRoute;
+}
+```
+
+이것도 잘 돌아가지만 ES2026부터는 내장된 대안이 생겼다.
+
+```js
+const routes = Iterator.concat(
+  builtInRoutes,
+  pluginRoutes,
+  [fallbackRoute],
+);
+```
+
+결과는 지연(lazy) 상태로 남는다. 이 부분을 놓치면 안 된다.
+
+`Iterator.concat()`은 모든 항목을 곧바로 다른 배열에 복사하지 않는다. 소비하는 쪽이 이터레이터를 따라 진행할 때마다 그때그때 값을 요청한다.
+
+간단한 예를 보자.
+
+```js
+const first = ["/", "/about"];
+const admin = ["/admin", "/admin/users"];
+const fallback = ["*"];
+ 
+const routes = Iterator.concat(
+  first,
+  admin,
+  fallback,
+);
+ 
+for (const route of routes) {
+  console.log(route);
+}
+```
+
+실행하면 이렇게 찍힌다.
+
+```text
+/
+/about
+/admin
+/admin/users
+*
+```
+
+다음 코드로도 비슷한 출력을 얻을 수 있다.
+
+```js
+const routes = [
+  ...first,
+  ...admin,
+  ...fallback,
+];
+```
+
+하지만 이 방법은 새 배열을 즉시 만든다.
+
+지연 처리가 중요하거나 소스가 커서 컬렉션을 하나 더 만들 필요가 없을 때 `Iterator.concat()`이 잘 맞는다.
+
+꼭 알아 둘 제약이 하나 있다. `Iterator.concat()`은 동기 이터러블에만 쓸 수 있다. `AsyncIterator.concat()` 같은 비동기 버전으로는 쓰지 못한다.
+
+## 4. JSON을 파싱할 때 큰 정수 지키기
+
+JSON과 자바스크립트 숫자의 관계는 오래됐고 때로는 위험한 구석도 있다.
+
+자바스크립트 `Number` 값은 `Number.MAX_SAFE_INTEGER`를 넘는 모든 정수를 안전하게 표현하지 못한다.
+
+큰 데이터베이스 ID, 일부 시스템의 타임스탬프, Snowflake ID 같은 값에서 이게 문제가 된다.
+
+이런 페이로드가 있다고 하자.
+
+```js
+const payload = `{
+  "messageId": 1183028002140618753,
+  "channel": "general"
+}`;
+```
+
+평소처럼 파싱하면 정밀도를 잃을 수 있다.
+
+```js
+const message = JSON.parse(payload);
+ 
+console.log(message.messageId);
+// 1183028002140618800
+```
+
+ID가 조용히 바뀌었다.
+
+결과가 여전히 멀쩡한 숫자처럼 보이니 더 골치 아프다.
+
+ECMAScript 2026에서는 `JSON.parse()` 리바이버(reviver)에 세 번째 인자 `context`가 추가돼 이런 상황을 다루기 쉬워진다.
+
+원시값이면 `context.source`로 원래 JSON 소스 텍스트를 확인할 수 있다.
+
+덕분에 `BigInt`를 만들 때 이미 반올림된 `Number` 대신 원래 숫자 문자열을 쓸 수 있다.
+
+```js
+const message = JSON.parse(
+  payload,
+  (key, value, context) => {
+    if (key === "messageId") {
+      return BigInt(context.source);
+    }
+ 
+    return value;
+  },
+);
+ 
+console.log(message.messageId);
+// 1183028002140618753n
+```
+
+이걸로 파싱 쪽 문제는 해결된다.
+
+그런데 이 객체를 다시 직렬화하려고 하면 문제가 하나 더 생긴다.
+
+```js
+JSON.stringify(message);
+```
+
+보통 `JSON.stringify()`는 `BigInt`를 직렬화하지 못한다.
+
+이런 경우라면 ES2026의 `JSON.rawJSON()`을 쓴다.
+
+```js
+const json = JSON.stringify(
+  message,
+  (key, value) => {
+    if (typeof value === "bigint") {
+      return JSON.rawJSON(value.toString());
+    }
+ 
+    return value;
+  },
+);
+ 
+console.log(json);
+```
+
+출력에는 정수 전체가 담긴다.
+
+```json
+{"messageId":1183028002140618753,"channel":"general"}
+```
+
+ID는 따옴표로 감싼 문자열로 바뀌지 않고 JSON 숫자 그대로 남아 있다.
+
+새로운 파싱 context와 `JSON.rawJSON()`을 함께 쓰면 큰 숫자 값을 왕복 변환(round-trip)하는 일이 훨씬 안전해진다.
+
+그렇다고 모든 정수를 갑자기 `BigInt`로 바꿔야 한다는 뜻은 아니다. 어떤 표현 방식이 올바른지는 여전히 그 값이 무엇을 뜻하느냐에 달렸다.
+
+ID, 가격, 카운터, 측정값은 모두 JSON 숫자로 나타날 수 있지만 애플리케이션 안에서는 저마다 아주 다르게 다뤄야 할 수 있다.
+
+## 5. `Uint8Array`를 Base64와 Hex로 바로 변환하기
+
+브라우저 자바스크립트에서 바이너리 데이터를 다루는 일은 늘 조금 번거로웠다.
+
+바이트를 Base64로 인코딩하려면 먼저 바이트를 임시 문자열로 바꿔야 하는 경우가 많았다.
+
+예를 들어 URL에 써도 안전한 무작위 토큰 하나를 만들려면 이런 코드를 짜야 했다.
+
+```js
+const bytes = crypto.getRandomValues(
+  new Uint8Array(32),
+);
+ 
+const token = btoa(
+  String.fromCharCode(...bytes),
+)
+  .replaceAll("+", "-")
+  .replaceAll("/", "_")
+  .replace(/=+$/, "");
+```
+
+돌아가기는 하는데 실제 목적과 상관없는 변환이 여러 단계 끼어 있다.
+
+정작 하고 싶은 건 바이트를 Base64URL로 인코딩하는 것뿐이다.
+
+이제 `Uint8Array`가 이를 직접 처리한다.
+
+```js
+const bytes = crypto.getRandomValues(
+  new Uint8Array(32),
+);
+ 
+const token = bytes.toBase64({
+  alphabet: "base64url",
+  omitPadding: true,
+});
+ 
+console.log(token);
+```
+
+디코딩도 똑같이 간단하다.
+
+```js
+const decoded = Uint8Array.fromBase64(token, {
+  alphabet: "base64url",
+});
+```
+
+ES2026에서는 16진수 변환도 된다.
+
+```js
+const bytes = new Uint8Array([
+  72,
+  101,
+  108,
+  108,
+  111,
+]);
+ 
+const hex = bytes.toHex();
+ 
+console.log(hex);
+// "48656c6c6f"
+```
+
+반대 방향도 된다.
+
+```js
+const restored = Uint8Array.fromHex(
+  "48656c6c6f",
+);
+```
+
+디코딩한 데이터를 기존 버퍼에 써 넣는 메서드도 있다.
+
+```js
+const buffer = new Uint8Array(64);
+ 
+const result = buffer.setFromBase64(encoded);
+ 
+console.log(result.read);
+console.log(result.written);
+```
+
+메모리 할당을 더 세밀하게 통제하고 싶거나 미리 할당해 둔 버퍼로 작업할 때 쓸 만하다.
+
+이 메서드들이 `TextEncoder`와 `TextDecoder`를 대신하지는 않는다.
+
+텍스트와 바이트 사이의 변환은 여전히 그쪽 몫이다.
+
+```text
+string ↔ bytes
+```
+
+인코딩된 바이너리 표현에는 새 `Uint8Array` API를 쓴다.
+
+```text
+bytes ↔ Base64
+bytes ↔ Hex
+```
+
+이렇게 역할이 나뉘면서 바이너리를 다루는 코드가 훨씬 읽기 쉬워진다.
+
+## 6. `Error.isError()`로 진짜 오류 판별하기
+
+아마 이런 검사를 수백 번은 써 봤을 것이다.
+
+```js
+if (value instanceof Error) {
+  // handle error
+}
+```
+
+대부분은 이걸로 충분하다.
+
+오류가 다른 자바스크립트 렐름에서 넘어왔을 때가 문제다.
+
+iframe으로 쉽게 보여 줄 수 있다.
+
+```js
+const iframe = document.createElement("iframe");
+ 
+document.body.append(iframe);
+ 
+const externalError =
+  new iframe.contentWindow.Error("Something failed");
+ 
+console.log(externalError instanceof Error);
+// false
+```
+
+이 객체는 분명히 `Error`다.
+
+다만 이 객체가 속한 다른 렐름에는 `Error` 생성자가 따로 있을 뿐이다. 그래서 `instanceof`의 프로토타입 검사가 실패한다.
+
+ES2026에서 `Error.isError()`가 새로 들어왔다.
+
+```js
+console.log(Error.isError(externalError));
+// true
+```
+
+`Array.isArray()`의 오류 버전이라고 생각하면 된다.
+
+시스템 경계에서 특히 쓸모 있다. 플러그인, iframe, VM 컨텍스트, 다른 실행 환경에서 값이 들어올 수 있는 곳이 그렇다.
+
+`catch` 안에서도 도움이 된다.
+
+자바스크립트에서는 어떤 값이든 던질 수 있다.
+
+```js
+throw "Something failed";
+```
+
+혹은 이렇게.
+
+```js
+throw {
+  message: "Something failed",
+};
+```
+
+그래서 방어적인 코드는 던져진 값의 정체를 모르는 채로 정규화해야 할 때가 많다.
+
+```js
+try {
+  await runPlugin();
+} catch (value) {
+  const error = Error.isError(value)
+    ? value
+    : new Error(String(value), {
+        cause: value,
+      });
+ 
+  reportError(error);
+}
+```
+
+`Error.isError()`는 값이 실제 오류 객체인지 확인한다. `name`과 `message` 속성만 갖췄다고 해서 평범한 객체가 갑자기 오류로 인정되지는 않는다.
+
+## 7. 부동소수점 숫자를 더 믿을 만하게 더하기
+
+부동소수점 연산이 내는 의외의 결과 가운데 유명한 것이 몇 가지 있다.
+
+```js
+console.log(0.1 + 0.2);
+// 0.30000000000000004
+```
+
+그런데 크기가 크게 다른 숫자를 더하면 반올림 문제는 더 미묘해진다.
+
+이런 경우다.
+
+```js
+const readings = [
+  1e16,
+  3.5,
+  -1e16,
+];
+ 
+const total = readings.reduce(
+  (sum, value) => sum + value,
+  0,
+);
+ 
+console.log(total);
+// 4
+```
+
+수학적으로는 결과가 `3.5`여야 한다.
+
+이 문제는 부동소수점 표현 방식 때문에 생긴다. `1e16` 근처에서는 자바스크립트가 가능한 모든 소수 값을 표현하지 못한다. 큰 오프셋을 빼기 전에 중간 결과가 반올림돼 버린다.
+
+ES2026에는 이런 계산용으로 `Math.sumPrecise()`가 추가됐다.
+
+```js
+const readings = [
+  1e16,
+  3.5,
+  -1e16,
+];
+ 
+const total = Math.sumPrecise(readings);
+ 
+console.log(total);
+// 3.5
+```
+
+이터러블을 받으니 배열이 아니어도 된다.
+
+```js
+const values = new Set([
+  1e16,
+  3.5,
+  -1e16,
+]);
+ 
+console.log(Math.sumPrecise(values));
+// 3.5
+```
+
+다만 이름은 조금 짚고 넘어가야 한다.
+
+"Precise"라는 이름이 붙었어도 자바스크립트에 정확한 십진 연산이 갑자기 생기지는 않는다.
+
+이 결과는 여전히 그대로다.
+
+```js
+Math.sumPrecise([0.1, 0.2]);
+// 0.30000000000000004
+```
+
+입력값 자체가 이미 이진 부동소수점 근사치이기 때문이다.
+
+`Math.sumPrecise()`는 많은 값을 더하는 과정에서 추가로 생기는 오차를 줄인다. 자바스크립트가 숫자를 표현하는 방식까지 손대지는 않는다.
+
+그래서 통계, 측정값, 과학 데이터셋, 분석 같은 계산에 잘 맞는다.
+
+금융 연산까지 완전히 해결해 주지는 못한다. 돈을 계산할 때는 대개 십진 연산이나 센트 같은 정수 표현이 필요하다.
+
+## 작은 API, 줄어드는 보일러플레이트
+
+ECMAScript 2026에는 판 전체를 끌고 가는 화려한 새 문법 하나 같은 게 없다. 개선 사항은 그보다 훨씬 실용적이다.
+
+반복되던 `has()`, `set()`, `get()` 조합은 `getOrInsertComputed()` 하나가 될 수 있다. 비동기 이터레이터는 수동으로 모으는 반복문 없이 배열이 된다. 이터러블은 다른 컬렉션에 복사하지 않고 지연 방식으로 이어 붙일 수 있다.
+
+JSON에서 큰 정수를 지킬 도구도 한결 나아졌다. `Uint8Array`에는 마침내 Base64와 16진수 직접 변환이 생겼다. 오류 판별은 렐름을 넘나들어도 믿을 만하고 `Math.sumPrecise()` 덕분에 특정 수치 집계도 전보다 덜 흔들린다.
+
+이 가운데 하나만으로 애플리케이션이 완전히 달라지지는 않는다.
+
+그래서 오히려 유용하다.
+
+수년간 자바스크립트 프로젝트에는 작은 유틸리티 함수, 어색한 변환, 방어적 검사, 보일러플레이트 조각이 쌓여 왔는데 이 기능들이 그 자리를 대신한다.
+
+프로덕션에서 쓰기 전에는 대상 브라우저와 런타임의 지원 여부를 확인하자. ECMAScript는 언어를 정의할 뿐이고 브라우저, Node.js, Bun, Deno 같은 환경마다 새 기능을 내놓는 시점이 꼭 같지는 않다.
+
+ES2026은 다른 종류의 자바스크립트를 쓰게 한다기보다 이미 쓰고 있는 자바스크립트에 더 나은 내장 도구를 얹어 주는 쪽에 가깝다.
+
+## 참고 자료
+
+- [7 Useful JavaScript Features Added in ECMAScript 2026 (JavaScript Development Space)](https://jsdev.space/ecmascript-2026-features/)
