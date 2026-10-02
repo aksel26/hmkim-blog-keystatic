@@ -20,5 +20,7 @@ jobs:
         run: pnpm --filter agent exec tsc --noEmit
       - name: agent tests
         run: pnpm --filter agent test
+      - name: blog tests
+        run: pnpm --filter blog test
       - name: agent-web typecheck
         run: pnpm --filter agent-web exec tsc --noEmit

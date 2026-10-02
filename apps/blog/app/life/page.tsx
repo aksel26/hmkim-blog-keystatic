@@ -1,4 +1,4 @@
-import { getAllLifePosts, getLifeTags } from '@/lib/keystatic/reader';
+import { getAllLifePosts } from '@/lib/keystatic/reader';
 import LifeArchive from '@/components/life/LifeArchive';
 import type { Metadata } from 'next';
 
@@ -26,10 +26,7 @@ export const metadata: Metadata = {
 };
 
 export default async function LifePage() {
-  const [posts, tags] = await Promise.all([
-    getAllLifePosts(),
-    getLifeTags(),
-  ]);
+  const posts = await getAllLifePosts();
 
   return <LifeArchive posts={posts.map(post => ({
     slug: post.slug,
@@ -39,5 +36,5 @@ export default async function LifePage() {
     tags: [...(post.tags || [])],
     thumbnailImage: post.thumbnailImage || undefined,
     thumbnailVideo: post.thumbnailVideo || undefined,
-  }))} tags={tags} />;
+  }))} />;
 }

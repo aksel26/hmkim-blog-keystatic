@@ -1,5 +1,6 @@
 import { createReader } from '@keystatic/core/reader';
 import keystaticConfig from '@/keystatic.config';
+import { tagKey } from '@/lib/tags';
 
 // Create a reader instance
 // Pass empty string for local storage mode
@@ -98,27 +99,6 @@ export async function getAllPosts(onlyPublished = true) {
   );
 }
 
-// Get all unique tags from both collections
-export async function getAllTags(onlyPublished = true) {
-  const posts = await getAllPosts(onlyPublished);
-  const tags = posts.flatMap((post) => post?.tags || []);
-  return Array.from(new Set(tags));
-}
-
-// Get tags from Tech posts only
-export async function getTechTags(onlyPublished = true) {
-  const posts = await getAllTechPosts(onlyPublished);
-  const tags = posts.flatMap((post) => post?.tags || []);
-  return Array.from(new Set(tags));
-}
-
-// Get tags from Life posts only
-export async function getLifeTags(onlyPublished = true) {
-  const posts = await getAllLifePosts(onlyPublished);
-  const tags = posts.flatMap((post) => post?.tags || []);
-  return Array.from(new Set(tags));
-}
-
 // Get all unique keywords from both collections
 export async function getAllKeywords(onlyPublished = true) {
   const posts = await getAllPosts(onlyPublished);
@@ -137,13 +117,13 @@ export async function getRelatedPosts(
   const posts =
     category === 'tech' ? await getAllTechPosts() : await getAllLifePosts();
 
-  const tagSet = new Set(tags);
+  const tagSet = new Set(tags.map(tagKey));
 
   const ranked = posts
     .filter((post) => post.slug !== currentSlug)
     .map((post) => ({
       post,
-      score: (post.tags || []).filter((tag) => tagSet.has(tag)).length,
+      score: new Set((post.tags || []).map(tagKey).filter((key) => tagSet.has(key))).size,
     }))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
