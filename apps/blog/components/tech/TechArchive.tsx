@@ -7,6 +7,8 @@ import { m } from 'framer-motion';
 import { formatDate, isGifImage } from '@/lib/utils';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Loader2 } from 'lucide-react';
+import TagFilter from '@/components/TagFilter';
+import { tagKey } from '@/lib/tags';
 
 interface TechPost {
   slug: string;
@@ -19,18 +21,17 @@ interface TechPost {
 
 interface TechArchiveProps {
   posts: TechPost[];
-  tags: string[];
 }
 
-export default function TechArchive({ posts, tags }: TechArchiveProps) {
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+export default function TechArchive({ posts }: TechArchiveProps) {
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   const filteredPosts = useMemo(() => {
-    if (selectedTag) {
-      return posts.filter((post) => post.tags?.includes(selectedTag));
+    if (selectedKey) {
+      return posts.filter((post) => post.tags?.some((tag) => tagKey(tag) === selectedKey));
     }
     return posts;
-  }, [selectedTag, posts]);
+  }, [selectedKey, posts]);
 
   const {
     displayedItems,
@@ -71,29 +72,12 @@ export default function TechArchive({ posts, tags }: TechArchiveProps) {
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground/60">
           Filter by Tag
         </h2>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedTag(null)}
-            className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === null
-              ? 'bg-tech-blue text-white dark:text-gray-700'
-              : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-          >
-            All
-          </button>
-          {tags.map((tag) => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition-all ${selectedTag === tag
-                ? 'bg-tech-blue text-white dark:text-gray-700'
-                : 'bg-gray-100 dark:bg-gray-800 text-foreground hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
+        <TagFilter
+          posts={posts}
+          selectedKey={selectedKey}
+          onChange={setSelectedKey}
+          accentClass="bg-tech-blue"
+        />
       </m.div>
 
       {/* Posts Grid */}

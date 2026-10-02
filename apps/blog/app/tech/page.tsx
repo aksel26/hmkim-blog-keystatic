@@ -1,4 +1,4 @@
-import { getAllTechPosts, getTechTags } from '@/lib/keystatic/reader';
+import { getAllTechPosts } from '@/lib/keystatic/reader';
 import TechArchive from '@/components/tech/TechArchive';
 import type { Metadata } from 'next';
 
@@ -26,10 +26,7 @@ export const metadata: Metadata = {
 };
 
 export default async function TechPage() {
-  const [posts, tags] = await Promise.all([
-    getAllTechPosts(),
-    getTechTags(),
-  ]);
+  const posts = await getAllTechPosts();
 
   return <TechArchive posts={posts.map(post => ({
     slug: post.slug,
@@ -38,5 +35,5 @@ export default async function TechPage() {
     createdAt: post.createdAt || '',
     tags: [...(post.tags || [])],
     thumbnailImage: post.thumbnailImage || undefined,
-  }))} tags={tags} />;
+  }))} />;
 }
