@@ -221,7 +221,7 @@ export default async function LifePostPage(props: { params: Promise<{ slug: stri
                 </article>
 
                 {/* Related Posts */}
-                <RelatedPosts posts={relatedPosts} category="life" />
+                <RelatedPosts posts={relatedPosts} />
 
                 {/* Comment Section */}
                 <div className="container mx-auto max-w-3xl px-6 mt-8">

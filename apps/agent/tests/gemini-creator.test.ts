@@ -20,6 +20,9 @@ stub('../ai-agents/config/models', {
   },
 });
 
+const existingPosts: Array<{ title: string; path: string }> = [];
+stub('../ai-agents/tools/post-index', { loadExistingPosts: async () => existingPosts });
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { geminiCreator } = require('../ai-agents/agents/gemini-creator');
 
@@ -34,6 +37,17 @@ test('태그 밖 머리말과 수정 사항 리포트는 본문에서 빠진다'
   const result = await geminiCreator(state);
   assert.equal(result.finalContent, '# 제목\n\n본문');
   assert.match(prompts[0], /<blog_post>/);
+  assert.doesNotMatch(prompts[0], /내부 링크/);
+});
+
+test('기존 글 목록이 있으면 내부 링크 지시와 목록이 본문 프롬프트에 들어간다', async () => {
+  existingPosts.push({ title: 'Claude Code 작업 완료 알림 설정하기', path: '/tech/claude-code-hooks' });
+  prompts.length = 0;
+  responses.push('<blog_post>본문</blog_post>', metadataJson);
+  await geminiCreator(state);
+  assert.match(prompts[0], /\*\*내부 링크\*\*/);
+  assert.match(prompts[0], /- Claude Code 작업 완료 알림 설정하기: \/tech\/claude-code-hooks/);
+  existingPosts.length = 0;
 });
 
 test('태그가 없으면 응답 전체를 본문으로 쓴다', async () => {
