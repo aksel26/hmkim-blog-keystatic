@@ -214,7 +214,7 @@ export default async function TechPostPage(props: { params: Promise<{ slug: stri
                 </article>
 
                 {/* Related Posts */}
-                <RelatedPosts posts={relatedPosts} category="tech" />
+                <RelatedPosts posts={relatedPosts} />
 
                 {/* Comment Section */}
                 <div className="container mx-auto max-w-3xl px-6 mt-8">

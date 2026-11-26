@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { formatDate, isGifImage } from '@/lib/utils';
 
 interface RelatedPost {
+  category: 'tech' | 'life';
   slug: string;
   title: string;
   summary: string;
@@ -13,16 +14,10 @@ interface RelatedPost {
 
 interface RelatedPostsProps {
   posts: RelatedPost[];
-  category: 'tech' | 'life';
 }
 
-export function RelatedPosts({ posts, category }: RelatedPostsProps) {
+export function RelatedPosts({ posts }: RelatedPostsProps) {
   if (posts.length === 0) return null;
-
-  const accentHover =
-    category === 'tech'
-      ? 'group-hover:text-tech-blue'
-      : 'group-hover:text-life-orange';
 
   return (
     <section className="container mx-auto max-w-5xl px-6 mt-20">
@@ -31,8 +26,8 @@ export function RelatedPosts({ posts, category }: RelatedPostsProps) {
       </h2>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
-          <article key={post.slug} className="group">
-            <Link href={`/${category}/${post.slug}`} className="block">
+          <article key={`${post.category}-${post.slug}`} className="group">
+            <Link href={`/${post.category}/${post.slug}`} className="block">
               {post.thumbnailImage && (
                 <div className="relative mb-3 aspect-video overflow-hidden rounded-xl">
                   <Image
@@ -46,7 +41,7 @@ export function RelatedPosts({ posts, category }: RelatedPostsProps) {
                 </div>
               )}
               <h3
-                className={`mb-2 text-base font-medium leading-snug tracking-tight transition-colors ${accentHover}`}
+                className={`mb-2 text-base font-medium leading-snug tracking-tight transition-colors ${post.category === 'tech' ? 'group-hover:text-tech-blue' : 'group-hover:text-life-orange'}`}
               >
                 {post.title}
               </h3>

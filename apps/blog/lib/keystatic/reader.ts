@@ -106,27 +106,29 @@ export async function getAllKeywords(onlyPublished = true) {
   return Array.from(new Set(keywords));
 }
 
-// Get related posts within the same category, ranked by shared-tag count
-// (falls back to most-recent posts when there is no tag overlap)
+// Get related posts across both categories, ranked by shared-tag count
+// (ties prefer the same category, then the most recent post)
 export async function getRelatedPosts(
   category: 'tech' | 'life',
   currentSlug: string,
   tags: readonly string[] = [],
   limit = 3
 ) {
-  const posts =
-    category === 'tech' ? await getAllTechPosts() : await getAllLifePosts();
+  const posts = await getAllPosts();
 
   const tagSet = new Set(tags.map(tagKey));
 
   const ranked = posts
-    .filter((post) => post.slug !== currentSlug)
+    .filter((post) => !(post.category === category && post.slug === currentSlug))
     .map((post) => ({
       post,
       score: new Set((post.tags || []).map(tagKey).filter((key) => tagSet.has(key))).size,
     }))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
+      const sameA = a.post.category === category ? 1 : 0;
+      const sameB = b.post.category === category ? 1 : 0;
+      if (sameB !== sameA) return sameB - sameA;
       return (
         new Date(b.post.createdAt || '').getTime() -
         new Date(a.post.createdAt || '').getTime()
@@ -134,6 +136,7 @@ export async function getRelatedPosts(
     });
 
   return ranked.slice(0, limit).map(({ post }) => ({
+    category: post.category,
     slug: post.slug,
     title: post.title || 'Untitled',
     summary: post.summary || '',
