@@ -17,7 +17,7 @@ thumbnailImage: /images/thumbnails/browser-api-web-api-api/thumbnailImage.webp
 ---
 웹 개발을 하다 보면 우리는 '웹 플랫폼(Web Platform)'이라는 용어를 자주 사용합니다. 이는 전 세계적으로 통용되는 표준 사양에 따라 모든 브라우저가 동일하게 동작하는 하나의 거대한 생태계를 의미하죠. 하지만 우리가 매일 사용하는 수많은 API 중에서, 사실은 '웹 표준'이 아닌 '브라우저 제조사의 서비스'에 불과한 것들이 많다는 사실을 알고 계셨나요?
 
-오늘은 Polypane의 최신 아티클 "Not all browser APIs are Web APIs"**의 내용을 바탕으로, 우리가 당연하게 여겼던 웹 기능들의 이면에 숨겨진 진실과 개발자가 주의해야 할 점들을 자세히 번역하고 정리해 드리겠습니다.
+오늘은 Polypane의 최신 아티클 "Not all browser APIs are Web APIs"의 내용을 바탕으로, 우리가 당연하게 여겼던 웹 기능들의 이면에 숨겨진 진실과 개발자가 주의해야 할 점들을 자세히 번역하고 정리해 드리겠습니다.
 
 ### 1. 표준화의 환상: 당신의 위치 정보는 어디서 오는가?
 
@@ -36,7 +36,7 @@ thumbnailImage: /images/thumbnails/browser-api-web-api-api/thumbnailImage.webp
 
 ### 3. Passkeys와 결제 API: 브라우저에 종속된 사용자 경험
 
-최근 각광받는 **Passkeys(WebAuthn)**와 **Payment Request API** 역시 겉보기에는 웹 표준이지만, 실제 구현은 브라우저 제조사의 플랫폼 서비스에 깊게 뿌리박고 있습니다.
+최근 각광받는 **Passkeys**(WebAuthn)와 **Payment Request API** 역시 겉보기에는 웹 표준이지만, 실제 구현은 브라우저 제조사의 플랫폼 서비스에 깊게 뿌리박고 있습니다.
 
 - **Passkeys:** 이는 단순한 암호화 기술을 넘어 브라우저의 비밀번호 관리자(iCloud 키체인, 구글 비밀번호 관리자 등)와 긴밀하게 연결됩니다. 사용자가 어떤 에코시스템(iOS, Android, Windows)을 쓰느냐에 따라 사용자 경험이 완전히 달라지며, 개발자가 이를 제어할 수 있는 권한은 극히 제한적입니다.
 - **Payment Request API:** 결제 버튼을 누를 때 뜨는 UI는 브라우저가 제공하는 기능입니다. 하지만 그 밑단에는 애플 페이(Apple Pay)나 구글 페이(Google Pay) 같은 제조사의 결제 게이트웨이가 자리 잡고 있습니다. 특정 브라우저에서만 특정 결제 수단이 강제되거나 활성화되는 현상은 이것이 '순수한 웹 표준'이라기보다 '제조사 서비스의 웹 인터페이스'에 가깝다는 증거입니다.
@@ -45,7 +45,7 @@ thumbnailImage: /images/thumbnails/browser-api-web-api-api/thumbnailImage.webp
 
 푸시 알림(Web Push)은 브라우저가 꺼져 있어도 사용자에게 정보를 전달할 수 있는 강력한 도구입니다. 하지만 이 역시 '푸시 서버'라는 거대한 인프라가 뒤를 받치고 있습니다.
 
-크롬은 **FCM(Firebase Cloud Messaging)**을 사용하고, 사파리는 **APNs(Apple Push Notification service)**를, 파이어폭스는 모질라의 자체 푸시 서비스를 사용합니다. 개발자는 표준화된 `Push API`를 사용해 코드를 짜지만, 실제 알림이 전송되는 경로는 제조사마다 완전히 다릅니다. 만약 특정 제조사의 푸시 서버에 장애가 발생한다면, 여러분의 웹 서비스는 해당 브라우저 사용자들에게 알림을 보낼 수 없게 됩니다. 이는 명백한 **벤더 종속(Vendor Lock-in)** 사례입니다.
+크롬은 **FCM**(Firebase Cloud Messaging)을 사용하고, 사파리는 **APNs**(Apple Push Notification service)를, 파이어폭스는 모질라의 자체 푸시 서비스를 사용합니다. 개발자는 표준화된 `Push API`를 사용해 코드를 짜지만, 실제 알림이 전송되는 경로는 제조사마다 완전히 다릅니다. 만약 특정 제조사의 푸시 서버에 장애가 발생한다면, 여러분의 웹 서비스는 해당 브라우저 사용자들에게 알림을 보낼 수 없게 됩니다. 이는 명백한 **벤더 종속(Vendor Lock-in)** 사례입니다.
 
 ### 5. 개발자가 가져야 할 실전 전략
 

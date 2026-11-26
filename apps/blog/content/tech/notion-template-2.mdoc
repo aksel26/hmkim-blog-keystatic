@@ -97,7 +97,7 @@ exports.notionToSlack = functions.https.onRequest(async (req, res) => {
 
 ### 2. 핵심 설정: Google IAM 권한 (중요!)
 
-배포 후 노션 서버가 이 함수를 호출할 수 있도록 **공개 액세스(`allUsers`)**를 허용해야 합니다. 이 단계를 놓치면 403 에러를 마주하게 됩니다.
+배포 후 노션 서버가 이 함수를 호출할 수 있도록 **공개 액세스**(`allUsers`)를 허용해야 합니다. 이 단계를 놓치면 403 에러를 마주하게 됩니다.
 
 ```bash
 gcloud functions add-iam-policy-binding notionToSlack \\
@@ -169,7 +169,7 @@ gcloud functions add-iam-policy-binding notionToSlack \\
 
 ### 🧠 정량적 데이터에 대한 고찰
 
-팀장님은 "이 정도 했다"를 보여주기 위한 용도로 활용하셨지만, 개발자로서 저는 **'숫자 너머의 가치'**를 고민하게 되었습니다.
+팀장님은 "이 정도 했다"를 보여주기 위한 용도로 활용하셨지만, 개발자로서 저는 '**숫자 너머의 가치**'를 고민하게 되었습니다.
 
 단순히 처리한 업무의 개수보다 **긴급 대응 속도**나 **재작업 비율** 같은 질적 지표를 어떻게 자동화에 녹여낼지가 다음 과제로 남았습니다.
 
